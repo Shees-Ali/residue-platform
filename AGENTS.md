@@ -1,0 +1,31 @@
+# AGENTS.md - residue-platform
+
+Shared rules for every coding agent and contributor.
+
+## Project
+Crop-residue marketplace demo: farmers call (Urdu, Twilio + Gemini Live) to report residue; the API assigns a factory, dispatches transporters, runs a simulated escrow ledger and splits revenue. Synthetic data only. Plan: `memory/implementation-plan.md`.
+
+## Layout
+- `web/` React 18 + TS + Vite + Tailwind. Firebase Hosting.
+- `api/` FastAPI + Pydantic v2 + Firestore. Cloud Run.
+- `voice/` ADK voice agent (FastAPI, Twilio media streams). Cloud Run.
+- `deploy/` firebase.json and gcloud deploy scripts. `seed/` synthetic data. `scripts/` CI checks.
+- `memory/` project memory (source of truth).
+
+## Commands
+- `make setup` install deps for all projects.
+- `make dev` run api, voice and web locally.
+- `make test` run all tests (`make test-api|test-voice|test-web` for one).
+- `make deploy` deploy api, voice, web (see `deploy/`). Needs gcloud and firebase CLIs logged in.
+
+## Conventions
+- Read `memory/implementation-plan.md` and the story file in `memory/stories/` before starting any story. After finishing or changing anything, update the story file (built, decided and why, open) and `memory/user-stories.md`.
+- Log every decision (stack, API shape, data model, trade-offs, rejected options) in `memory/decisions.md`: dated, append only, mark superseded.
+- Spec any future story in `memory/` before writing code: endpoints, data fields, done-when check, tests first.
+- Tests first for: the ledger check (A3), the revenue split (FA3), offer expiry (A2), factory scoring (A1). Not for UI or voice.
+- `voice/` never imports Firestore or any database client (CI enforces it). It reaches data only through the API.
+- Agent routes (`/api/agent/*`) expose only: create lot, get quote, escalate, record confirmation. Writes need `Idempotency-Key`. Farmer identity comes from the call record, never from request fields.
+- Money is integer minor units; shares are basis points summing to 10000.
+- Leave `TODO(<story id>)` comments for unbuilt work.
+- Commit memory updates in the same commit as the code they describe. Small commits.
+- Never put secrets or real farmer data in the repo, `memory/` or agent files. `.env` files stay local; `.env.example` holds placeholders.
