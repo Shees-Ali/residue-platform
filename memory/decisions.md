@@ -31,3 +31,6 @@ Voice audio conversion will use `audioop`, present in 3.12 (removed in 3.13). Lo
 
 ## 2026-10-13 - Agent-route contract tested via OpenAPI, not app.routes
 Newer FastAPI wraps included routers in `_IncludedRouter`, so `app.routes` has no `.path`. `test_agent_contract.py` reads `app.openapi()["paths"]` instead.
+
+## 2026-10-13 - Web: Tailwind v3, openapi-fetch, committed generated schema
+Tailwind 3.4 (stable PostCSS setup) over v4. `openapi-fetch` pairs with `openapi-typescript` for the typed client. `web/openapi.json` and `src/api/schema.d.ts` are committed so the web builds without running the API; regenerate with `npm run gen:api` after API changes.

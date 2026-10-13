@@ -19,6 +19,7 @@ As a factory, I weigh the lot at the gate and accept or reject it, with an AI gr
 ## Built so far
 
 - 2026-10-13 scaffold: services/grading.py grade_photos stub (Gemini vision) and jobs confirm/grade route stubs.
+- 2026-10-13 scaffold: /factory page placeholder.
 
 ## Decisions
 - None yet. Log repo-wide decisions in `../decisions.md`.

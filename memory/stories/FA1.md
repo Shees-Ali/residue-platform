@@ -19,6 +19,7 @@ As a factory, I see lots assigned to me and fund escrow so dispatch can start.
 ## Built so far
 
 - 2026-10-13 scaffold: POST /api/ledger/escrow stub.
+- 2026-10-13 scaffold: /factory page placeholder.
 
 ## Decisions
 - None yet. Log repo-wide decisions in `../decisions.md`.
