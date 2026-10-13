@@ -28,3 +28,6 @@ Requirement: voice service account gets `run.invoker` on the API only. Browser d
 
 ## 2026-10-13 - Python 3.12 pinned; audioop
 Voice audio conversion will use `audioop`, present in 3.12 (removed in 3.13). Local machine has 3.13; use 3.12 (Docker/CI) or add `audioop-lts`. Decide when implementing the audio path.
+
+## 2026-10-13 - Agent-route contract tested via OpenAPI, not app.routes
+Newer FastAPI wraps included routers in `_IncludedRouter`, so `app.routes` has no `.path`. `test_agent_contract.py` reads `app.openapi()["paths"]` instead.

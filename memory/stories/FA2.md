@@ -17,7 +17,8 @@ As a factory, I weigh the lot at the gate and accept or reject it, with an AI gr
 - Search the repo for `TODO(FA2)`.
 
 ## Built so far
-- Nothing yet (scaffold stubs only).
+
+- 2026-10-13 scaffold: services/grading.py grade_photos stub (Gemini vision) and jobs confirm/grade route stubs.
 
 ## Decisions
 - None yet. Log repo-wide decisions in `../decisions.md`.

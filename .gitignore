@@ -11,3 +11,4 @@ __pycache__/
 .firebase/
 seed/out/
 web/src/api/schema.d.ts.tmp
+*.egg-info/

@@ -17,7 +17,8 @@ As a factory, I list finished products for sale and see how each sale is split.
 - Search the repo for `TODO(FA3)`.
 
 ## Built so far
-- Nothing yet (scaffold stubs only).
+
+- 2026-10-13 scaffold: services/revenue_share.py split stub (bps, integer cents); failing tests in api/tests/test_revenue_share.py; products/orders route stubs.
 
 ## Decisions
 - None yet. Log repo-wide decisions in `../decisions.md`.

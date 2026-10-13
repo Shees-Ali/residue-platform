@@ -17,7 +17,8 @@ As a factory, I see lots assigned to me and fund escrow so dispatch can start.
 - Search the repo for `TODO(FA1)`.
 
 ## Built so far
-- Nothing yet (scaffold stubs only).
+
+- 2026-10-13 scaffold: POST /api/ledger/escrow stub.
 
 ## Decisions
 - None yet. Log repo-wide decisions in `../decisions.md`.
