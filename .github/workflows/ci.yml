@@ -1,0 +1,54 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: api } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip, cache-dependency-path: api/pyproject.toml }
+      - run: pip install -e ".[dev]"
+      - run: ruff check .
+      - run: pytest -m "not tdd"
+
+  api-tdd:
+    # Failing-by-design tests (A1, A2, A3, FA3). Non-blocking until implemented.
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    defaults: { run: { working-directory: api } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e ".[dev]"
+      - run: pytest -m tdd
+
+  voice:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: voice } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip, cache-dependency-path: voice/pyproject.toml }
+      - name: No database clients in voice
+        run: python ../scripts/check_no_db_in_voice.py
+      - run: pip install -e ".[dev]"
+      - run: ruff check .
+      - run: pytest
+
+  web:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: web } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
