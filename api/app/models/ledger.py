@@ -1,0 +1,13 @@
+from typing import Literal
+
+from pydantic import BaseModel
+
+LedgerKind = Literal[
+    "escrow_in", "release_farmer", "release_transporter", "platform_fee", "refund"
+]
+
+
+class LedgerEntry(BaseModel):
+    job_id: str
+    kind: LedgerKind
+    amount_cents: int  # integer minor units, always >= 0
