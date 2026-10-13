@@ -139,7 +139,7 @@ voice/ (ADK voice agent)
 Shared
 - deploy/: firebase.json for web Hosting, and gcloud run deploy scripts for api and voice with max-instances 2 and min-instances 0. The voice service account gets run.invoker on the API only.
 - seed/: a script that creates synthetic farmers, transporters and factories. No real data.
-- Each project gets .env.example, a health route or page, and a README section. Root Makefile with dev, test and deploy targets. A GitHub Actions workflow that runs tests for all three projects.
+- Each project gets .env.example, a health route or page, and a README section. No Makefile (see 2026-10-14 decision): `python start.py` per Python service, `npm run dev` for web. A GitHub Actions workflow that runs tests for all three projects.
 - Root README lists user stories F1 to F4, T1, T2, FA1 to FA3, A1 to A3 and B1. Leave TODO comments that reference the story IDs.
 - Create stubs, tests and config only. Do not implement business logic yet. Commit in small steps.
 ```

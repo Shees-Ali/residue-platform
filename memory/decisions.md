@@ -34,3 +34,6 @@ Newer FastAPI wraps included routers in `_IncludedRouter`, so `app.routes` has n
 
 ## 2026-10-13 - Web: Tailwind v3, openapi-fetch, committed generated schema
 Tailwind 3.4 (stable PostCSS setup) over v4. `openapi-fetch` pairs with `openapi-typescript` for the typed client. `web/openapi.json` and `src/api/schema.d.ts` are committed so the web builds without running the API; regenerate with `npm run gen:api` after API changes.
+
+## 2026-10-14 - No Makefile; plain Python and npm commands
+Dropped the root Makefile so contributors need nothing beyond Python and Node (make is an extra install, especially on Windows). `api/start.py` and `voice/start.py` run uvicorn with reload (ports 8000/8001, override with `PORT`); web uses `npm run dev`. Tests, lint and deploy are documented as direct commands in AGENTS.md and README (deploy via `bash deploy/*.sh`). Rejected: a root orchestrator script (one terminal per service is simple enough); Taskfile/just (same extra-tool problem). Removed targets with no replacement: `seed` (`python seed/seed.py`) and `gen-api` (`cd api && python -m scripts.export_openapi ../web/openapi.json`, then `cd web && npm run gen:api`) are now run directly.

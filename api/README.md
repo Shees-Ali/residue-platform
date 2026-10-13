@@ -4,7 +4,7 @@ FastAPI backend (Python 3.12, Pydantic v2, Firestore AsyncClient).
 
 ```
 pip install -e ".[dev]"
-uvicorn app.main:app --reload --port 8000   # GET /health
+python start.py                              # uvicorn --reload on :8000, GET /health
 pytest -m "not tdd"                          # green gate
 pytest -m tdd                                # failing-by-design tests (A1, A2, A3, FA3)
 ruff check .

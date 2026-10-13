@@ -3,7 +3,7 @@
 Read `../AGENTS.md` first, then `../memory/implementation-plan.md` and the story file you are working on.
 
 ## Commands
-- `pip install -e ".[dev]"`; `uvicorn app.main:app --reload --port 8001`
+- `pip install -e ".[dev]"`; `python start.py` (uvicorn --reload, :8001)
 - `pytest`; `ruff check .`; `python ../scripts/check_no_db_in_voice.py`
 
 ## Rules

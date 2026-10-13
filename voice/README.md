@@ -4,7 +4,7 @@ ADK voice agent (Python 3.12, FastAPI, Gemini Live bidi streaming, Twilio Media 
 
 ```
 pip install -e ".[dev]"
-uvicorn app.main:app --reload --port 8001   # GET /health
+python start.py                              # uvicorn --reload on :8001, GET /health
 pytest
 python ../scripts/check_no_db_in_voice.py    # must pass: no database imports in this project
 ```

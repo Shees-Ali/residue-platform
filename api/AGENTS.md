@@ -3,7 +3,7 @@
 Read `../AGENTS.md` first, then `../memory/implementation-plan.md` and the story file you are working on.
 
 ## Commands
-- `pip install -e ".[dev]"`; `uvicorn app.main:app --reload --port 8000`
+- `pip install -e ".[dev]"`; `python start.py` (uvicorn --reload, :8000)
 - `pytest -m "not tdd"` (green gate); `pytest -m tdd` (failing-by-design: A1, A2, A3, FA3)
 - `ruff check .`; `python -m scripts.export_openapi ../web/openapi.json`
 

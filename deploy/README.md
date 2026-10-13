@@ -4,7 +4,7 @@ Prereqs: `gcloud` and `firebase` CLIs logged in; secrets `twilio-auth-token`, `g
 
 ```
 export PROJECT_ID=your-project
-make deploy        # api, then voice, then web
+bash deploy/deploy-api.sh && bash deploy/deploy-voice.sh && bash deploy/deploy-web.sh   # from repo root; or run any one
 ```
 
 - Cloud Run: `--min-instances 0 --max-instances 2` for both services (free-tier safety). Set a budget alert.

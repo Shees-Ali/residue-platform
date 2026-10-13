@@ -12,10 +12,23 @@ Crop-residue marketplace demo. Farmers phone in (Urdu, Twilio + Gemini Live); th
 
 ## Quick start
 ```
-make setup     # install all deps
-make dev       # api :8000, voice :8001, web :5173
-make test      # all tests (tdd-marked failing tests excluded; see below)
-make deploy    # needs gcloud + firebase CLIs, PROJECT_ID set
+# once per project
+cd api   && pip install -e ".[dev]"
+cd voice && pip install -e ".[dev]"
+cd web   && npm install
+
+# run (one terminal each)
+cd api   && python start.py   # :8000
+cd voice && python start.py   # :8001
+cd web   && npm run dev       # :5173
+
+# test
+cd api   && pytest -m "not tdd"   # tdd-marked failing tests excluded; see below
+cd voice && pytest
+cd web   && npm test
+
+# deploy (needs gcloud + firebase CLIs, PROJECT_ID set; bash or Git Bash)
+bash deploy/deploy-api.sh && bash deploy/deploy-voice.sh && bash deploy/deploy-web.sh
 ```
 Each project has `.env.example`, a health route (`/health`) and its own README, AGENTS.md and CLAUDE.md. Agents: read [AGENTS.md](AGENTS.md) and [memory/](memory/) first.
 

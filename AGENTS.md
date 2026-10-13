@@ -13,10 +13,11 @@ Crop-residue marketplace demo: farmers call (Urdu, Twilio + Gemini Live) to repo
 - `memory/` project memory (source of truth).
 
 ## Commands
-- `make setup` install deps for all projects.
-- `make dev` run api, voice and web locally.
-- `make test` run all tests (`make test-api|test-voice|test-web` for one).
-- `make deploy` deploy api, voice, web (see `deploy/`). Needs gcloud and firebase CLIs logged in.
+No Makefile; only Python and Node are required.
+- Setup: `pip install -e ".[dev]"` in `api/` and `voice/`; `npm install` in `web/`.
+- Run: `python start.py` in `api/` (:8000) and `voice/` (:8001); `npm run dev` in `web/` (:5173).
+- Test: `pytest -m "not tdd"` in `api/`, `pytest` in `voice/`, `npm test` in `web/`. Also `ruff check .` (api, voice), `npm run lint` (web), `python scripts/check_no_db_in_voice.py`.
+- Deploy: `bash deploy/deploy-api.sh|deploy-voice.sh|deploy-web.sh` (see `deploy/`). Needs gcloud and firebase CLIs logged in.
 
 ## Conventions
 - Read `memory/implementation-plan.md` and the story file in `memory/stories/` before starting any story. After finishing or changing anything, update the story file (built, decided and why, open) and `memory/user-stories.md`.
