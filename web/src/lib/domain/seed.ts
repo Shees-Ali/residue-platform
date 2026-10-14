@@ -61,12 +61,21 @@ export function seedDomain(): DomainState {
   const createdLot = { id: "lot-created", farmerId: "f3", residueType: "cotton_stalk" as const, quantityTonnes: 4, pickupWindow: "2026-10-17", village: "Jaranwala", district: "Faisalabad", createdAt: NOW - 600_000 };
   const createdJob: Job = { id: "job-created", lotId: createdLot.id, factoryId: "fac3", transporterId: null, state: "created", offeredTransporterIds: [], finalWeightTonnes: null, grade: null, rejectReason: null, ranking: ["fac3"], assignedAt: NOW - 600_000, assignedOverride: false };
 
+  // A job sitting at `delivered`, waiting on the FA2 weighbridge: the factory
+  // confirms the weight and grade (or rejects with a reason).
+  const deliveredLot = { id: "lot-delivered", farmerId: "f1", residueType: "rice_straw" as const, quantityTonnes: 2.5, pickupWindow: "2026-10-12", village: "Muridke", district: "Sheikhupura", createdAt: NOW - 86_400_000 * 2 };
+  const deliveredJob: Job = { id: "job-delivered", lotId: deliveredLot.id, factoryId: "fac1", transporterId: "t2", state: "delivered", offeredTransporterIds: ["t2"], finalWeightTonnes: 2.42, grade: null, rejectReason: null, ranking: ["fac1"], assignedAt: NOW - 86_400_000 * 2, assignedOverride: false };
+
+  // A job at `confirmed`, waiting on the F4 farmer verification.
+  const confirmedLot = { id: "lot-confirmed", farmerId: "f2", residueType: "wheat_straw" as const, quantityTonnes: 1.8, pickupWindow: "2026-10-11", village: "Kamoke", district: "Gujranwala", createdAt: NOW - 86_400_000 * 3 };
+  const confirmedJob: Job = { id: "job-confirmed", lotId: confirmedLot.id, factoryId: "fac2", transporterId: "t3", state: "confirmed", offeredTransporterIds: ["t3"], finalWeightTonnes: 1.75, grade: null, rejectReason: null, ranking: ["fac2"], assignedAt: NOW - 86_400_000 * 3, assignedOverride: false };
+
   return {
     farmers,
     transporters,
     factories,
-    lots: [settledLot, offeredLot, createdLot],
-    jobs: [createdJob, offeredJob, settledJob],
+    lots: [settledLot, offeredLot, createdLot, deliveredLot, confirmedLot],
+    jobs: [createdJob, offeredJob, settledJob, deliveredJob, confirmedJob],
     offers: [pendingOffer],
     ledger: settledLedger,
     products,

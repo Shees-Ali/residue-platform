@@ -29,3 +29,108 @@
     cursor: pointer;
   }
 }
+
+/* --- Phase 2 domain widgets ---
+   Small primitives layered on the existing palette. Kept minimal: the heavy
+   lifting is done by the ported FasalLoop classes (.stat-card, .tracker,
+   .job-card, .table-wrap, .status-badge); these just cover the gaps for
+   offers, ledger rows, grades and splits. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 11px;
+  color: var(--muted-foreground);
+  background: var(--card);
+  white-space: nowrap;
+}
+.pill-gold {
+  color: var(--accent-foreground, #7a5a12);
+  border-color: var(--gold, #d6a64d);
+  background: color-mix(in srgb, var(--gold, #d6a64d) 14%, transparent);
+}
+.pill-live {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+/* A single field/label/value row used inside job cards and side panels. */
+.kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  padding: 3px 0;
+}
+.kv dt,
+.kv .kv-k {
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+.kv dd,
+.kv .kv-v {
+  margin: 0;
+  text-align: right;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+/* Countdown chip for a live offer (T1). */
+.countdown {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+/* The invariant badge (A3): balanced vs in-flight. */
+.invariant {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 12px;
+  font-weight: 650;
+  border: 1px solid var(--border);
+}
+.invariant-ok {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+.invariant-hold {
+  color: var(--accent-foreground, #7a5a12);
+  border-color: var(--gold, #d6a64d);
+  background: color-mix(in srgb, var(--gold, #d6a64d) 12%, transparent);
+}
+/* Split bar (FA3/B1): four stacked shares of one sale. */
+.split-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--muted);
+  margin: 8px 0 4px;
+}
+.split-legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 16px;
+  font-size: 11px;
+}
+.split-legend .swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  display: inline-block;
+  margin-right: 6px;
+}
+/* Compact two-up panel grid for factory/admin side columns. */
+.panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 22px;
+}

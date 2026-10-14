@@ -71,7 +71,13 @@ export type DomainAction =
 let seq = 0;
 const nextId = (prefix: string) => `${prefix}-${++seq}`;
 
-const escrowFor = (job: Job, lot: Lot, factory: Factory): number =>
+/**
+ * Escrow for a job: the factory's per-tonne price plus the haulage rate,
+ * times tonnes, in paisa. This is the amount the factory must fund before
+ * dispatch (FA1) and the pot the settlement splits (A3/FA3). Exported so the
+ * quote a farmer hears (F2) and the ledger agree to the paisa.
+ */
+export const escrowFor = (job: Job, lot: Lot, factory: Factory): number =>
   Math.round(lot.quantityTonnes * (factory.pricePerTonneCents + TRANSPORT_RATE_PER_TONNE));
 
 export function reducer(state: DomainState, action: DomainAction): DomainState {
@@ -190,7 +196,10 @@ function fundEscrow(state: DomainState, a: Extract<DomainAction, { type: "fundEs
 // --- A2: funded jobs are put out to the transporter ladder. ---
 function makeOffers(state: DomainState, a: Extract<DomainAction, { type: "makeOffers" }>): DomainState {
   const job = jobById(state, a.jobId);
-  if (!job || !canTransition(job.state, "offered")) return state;
+  if (!job) return state;
+  // Legal from `funded` (first dispatch) and from `offered` (the A2 ladder
+  // re-dispatch after expiry requeues the job). Anything else is a no-op.
+  if (job.state !== "funded" && job.state !== "offered") return state;
   const lot = state.lots.find((l) => l.id === job.lotId);
   const farmer = lot && state.farmers.find((f) => f.id === lot.farmerId);
   if (!lot || !farmer) return state;

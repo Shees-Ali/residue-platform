@@ -3,7 +3,7 @@
 // judge will see break if the wiring regresses — one-winner offer acceptance,
 // no-op on illegal transitions, and a settlement that balances the ledger.
 import { describe, expect, test } from "vitest";
-import { OFFER_TTL_MS, reducer, type DomainAction, type DomainState } from "../engine";
+import { OFFER_TTL_MS, escrowFor, reducer, type DomainAction, type DomainState } from "../engine";
 import { escrowBalanced } from "../ledger";
 import type { Grade } from "../types";
 
@@ -116,5 +116,42 @@ describe("engine: illegal transitions are no-ops", () => {
     const twice = run([{ type: "fundEscrow", jobId }], funded);
     expect(twice).toBe(funded);
     expect(twice.ledger.filter((e) => e.kind === "escrow_in")).toHaveLength(1);
+  });
+});
+
+describe("engine: A2 fast-forward re-dispatches an offered job", () => {
+  test("makeOffers advances the ladder when the job is already offered", () => {
+    const s1 = run([{ type: "submitLot", farmerId: "f1", residueType: "rice_straw", quantityTonnes: 2, village: "Muridke", district: "Sheikhupura", pickupWindow: "2026-10-16", nowMs: NOW }]);
+    const jobId = s1.jobs[0].id;
+    const offered = run([{ type: "fundEscrow", jobId }, { type: "makeOffers", jobId, nowMs: NOW }], s1);
+    expect(offered.jobs[0].state).toBe("offered");
+    const firstTarget = offered.offers[0].transporterId;
+
+    // Re-dispatch an already-offered job (the fast-forward path): the ladder
+    // must advance to a transporter not yet tried, and the job stays offered.
+    const redispatched = run([{ type: "makeOffers", jobId, nowMs: NOW }], offered);
+    expect(redispatched.jobs[0].state).toBe("offered");
+    expect(redispatched.offers[0].transporterId).not.toBe(firstTarget);
+    expect(redispatched.offers.filter((o) => o.status === "pending")).toHaveLength(2);
+  });
+
+  test("makeOffers is a no-op on a job that is neither funded nor offered", () => {
+    const s1 = run([{ type: "submitLot", farmerId: "f1", residueType: "rice_straw", quantityTonnes: 2, village: "Muridke", district: "Sheikhupura", pickupWindow: "2026-10-16", nowMs: NOW }]);
+    const jobId = s1.jobs[0].id; // still `created`
+    expect(run([{ type: "makeOffers", jobId, nowMs: NOW }], s1)).toBe(s1);
+  });
+});
+
+describe("engine: escrowFor is the quote the farmer hears (F2)", () => {
+  test("escrowFor equals the settled escrow-in entry to the paisa", () => {
+    const { state: verified, jobId } = toVerified();
+    const job = verified.jobs.find((j) => j.id === jobId)!;
+    const lot = verified.lots.find((l) => l.id === job.lotId)!;
+    const factory = verified.factories.find((f) => f.id === job.factoryId)!;
+    const quoted = escrowFor(job, lot, factory);
+
+    const settled = run([{ type: "settle", jobId, farmerShare: { farmer: 5000, factory: 3000, ngo: 500, platform: 1500 } }], verified);
+    const escrowIn = settled.ledger.find((e) => e.kind === "escrow_in" && e.jobId === jobId)!;
+    expect(escrowIn.amountCents).toBe(quoted);
   });
 });
