@@ -1,24 +1,25 @@
 from fastapi import APIRouter, Depends
 
 from app.auth.firebase import current_user
+from app.deps import DbSession, Events
 from app.routers._stub import todo
 
 router = APIRouter(prefix="/api/lots", tags=["lots"], dependencies=[Depends(current_user)])
 
 
 @router.get("")
-async def get_lots_root():
+async def get_lots_root(db: DbSession):
     # TODO(F1)
     todo("F1")
 
 
 @router.post("")
-async def post_lots_root():
+async def post_lots_root(db: DbSession, events: Events):
     # TODO(F1)
     todo("F1")
 
 
 @router.get("/{lot_id}/ranking")
-async def get_lots_lot_id_ranking(lot_id: str):
+async def get_lots_lot_id_ranking(db: DbSession, lot_id: str):
     # TODO(A1)
     todo("A1")

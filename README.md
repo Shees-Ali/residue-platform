@@ -5,7 +5,7 @@ Crop-residue marketplace demo. Farmers phone in (Urdu, Twilio + Gemini Live); th
 | Project | What | Runs on |
 |---|---|---|
 | [web/](web/) | React 18, Vite, Tailwind, Firebase, Leaflet | Firebase Hosting |
-| [api/](api/) | FastAPI, Pydantic v2, Firestore | Cloud Run |
+| [api/](api/) | FastAPI, Pydantic v2, PostgreSQL | Cloud Run |
 | [voice/](voice/) | ADK voice agent, Twilio media streams. No database access | Cloud Run |
 | [deploy/](deploy/), [seed/](seed/), [scripts/](scripts/) | deploy scripts, synthetic data, CI checks | |
 | [memory/](memory/) | project memory: plan, stories, decision log (source of truth) | |
@@ -38,7 +38,7 @@ Failing-by-design tests (marker `tdd`) exist for the A3 ledger check, FA3 revenu
 ## User stories
 Details, status and decisions: [memory/user-stories.md](memory/user-stories.md). Code TODOs reference these IDs, e.g. `TODO(F1)`.
 
-- **F1** Report residue by call. Done when: a spoken call produces a complete lot in Firestore and the agent reads the details back.
+- **F1** Report residue by call. Done when: a spoken call produces a complete lot in the database and the agent reads the details back.
 - **F2** Hear the price and terms. Done when: the quote on the call matches the ledger entries created later.
 - **F3** Reach a person when stuck. Done when: an unclear or upset call appears in the queue within seconds.
 - **F4** Confirm delivery and payment. Done when: a yes completes verification and releases the payout, and a dispute freezes it and alerts the admin.

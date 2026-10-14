@@ -6,7 +6,11 @@ dependencies = [
   "fastapi>=0.115",
   "uvicorn[standard]>=0.30",
   "pydantic>=2.8",
-  "google-cloud-firestore>=2.19",
+  "sqlalchemy[asyncio]>=2.0.30",
+  "asyncpg>=0.29",
+  "alembic>=1.13",
+  "python-dotenv>=1.0",
+  "google-cloud-firestore>=2.19",  # events feed only
   "google-auth>=2.34",
   "google-genai>=0.3",
   "requests>=2.32",
@@ -26,6 +30,7 @@ markers = ["tdd: failing-by-design tests awaiting implementation (see memory/dec
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+extend-exclude = ["migrations/versions/0001_initial_schema.py"]  # alembic autogenerate output
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]

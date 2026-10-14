@@ -1,24 +1,25 @@
 from fastapi import APIRouter, Depends
 
 from app.auth.firebase import current_user
+from app.deps import DbSession, Events
 from app.routers._stub import todo
 
 router = APIRouter(prefix="/api/ledger", tags=["ledger"], dependencies=[Depends(current_user)])
 
 
 @router.get("")
-async def get_ledger_root():
+async def get_ledger_root(db: DbSession):
     # TODO(A3)
     todo("A3")
 
 
 @router.get("/check")
-async def get_ledger_check():
+async def get_ledger_check(db: DbSession):
     # TODO(A3)
     todo("A3")
 
 
 @router.post("/escrow")
-async def post_ledger_escrow():
+async def post_ledger_escrow(db: DbSession, events: Events):
     # TODO(FA1)
     todo("FA1")

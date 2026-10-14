@@ -5,6 +5,7 @@ Long-term memory and source of truth for residue-platform. Read before starting 
 - [implementation-plan.md](implementation-plan.md) - the Technical Implementation Plan (stack, flows, build order, risks).
 - [user-stories.md](user-stories.md) - story index with status.
 - [stories/](stories/) - one file per story (F1-F4, T1-T2, FA1-FA3, A1-A3, B1): spec, acceptance criteria, status, decisions, open items.
+- [data-model.md](data-model.md) - PostgreSQL schema, conventions and the Firestore events feed.
 - [decisions.md](decisions.md) - append-only decision log.
 
 Rules

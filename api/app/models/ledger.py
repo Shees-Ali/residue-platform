@@ -10,4 +10,4 @@ LedgerKind = Literal[
 class LedgerEntry(BaseModel):
     job_id: str
     kind: LedgerKind
-    amount_cents: int  # integer minor units, always >= 0
+    amount: int  # integer minor units, always >= 0

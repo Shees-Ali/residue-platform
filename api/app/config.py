@@ -1,5 +1,10 @@
 import os
 from dataclasses import dataclass
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")  # api/.env; real env vars win
 
 
 @dataclass(frozen=True)
@@ -7,6 +12,7 @@ class Settings:
     firebase_project_id: str = os.getenv("FIREBASE_PROJECT_ID", "")
     voice_service_account: str = os.getenv("VOICE_SERVICE_ACCOUNT", "")
     api_audience: str = os.getenv("API_AUDIENCE", "")
+    database_url: str = os.getenv("DATABASE_URL", "")
 
 
 def get_settings() -> Settings:

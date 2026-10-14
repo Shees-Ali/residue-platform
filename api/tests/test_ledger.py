@@ -7,7 +7,7 @@ pytestmark = pytest.mark.tdd  # A3: remove when implemented
 
 
 def e(kind, amt):
-    return LedgerEntry(job_id="j1", kind=kind, amount_cents=amt)
+    return LedgerEntry(job_id="j1", kind=kind, amount=amt)
 
 
 def test_balanced_when_escrow_equals_releases_fees_refunds():
