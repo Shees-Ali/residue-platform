@@ -968,6 +968,7 @@
           "agent"
         ],
         "summary": "Create Lot",
+        "description": "Save the caller's lot. The farmer comes from the call record; replays return the original.",
         "operationId": "create_lot_api_agent_lots_post",
         "parameters": [
           {
@@ -1014,11 +1015,13 @@
           }
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/LotReadback"
+                }
               }
             }
           },
@@ -1237,10 +1240,231 @@
           }
         }
       }
+    },
+    "/api/internal/calls": {
+      "post": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Start Call",
+        "description": "Link the caller's number to a farmer (creating one if new) and open a call record.\n\nIdempotent on twilio_call_sid, so a webhook retry returns the same call.",
+        "operationId": "start_call_api_internal_calls_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CallStartIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallStartOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/internal/calls/{call_id}/end": {
+      "post": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "End Call",
+        "operationId": "end_call_api_internal_calls__call_id__end_post",
+        "parameters": [
+          {
+            "name": "call_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Call Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CallEndIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallEndOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "CallEndIn": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "abandoned",
+              "failed"
+            ],
+            "title": "Status",
+            "default": "completed"
+          },
+          "transcript": {
+            "type": "string",
+            "title": "Transcript",
+            "default": ""
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "CallEndIn"
+      },
+      "CallEndOut": {
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "title": "Call Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "call_id",
+          "status"
+        ],
+        "title": "CallEndOut"
+      },
+      "CallStartIn": {
+        "properties": {
+          "twilio_call_sid": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Twilio Call Sid"
+          },
+          "caller_phone": {
+            "type": "string",
+            "pattern": "^\\+\\d{8,15}$",
+            "title": "Caller Phone"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "intake",
+              "verification"
+            ],
+            "title": "Kind",
+            "default": "intake"
+          }
+        },
+        "type": "object",
+        "required": [
+          "twilio_call_sid",
+          "caller_phone"
+        ],
+        "title": "CallStartIn",
+        "description": "Sent by the voice transport layer (not the model) when a call connects."
+      },
+      "CallStartOut": {
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "title": "Call Id"
+          },
+          "farmer_known": {
+            "type": "boolean",
+            "title": "Farmer Known"
+          }
+        },
+        "type": "object",
+        "required": [
+          "call_id",
+          "farmer_known"
+        ],
+        "title": "CallStartOut"
+      },
       "CreateLotIn": {
         "properties": {
           "call_id": {
@@ -1255,9 +1479,13 @@
             "type": "number",
             "title": "Quantity Tonnes"
           },
-          "pickup_window": {
+          "pickup_date": {
             "type": "string",
-            "title": "Pickup Window"
+            "title": "Pickup Date"
+          },
+          "pickup_part": {
+            "type": "string",
+            "title": "Pickup Part"
           },
           "village": {
             "type": "string",
@@ -1273,7 +1501,8 @@
           "call_id",
           "residue_type",
           "quantity_tonnes",
-          "pickup_window",
+          "pickup_date",
+          "pickup_part",
           "village",
           "district"
         ],
@@ -1332,6 +1561,72 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "LotReadback": {
+        "properties": {
+          "lot_id": {
+            "type": "string",
+            "title": "Lot Id"
+          },
+          "residue_type": {
+            "type": "string",
+            "title": "Residue Type"
+          },
+          "residue_label": {
+            "type": "string",
+            "title": "Residue Label"
+          },
+          "quantity_tonnes": {
+            "type": "number",
+            "title": "Quantity Tonnes"
+          },
+          "village": {
+            "type": "string",
+            "title": "Village"
+          },
+          "district": {
+            "type": "string",
+            "title": "District"
+          },
+          "place_match": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "fuzzy",
+              "district"
+            ],
+            "title": "Place Match"
+          },
+          "pickup_from": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Pickup From"
+          },
+          "pickup_to": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Pickup To"
+          },
+          "pickup_text": {
+            "type": "string",
+            "title": "Pickup Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lot_id",
+          "residue_type",
+          "residue_label",
+          "quantity_tonnes",
+          "village",
+          "district",
+          "place_match",
+          "pickup_from",
+          "pickup_to",
+          "pickup_text"
+        ],
+        "title": "LotReadback",
+        "description": "Everything the agent needs to read a saved lot back to the farmer."
       },
       "RecordConfirmationIn": {
         "properties": {

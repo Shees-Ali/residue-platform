@@ -324,7 +324,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create Lot */
+        /**
+         * Create Lot
+         * @description Save the caller's lot. The farmer comes from the call record; replays return the original.
+         */
         post: operations["create_lot_api_agent_lots_post"];
         delete?: never;
         options?: never;
@@ -383,10 +386,98 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/internal/calls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Call
+         * @description Link the caller's number to a farmer (creating one if new) and open a call record.
+         *
+         *     Idempotent on twilio_call_sid, so a webhook retry returns the same call.
+         */
+        post: operations["start_call_api_internal_calls_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/internal/calls/{call_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** End Call */
+        post: operations["end_call_api_internal_calls__call_id__end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** CallEndIn */
+        CallEndIn: {
+            /**
+             * Status
+             * @default completed
+             * @enum {string}
+             */
+            status: "completed" | "abandoned" | "failed";
+            /**
+             * Transcript
+             * @default
+             */
+            transcript: string;
+            /**
+             * Summary
+             * @default
+             */
+            summary: string;
+        };
+        /** CallEndOut */
+        CallEndOut: {
+            /** Call Id */
+            call_id: string;
+            /** Status */
+            status: string;
+        };
+        /**
+         * CallStartIn
+         * @description Sent by the voice transport layer (not the model) when a call connects.
+         */
+        CallStartIn: {
+            /** Twilio Call Sid */
+            twilio_call_sid: string;
+            /** Caller Phone */
+            caller_phone: string;
+            /**
+             * Kind
+             * @default intake
+             * @enum {string}
+             */
+            kind: "intake" | "verification";
+        };
+        /** CallStartOut */
+        CallStartOut: {
+            /** Call Id */
+            call_id: string;
+            /** Farmer Known */
+            farmer_known: boolean;
+        };
         /** CreateLotIn */
         CreateLotIn: {
             /** Call Id */
@@ -395,8 +486,10 @@ export interface components {
             residue_type: string;
             /** Quantity Tonnes */
             quantity_tonnes: number;
-            /** Pickup Window */
-            pickup_window: string;
+            /** Pickup Date */
+            pickup_date: string;
+            /** Pickup Part */
+            pickup_part: string;
             /** Village */
             village: string;
             /** District */
@@ -425,6 +518,41 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * LotReadback
+         * @description Everything the agent needs to read a saved lot back to the farmer.
+         */
+        LotReadback: {
+            /** Lot Id */
+            lot_id: string;
+            /** Residue Type */
+            residue_type: string;
+            /** Residue Label */
+            residue_label: string;
+            /** Quantity Tonnes */
+            quantity_tonnes: number;
+            /** Village */
+            village: string;
+            /** District */
+            district: string;
+            /**
+             * Place Match
+             * @enum {string}
+             */
+            place_match: "exact" | "fuzzy" | "district";
+            /**
+             * Pickup From
+             * Format: date-time
+             */
+            pickup_from: string;
+            /**
+             * Pickup To
+             * Format: date-time
+             */
+            pickup_to: string;
+            /** Pickup Text */
+            pickup_text: string;
         };
         /** RecordConfirmationIn */
         RecordConfirmationIn: {
@@ -1095,12 +1223,12 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["LotReadback"];
                 };
             };
             /** @description Validation Error */
@@ -1208,6 +1336,78 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_call_api_internal_calls_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CallStartIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallStartOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    end_call_api_internal_calls__call_id__end_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                call_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CallEndIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallEndOut"];
                 };
             };
             /** @description Validation Error */

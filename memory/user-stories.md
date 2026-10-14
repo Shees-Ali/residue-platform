@@ -7,7 +7,7 @@ Job states: created, funded, offered, accepted, picked up, delivered, confirmed,
 
 | ID | Title | Status | Done when |
 |---|---|---|---|
-| [F1](stories/F1.md) | Report residue by call | todo | a spoken call produces a complete lot in Firestore and the agent reads the details back. |
+| [F1](stories/F1.md) | Report residue by call | in progress (API + tools done, audio/Twilio left) | a spoken call produces a complete lot in the database and the agent reads the details back. |
 | [F2](stories/F2.md) | Hear the price and terms | todo | the quote on the call matches the ledger entries created later. |
 | [F3](stories/F3.md) | Reach a person when stuck | todo | an unclear or upset call appears in the queue within seconds. |
 | [F4](stories/F4.md) | Confirm delivery and payment | todo | a yes completes verification and releases the payout, and a dispute freezes it and alerts the admin. |

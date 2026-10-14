@@ -358,4 +358,7 @@ class IdempotencyKey(Base):
     key: Mapped[str] = mapped_column(Text, primary_key=True)
     route: Mapped[str] = mapped_column(Text)
     response_hash: Mapped[str | None] = mapped_column(Text)
+    request_hash: Mapped[str | None] = mapped_column(Text)
+    status_code: Mapped[int | None] = mapped_column(Integer)
+    response: Mapped[dict | None] = mapped_column(JSONB)  # NULL while the first request runs
     created_at: Mapped[datetime] = created_at()

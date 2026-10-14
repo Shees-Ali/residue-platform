@@ -15,13 +15,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "api"))
 
-DISTRICTS = {
-    "Lahore": (31.52, 74.36),
-    "Sheikhupura": (31.71, 73.98),
-    "Kasur": (31.12, 74.45),
-    "Faisalabad": (31.42, 73.08),
-    "Okara": (30.81, 73.45),
-}
+from app.services.places import DISTRICTS, VILLAGES  # noqa: E402
+
 RESIDUES = {
     "rice_straw": "Rice straw",
     "wheat_straw": "Wheat straw",
@@ -49,16 +44,18 @@ def make(rng: random.Random, n_farmers: int, n_transporters: int, n_factories: i
         "villages": [], "farmers": [], "transporters": [],
         "factories": [], "factory_residues": [], "products": [],
     }
+    for district, villages in VILLAGES.items():
+        clat, clon = DISTRICTS[district]
+        for name, (dlat, dlon) in villages.items():
+            rows["villages"].append(
+                {"id": sid("village", f"{district}:{name}"), "name": name, "district": district,
+                 "lat": round(clat + dlat, 5), "lon": round(clon + dlon, 5)}
+            )
     for i in range(n_farmers):
-        d = rng.choice(districts)
-        lat, lon = jitter(rng, *DISTRICTS[d])
-        village_id = sid("village", str(i))
-        rows["villages"].append(
-            {"id": village_id, "name": f"Village {i}", "district": d, "lat": lat, "lon": lon}
-        )
+        village = rng.choice(rows["villages"])
         rows["farmers"].append(
             {"id": sid("farmer", str(i)), "name": f"Synthetic Farmer {i}",
-             "phone": FAKE_PHONE.format(i), "village_id": village_id}
+             "phone": FAKE_PHONE.format(i), "village_id": village["id"]}
         )
     for i in range(n_transporters):
         lat, lon = jitter(rng, *DISTRICTS[rng.choice(districts)])

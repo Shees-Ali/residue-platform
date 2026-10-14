@@ -24,3 +24,7 @@ Postgres is the system of record (`../memory/data-model.md`). Set `DATABASE_URL`
 - Hosted (Neon, later Cloud SQL): paste its connection string; nothing else changes.
 - New migration after editing `app/db_models/`: `alembic revision --autogenerate -m "message"`, then review it.
 - Tests that need the database skip when `DATABASE_URL` is unset.
+
+## Local auth bypass
+
+`/api/agent/*` and `/api/internal/*` require a Google ID token from the voice service account. For local testing without Google credentials set `AUTH_DISABLED=true` in `api/.env` (and `API_AUTH_DISABLED=true` in `voice/.env`). The API ignores the flag whenever `K_SERVICE` is set, i.e. on Cloud Run.

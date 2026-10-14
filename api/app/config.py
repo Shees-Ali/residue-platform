@@ -17,3 +17,11 @@ class Settings:
 
 def get_settings() -> Settings:
     return Settings()
+
+
+def auth_bypass_active() -> bool:
+    """Local-dev only: AUTH_DISABLED=true skips Google token checks.
+
+    Never honoured on Cloud Run (K_SERVICE is set there), even if the variable leaks in.
+    """
+    return os.getenv("AUTH_DISABLED", "").lower() == "true" and not os.getenv("K_SERVICE")

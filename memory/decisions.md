@@ -55,3 +55,19 @@ Every stub handler takes `db: DbSession` (writes also `events: Events`) from `ap
 
 ## 2026-10-14 - Real database defaults and DB-enforced ledger rules
 Column defaults are `server_default` (not ORM-only `default=`), so raw SQL, seeds and other tools insert valid rows. `ledger_entries` is made append-only by a trigger (UPDATE/DELETE raise), and a `ledger_balance` view gives the A3 per-job check (`balanced` is false mid-job by design); `services/ledger.py` stays the tested pure function. Generated migration `0001` is excluded from ruff. Rejected: ORM-only defaults (hidden coupling to Python), enforcing append-only only in app code.
+
+## 2026-10-14 - F1: internal route group for call records
+`POST /api/internal/calls` and `/{call_id}/end`, authenticated like the agent routes (Google ID token of the voice service account), called by the voice transport layer and never exposed to the model. The "exactly four routes" rule covers model-callable `/api/agent/*` only. Reason: something must link a caller's phone number to a farmer, and `voice/` cannot touch the database. Rejected: creating the call row lazily inside create_lot (trusts a phone header, misses calls without a lot).
+
+## 2026-10-14 - F1: structured pickup window, recoverable errors, village matching
+The model sends `pickup_date` (YYYY-MM-DD) and `pickup_part` (morning|afternoon|evening); the API converts to `pickup_from/to` in Pakistan time (fixed UTC+5). Invalid input returns 422 `{error, message, valid}` (handled by an exception handler for `LotError`), so the agent can ask again. Village: exact match in the district, then fuzzy (difflib 0.8), else the district centroid with `place_match="district"`; unknown district is a 422. Replaces the free-text `pickup_window` string. Rejected: free-text dates from a voice model (unreliable).
+
+## 2026-10-14 - Auth split: voice-service auth in F1, dashboard auth later
+F1 verifies Google ID tokens (email must equal `VOICE_SERVICE_ACCOUNT`, email verified, audience `API_AUDIENCE`). Firebase dashboard auth stays a 501 stub until A1/A2, the first stories with a dashboard user, so dashboard routes (and admin lot/farmer CRUD) stay 501 meanwhile. `AUTH_DISABLED=true` skips the Google check for local dev only and is ignored whenever `K_SERVICE` is set (Cloud Run). Voice has the matching `API_AUTH_DISABLED`.
+
+## 2026-10-14 - Idempotency: stored responses, same transaction as the work
+`run_idempotent` inserts the key row in the same transaction as the write and stores the response on success, so a failure rolls both back and a retry with the same key works; a replay returns the original body; same key with a different payload or route is 409; a request still in flight is 409. Concurrent duplicates wait on the unique key then replay.
+
+## 2026-10-14 - Settings read the environment when built, not at import (voice)
+`voice/app/config.py` uses `default_factory`, so flags like `API_AUTH_DISABLED` can be changed per process or per test. The API keeps import-time fields for now, with `auth_bypass_active()` reading env live.
+
