@@ -28,11 +28,31 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Lots Root */
-        get: operations["get_lots_root_api_lots_get"];
+        /** List Lots */
+        get: operations["list_lots_api_lots_get"];
         put?: never;
-        /** Post Lots Root */
-        post: operations["post_lots_root_api_lots_post"];
+        /**
+         * Create Lot For Farmer
+         * @description Admin enters a lot by hand for a farmer (found or created by phone).
+         */
+        post: operations["create_lot_for_farmer_api_lots_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lots/{lot_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Lot */
+        get: operations["get_lot_api_lots__lot_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -46,10 +66,27 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Lots Lot Id Ranking */
-        get: operations["get_lots_lot_id_ranking_api_lots__lot_id__ranking_get"];
+        /** Get Ranking */
+        get: operations["get_ranking_api_lots__lot_id__ranking_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lots/{lot_id}/override": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Override */
+        post: operations["override_api_lots__lot_id__override_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -90,6 +127,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{job_id}/fund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Jobs Job Id Fund
+         * @description Fund escrow (simulated). Starts dispatch: the nearest eligible transporter gets an offer.
+         */
+        post: operations["post_jobs_job_id_fund_api_jobs__job_id__fund_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/redispatch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Jobs Job Id Redispatch
+         * @description Offer a funded job again, e.g. after approving a transporter when every one passed.
+         */
+        post: operations["post_jobs_job_id_redispatch_api_jobs__job_id__redispatch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/photos/upload-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Jobs Job Id Photo Url
+         * @description Signed URL to upload one photo to storage; send the path back on pickup or deliver.
+         */
+        post: operations["post_jobs_job_id_photo_url_api_jobs__job_id__photos_upload_url_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jobs/{job_id}/pickup": {
         parameters: {
             query?: never;
@@ -124,23 +221,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/jobs/{job_id}/confirm": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Post Jobs Job Id Confirm */
-        post: operations["post_jobs_job_id_confirm_api_jobs__job_id__confirm_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/jobs/{job_id}/grade": {
         parameters: {
             query?: never;
@@ -150,8 +230,52 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Post Jobs Job Id Grade */
+        /**
+         * Post Jobs Job Id Grade
+         * @description AI visual estimate of the delivered lot. Never replaces the weighbridge confirmation.
+         */
         post: operations["post_jobs_job_id_grade_api_jobs__job_id__grade_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Jobs Job Id Confirm
+         * @description Weigh and decide. Accept sets the final weight and pays the transporter; reject records the
+         *     reason and applies the cost rule (transporter paid their share, the rest refunded).
+         */
+        post: operations["post_jobs_job_id_confirm_api_jobs__job_id__confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/verification-call": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Jobs Job Id Verification Call
+         * @description Open a verification call for the job's farmer. TODO(F4): the voice service dials it.
+         */
+        post: operations["post_jobs_job_id_verification_call_api_jobs__job_id__verification_call_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -165,7 +289,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Offers Root */
+        /**
+         * Get Offers Root
+         * @description The signed-in transporter's offers, open ones first, with what they need to decide.
+         */
         get: operations["get_offers_root_api_offers_get"];
         put?: never;
         post?: never;
@@ -184,7 +311,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Post Offers Offer Id Accept */
+        /**
+         * Post Offers Offer Id Accept
+         * @description Accept before the offer expires. Exactly one caller can win; the rest get 409.
+         */
         post: operations["post_offers_offer_id_accept_api_offers__offer_id__accept_post"];
         delete?: never;
         options?: never;
@@ -199,7 +329,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Ledger Root */
+        /**
+         * Get Ledger Root
+         * @description Every ledger entry, newest first (admin).
+         */
         get: operations["get_ledger_root_api_ledger_get"];
         put?: never;
         post?: never;
@@ -216,7 +349,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Ledger Check */
+        /**
+         * Get Ledger Check
+         * @description Escrow in equals releases plus fees plus refunds, for every finished job and order.
+         */
         get: operations["get_ledger_check_api_ledger_check_get"];
         put?: never;
         post?: never;
@@ -226,17 +362,20 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/ledger/escrow": {
+    "/api/ledger/mine": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Get Ledger Mine
+         * @description The transporter's payouts: pending until the factory confirms, then released.
+         */
+        get: operations["get_ledger_mine_api_ledger_mine_get"];
         put?: never;
-        /** Post Ledger Escrow */
-        post: operations["post_ledger_escrow_api_ledger_escrow_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -250,7 +389,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Products Root */
+        /**
+         * Get Products Root
+         * @description The marketplace: buyers and admins see what is for sale, a factory sees all of its own.
+         */
         get: operations["get_products_root_api_products_get"];
         put?: never;
         /** Post Products Root */
@@ -261,7 +403,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/orders": {
+    "/api/products/{product_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -270,7 +412,31 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Post Orders Root */
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Product */
+        patch: operations["patch_product_api_products__product_id__patch"];
+        trace?: never;
+    };
+    "/api/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Orders Root
+         * @description A buyer's own orders, a factory's orders for its products, or all of them (admin).
+         */
+        get: operations["get_orders_root_api_orders_get"];
+        put?: never;
+        /**
+         * Post Orders Root
+         * @description Place an order (payment is simulated). Reduces stock and writes the four-way split.
+         */
         post: operations["post_orders_root_api_orders_post"];
         delete?: never;
         options?: never;
@@ -285,7 +451,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Orders Order Id Split */
+        /**
+         * Get Orders Order Id Split
+         * @description How the sale is divided; shares add to 10000 bps and amounts to the order total.
+         */
         get: operations["get_orders_order_id_split_api_orders__order_id__split_get"];
         put?: never;
         post?: never;
@@ -306,7 +475,9 @@ export interface paths {
         put?: never;
         /**
          * Tick
-         * @description Called by Cloud Scheduler (and the demo fast-forward button) to expire unanswered offers.
+         * @description Expire unanswered offers and move each job to its next transporter.
+         *
+         *     Called by Cloud Scheduler, or by an admin (the demo fast-forward button with force=true).
          */
         post: operations["tick_api_dispatch_tick_post"];
         delete?: never;
@@ -344,7 +515,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Get Quote */
+        /**
+         * Get Quote
+         * @description Price per tonne, the farmer's share and when they are paid, for one of their own lots.
+         */
         post: operations["get_quote_api_agent_quote_post"];
         delete?: never;
         options?: never;
@@ -361,7 +535,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Escalate */
+        /**
+         * Escalate
+         * @description The caller needs a person: save the summary and transcript to the admin queue.
+         */
         post: operations["escalate_api_agent_escalations_post"];
         delete?: never;
         options?: never;
@@ -378,7 +555,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Record Confirmation */
+        /**
+         * Record Confirmation
+         * @description The farmer's yes or dispute on weight and payment. Yes settles; a dispute freezes.
+         */
         post: operations["record_confirmation_api_agent_confirmations_post"];
         delete?: never;
         options?: never;
@@ -425,10 +605,149 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/escalations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Escalations
+         * @description The admin queue: farmers who asked for a person, and disputes (open ones by default).
+         */
+        get: operations["get_escalations_api_escalations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/escalations/{escalation_id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Escalation Resolve */
+        post: operations["post_escalation_resolve_api_escalations__escalation_id__resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/impact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Impact
+         * @description Tonnes kept out of burning, plus a record per settled lot (farmer, place, date, weight).
+         */
+        get: operations["get_impact_api_impact_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transporters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Transporters */
+        get: operations["get_transporters_api_transporters_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transporters/{transporter_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve Transporter
+         * @description Approve (or re-tier) a transporter. The tier sets the largest job they are offered.
+         */
+        post: operations["approve_transporter_api_transporters__transporter_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transporters/{transporter_id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revoke Transporter
+         * @description Stop offering jobs to this transporter. Jobs they already accepted are unaffected.
+         */
+        post: operations["revoke_transporter_api_transporters__transporter_id__revoke_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AdminLotIn
+         * @description Manual lot entry by an admin on behalf of a farmer (same validation as the agent).
+         */
+        AdminLotIn: {
+            /** Farmer Phone */
+            farmer_phone: string;
+            /** Residue Type */
+            residue_type: string;
+            /** Quantity Tonnes */
+            quantity_tonnes: number;
+            /** Pickup Date */
+            pickup_date: string;
+            /** Pickup Part */
+            pickup_part: string;
+            /** Village */
+            village: string;
+            /** District */
+            district: string;
+        };
+        /** ApproveIn */
+        ApproveIn: {
+            /** Tier */
+            tier: number;
+        };
         /** CallEndIn */
         CallEndIn: {
             /**
@@ -478,6 +797,18 @@ export interface components {
             /** Farmer Known */
             farmer_known: boolean;
         };
+        /** ConfirmIn */
+        ConfirmIn: {
+            /** Accept */
+            accept: boolean;
+            /** Final Weight Kg */
+            final_weight_kg?: number | null;
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+        };
         /** CreateLotIn */
         CreateLotIn: {
             /** Call Id */
@@ -507,6 +838,26 @@ export interface components {
              */
             transcript: string;
         };
+        /** EscalationOut */
+        EscalationOut: {
+            /** Id */
+            id: string;
+            /** Call Id */
+            call_id: string;
+            /** Summary */
+            summary: string;
+            /** Transcript */
+            transcript: string;
+            /** Status */
+            status: string;
+            /** Farmer Phone */
+            farmer_phone?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** GetQuoteIn */
         GetQuoteIn: {
             /** Call Id */
@@ -514,10 +865,202 @@ export interface components {
             /** Lot Id */
             lot_id: string;
         };
+        /** Grade */
+        Grade: {
+            /** Residue Type */
+            residue_type: string;
+            /**
+             * Moisture Band
+             * @enum {string}
+             */
+            moisture_band: "dry" | "medium" | "wet";
+            /** Contamination Flags */
+            contamination_flags?: string[];
+            /** Confidence */
+            confidence: number;
+            /**
+             * Disclaimer
+             * @default Visual estimate only; weighbridge confirmation required.
+             */
+            disclaimer: string;
+        };
+        /** GradeIn */
+        GradeIn: {
+            /** Photo Path */
+            photo_path?: string | null;
+        };
+        /** GradeOut */
+        GradeOut: {
+            /** Photo Id */
+            photo_id: string;
+            grade: components["schemas"]["Grade"];
+            /**
+             * Is Estimate
+             * @default true
+             */
+            is_estimate: boolean;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** ImpactOut */
+        ImpactOut: {
+            /** Tonnes Diverted */
+            tonnes_diverted: number;
+            /** Jobs Settled */
+            jobs_settled: number;
+            /** Records */
+            records: components["schemas"]["ImpactRecord"][];
+        };
+        /** ImpactRecord */
+        ImpactRecord: {
+            /** Job Id */
+            job_id: string;
+            /** Lot Id */
+            lot_id: string;
+            /** Farmer Id */
+            farmer_id: string;
+            /** Farmer Name */
+            farmer_name: string;
+            /** Village */
+            village: string | null;
+            /** District */
+            district: string | null;
+            /** Weight Kg */
+            weight_kg: number;
+            /** Settled At */
+            settled_at: string | null;
+        };
+        /** JobOut */
+        JobOut: {
+            /** Id */
+            id: string;
+            /** Lot Id */
+            lot_id: string;
+            /** Factory Id */
+            factory_id: string;
+            /** Factory Name */
+            factory_name?: string | null;
+            /** Transporter Id */
+            transporter_id?: string | null;
+            /** State */
+            state: string;
+            /** Residue Type */
+            residue_type?: string | null;
+            /** Quantity Tonnes */
+            quantity_tonnes?: number | null;
+            /** Village */
+            village?: string | null;
+            /** Quoted Price Per Tonne */
+            quoted_price_per_tonne: number;
+            /** Farmer Share Bps */
+            farmer_share_bps: number;
+            /** Est Weight Kg */
+            est_weight_kg: number;
+            /** Final Weight Kg */
+            final_weight_kg?: number | null;
+            /** Rejection Reason */
+            rejection_reason?: string | null;
+            /**
+             * Offers Exhausted
+             * @default false
+             */
+            offers_exhausted: boolean;
+            /** Funded At */
+            funded_at?: string | null;
+            /** Accepted At */
+            accepted_at?: string | null;
+            /** Picked Up At */
+            picked_up_at?: string | null;
+            /** Delivered At */
+            delivered_at?: string | null;
+            /** Confirmed At */
+            confirmed_at?: string | null;
+            /** Verified At */
+            verified_at?: string | null;
+            /** Settled At */
+            settled_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** LedgerCheckOut */
+        LedgerCheckOut: {
+            /** Balanced */
+            balanced: boolean;
+            /** Jobs Checked */
+            jobs_checked: number;
+            /** Orders Checked */
+            orders_checked: number;
+            /** Unbalanced Jobs */
+            unbalanced_jobs: string[];
+            /** Unbalanced Orders */
+            unbalanced_orders: string[];
+            /** Held In Escrow */
+            held_in_escrow: number;
+            /** Totals */
+            totals: {
+                [key: string]: number;
+            };
+        };
+        /** LedgerEntryOut */
+        LedgerEntryOut: {
+            /** Id */
+            id: string;
+            /** Job Id */
+            job_id: string | null;
+            /** Order Id */
+            order_id: string | null;
+            /** Kind */
+            kind: string;
+            /** Amount */
+            amount: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** LegIn */
+        LegIn: {
+            /** Photo Path */
+            photo_path: string;
+            /** Weight Kg */
+            weight_kg: number;
+        };
+        /** LotOut */
+        LotOut: {
+            /** Id */
+            id: string;
+            /** Farmer Id */
+            farmer_id: string;
+            /** Residue Type */
+            residue_type: string;
+            /** Quantity Tonnes */
+            quantity_tonnes: number;
+            /** Lat */
+            lat: number;
+            /** Lon */
+            lon: number;
+            /** Status */
+            status: string;
+            /** Pickup From */
+            pickup_from: string | null;
+            /** Pickup To */
+            pickup_to: string | null;
+            /** Job Id */
+            job_id?: string | null;
+            /** Job State */
+            job_state?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /**
          * LotReadback
@@ -554,6 +1097,169 @@ export interface components {
             /** Pickup Text */
             pickup_text: string;
         };
+        /**
+         * OfferOut
+         * @description What a transporter sees: where, how much, how long they have.
+         */
+        OfferOut: {
+            /** Id */
+            id: string;
+            /** Job Id */
+            job_id: string;
+            /** Status */
+            status: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Payout Amount */
+            payout_amount: number;
+            /** Est Weight Kg */
+            est_weight_kg: number;
+            /** Residue Type */
+            residue_type: string;
+            /** Village */
+            village: string | null;
+            /** Pickup Lat */
+            pickup_lat: number;
+            /** Pickup Lon */
+            pickup_lon: number;
+            /** Factory Name */
+            factory_name: string;
+            /** Factory Lat */
+            factory_lat: number;
+            /** Factory Lon */
+            factory_lon: number;
+        };
+        /** OrderIn */
+        OrderIn: {
+            /** Product Id */
+            product_id: string;
+            /** Quantity */
+            quantity: number;
+        };
+        /** OrderOut */
+        OrderOut: {
+            /** Id */
+            id: string;
+            /** Product Id */
+            product_id: string;
+            /** Quantity */
+            quantity: number;
+            /** Total */
+            total: number;
+            /** Status */
+            status: string;
+            /** Splits */
+            splits: components["schemas"]["SplitLine"][];
+            /** Shares Total Bps */
+            shares_total_bps: number;
+            /** Amounts Total */
+            amounts_total: number;
+        };
+        /** OverrideIn */
+        OverrideIn: {
+            /** Factory Id */
+            factory_id: string;
+            /** Reason */
+            reason: string;
+        };
+        /** PayoutOut */
+        PayoutOut: {
+            /** Job Id */
+            job_id: string;
+            /** State */
+            state: string;
+            /** Status */
+            status: string;
+            /** Amount */
+            amount: number;
+        };
+        /** ProductIn */
+        ProductIn: {
+            /** Name */
+            name: string;
+            /** Unit Price */
+            unit_price: number;
+            /** Stock */
+            stock: number;
+        };
+        /** ProductOut */
+        ProductOut: {
+            /** Id */
+            id: string;
+            /** Factory Id */
+            factory_id: string;
+            /** Factory Name */
+            factory_name: string;
+            /** Name */
+            name: string;
+            /** Unit Price */
+            unit_price: number;
+            /** Stock */
+            stock: number;
+            /** Active */
+            active: boolean;
+        };
+        /** ProductPatch */
+        ProductPatch: {
+            /** Name */
+            name?: string | null;
+            /** Unit Price */
+            unit_price?: number | null;
+            /** Stock */
+            stock?: number | null;
+            /** Active */
+            active?: boolean | null;
+        };
+        /**
+         * QuoteOut
+         * @description What the agent says to the farmer. Rupee fields are for speaking, paisa fields are exact.
+         */
+        QuoteOut: {
+            /** Lot Id */
+            lot_id: string;
+            /** Price Per Tonne */
+            price_per_tonne: number;
+            /** Price Per Tonne Rupees */
+            price_per_tonne_rupees: number;
+            /** Farmer Share Bps */
+            farmer_share_bps: number;
+            /** Farmer Share Percent */
+            farmer_share_percent: number;
+            /** Farmer Per Tonne Rupees */
+            farmer_per_tonne_rupees: number;
+            /** Est Weight Kg */
+            est_weight_kg: number;
+            /** Est Total */
+            est_total: number;
+            /** Est Farmer Amount */
+            est_farmer_amount: number;
+            /** Est Farmer Amount Rupees */
+            est_farmer_amount_rupees: number;
+            /** Payment Timing */
+            payment_timing: string;
+        };
+        /** RankingEntry */
+        RankingEntry: {
+            /** Factory Id */
+            factory_id: string;
+            /** Factory Name */
+            factory_name: string;
+            /** Rank */
+            rank: number;
+            /** Score */
+            score: number;
+            /** Distance Km */
+            distance_km: number;
+            /** Price Per Tonne */
+            price_per_tonne: number;
+            /** Chosen */
+            chosen: boolean;
+            /** Override Reason */
+            override_reason?: string | null;
+        };
         /** RecordConfirmationIn */
         RecordConfirmationIn: {
             /** Call Id */
@@ -568,6 +1274,81 @@ export interface components {
              */
             note: string;
         };
+        /** SplitLine */
+        SplitLine: {
+            /** Party */
+            party: string;
+            /** Share Bps */
+            share_bps: number;
+            /** Amount */
+            amount: number;
+        };
+        /** TickIn */
+        TickIn: {
+            /**
+             * Force
+             * @default false
+             */
+            force: boolean;
+        };
+        /** TickOut */
+        TickOut: {
+            /** Expired */
+            expired: number;
+            /** Reoffered */
+            reoffered: number;
+            /** Exhausted */
+            exhausted: number;
+            /**
+             * Dispatched
+             * @default 0
+             */
+            dispatched: number;
+        };
+        /** TransporterOut */
+        TransporterOut: {
+            /** Id */
+            id: string;
+            /** Phone */
+            phone: string;
+            /** Tier */
+            tier: number;
+            /** Max Tonnes */
+            max_tonnes: number;
+            /** Approved */
+            approved: boolean;
+            /** Approved At */
+            approved_at: string | null;
+            /** Lat */
+            lat: number;
+            /** Lon */
+            lon: number;
+        };
+        /** UploadUrlIn */
+        UploadUrlIn: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "pickup" | "delivery" | "weighbridge";
+            /**
+             * Content Type
+             * @default image/jpeg
+             */
+            content_type: string;
+        };
+        /** UploadUrlOut */
+        UploadUrlOut: {
+            /** Path */
+            path: string;
+            /** Upload Url */
+            upload_url: string;
+            /**
+             * Method
+             * @default PUT
+             */
+            method: string;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -580,6 +1361,17 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VerificationCallOut */
+        VerificationCallOut: {
+            /** Call Id */
+            call_id: string;
+            /** Job Id */
+            job_id: string;
+            /** Farmer Id */
+            farmer_id: string;
+            /** Farmer Phone */
+            farmer_phone: string;
         };
     };
     responses: never;
@@ -612,11 +1404,17 @@ export interface operations {
             };
         };
     };
-    get_lots_root_api_lots_get: {
+    list_lots_api_lots_get: {
         parameters: {
-            query?: never;
+            query?: {
+                status?: string | null;
+                farmer_id?: string | null;
+                limit?: number;
+                offset?: number;
+            };
             header?: {
                 authorization?: string | null;
+                "x-dev-uid"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -629,7 +1427,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["LotOut"][];
                 };
             };
             /** @description Validation Error */
@@ -643,24 +1441,29 @@ export interface operations {
             };
         };
     };
-    post_lots_root_api_lots_post: {
+    create_lot_for_farmer_api_lots_post: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-dev-uid"?: string | null;
             };
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminLotIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["LotReadback"];
                 };
             };
             /** @description Validation Error */
@@ -674,11 +1477,12 @@ export interface operations {
             };
         };
     };
-    get_lots_lot_id_ranking_api_lots__lot_id__ranking_get: {
+    get_lot_api_lots__lot_id__get: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-dev-uid"?: string | null;
             };
             path: {
                 lot_id: string;
@@ -693,7 +1497,79 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["LotOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_ranking_api_lots__lot_id__ranking_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path: {
+                lot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RankingEntry"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    override_api_lots__lot_id__override_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path: {
+                lot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OverrideIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
                 };
             };
             /** @description Validation Error */
@@ -709,9 +1585,14 @@ export interface operations {
     };
     get_jobs_root_api_jobs_get: {
         parameters: {
-            query?: never;
+            query?: {
+                state?: string | null;
+                limit?: number;
+                offset?: number;
+            };
             header?: {
                 authorization?: string | null;
+                "x-dev-uid"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -724,7 +1605,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["JobOut"][];
                 };
             };
             /** @description Validation Error */
@@ -743,6 +1624,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-dev-uid"?: string | null;
             };
             path: {
                 job_id: string;
@@ -757,7 +1639,113 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_jobs_job_id_fund_api_jobs__job_id__fund_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_jobs_job_id_redispatch_api_jobs__job_id__redispatch_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_jobs_job_id_photo_url_api_jobs__job_id__photos_upload_url_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UploadUrlIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadUrlOut"];
                 };
             };
             /** @description Validation Error */
@@ -776,13 +1764,18 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-dev-uid"?: string | null;
             };
             path: {
                 job_id: string;
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LegIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -790,7 +1783,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["JobOut"];
                 };
             };
             /** @description Validation Error */
@@ -809,13 +1802,18 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-dev-uid"?: string | null;
             };
             path: {
                 job_id: string;
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LegIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -823,40 +1821,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    post_jobs_job_id_confirm_api_jobs__job_id__confirm_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-            };
-            path: {
-                job_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["JobOut"];
                 };
             };
             /** @description Validation Error */
@@ -875,6 +1840,83 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GradeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_jobs_job_id_confirm_api_jobs__job_id__confirm_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_jobs_job_id_verification_call_api_jobs__job_id__verification_call_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
             };
             path: {
                 job_id: string;
@@ -889,7 +1931,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["VerificationCallOut"];
                 };
             };
             /** @description Validation Error */
@@ -908,6 +1950,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-dev-uid"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -920,7 +1963,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["OfferOut"][];
                 };
             };
             /** @description Validation Error */
@@ -939,6 +1982,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-dev-uid"?: string | null;
             };
             path: {
                 offer_id: string;
@@ -953,7 +1997,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["JobOut"];
                 };
             };
             /** @description Validation Error */
@@ -969,9 +2013,15 @@ export interface operations {
     };
     get_ledger_root_api_ledger_get: {
         parameters: {
-            query?: never;
+            query?: {
+                kind?: string | null;
+                job_id?: string | null;
+                limit?: number;
+                offset?: number;
+            };
             header?: {
                 authorization?: string | null;
+                "x-dev-uid"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -984,7 +2034,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["LedgerEntryOut"][];
                 };
             };
             /** @description Validation Error */
@@ -1003,6 +2053,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-dev-uid"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -1015,7 +2066,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["LedgerCheckOut"];
                 };
             };
             /** @description Validation Error */
@@ -1029,11 +2080,12 @@ export interface operations {
             };
         };
     };
-    post_ledger_escrow_api_ledger_escrow_post: {
+    get_ledger_mine_api_ledger_mine_get: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-dev-uid"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -1046,7 +2098,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PayoutOut"][];
                 };
             };
             /** @description Validation Error */
@@ -1065,6 +2117,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-dev-uid"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -1077,7 +2130,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ProductOut"][];
                 };
             };
             /** @description Validation Error */
@@ -1096,6 +2149,81 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_product_api_products__product_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path: {
+                product_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_orders_root_api_orders_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -1108,7 +2236,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["OrderOut"][];
                 };
             };
             /** @description Validation Error */
@@ -1127,19 +2255,24 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-dev-uid"?: string | null;
             };
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["OrderOut"];
                 };
             };
             /** @description Validation Error */
@@ -1158,6 +2291,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-dev-uid"?: string | null;
             };
             path: {
                 order_id: string;
@@ -1172,7 +2306,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["OrderOut"];
                 };
             };
             /** @description Validation Error */
@@ -1189,11 +2323,18 @@ export interface operations {
     tick_api_dispatch_tick_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TickIn"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -1201,7 +2342,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TickOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -1263,7 +2413,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["QuoteOut"];
                 };
             };
             /** @description Validation Error */
@@ -1294,7 +2444,7 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1408,6 +2558,214 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CallEndOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_escalations_api_escalations_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EscalationOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_escalation_resolve_api_escalations__escalation_id__resolve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path: {
+                escalation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_impact_api_impact_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImpactOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_transporters_api_transporters_get: {
+        parameters: {
+            query?: {
+                approved?: boolean | null;
+            };
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransporterOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_transporter_api_transporters__transporter_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path: {
+                transporter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransporterOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_transporter_api_transporters__transporter_id__revoke_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path: {
+                transporter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransporterOut"];
                 };
             };
             /** @description Validation Error */

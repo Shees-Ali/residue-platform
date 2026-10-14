@@ -12,7 +12,7 @@ seed = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(seed)
 
 MODELS = {
-    "residue_types": t.ResidueType, "villages": t.Village, "farmers": t.Farmer,
+    "users": t.User, "residue_types": t.ResidueType, "villages": t.Village, "farmers": t.Farmer,
     "transporters": t.Transporter, "factories": t.Factory,
     "factory_residues": t.FactoryResidue, "products": t.Product,
 }

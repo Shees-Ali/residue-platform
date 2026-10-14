@@ -93,3 +93,49 @@ async def test_start_and_end_call_use_the_internal_routes(api):
     paths = [r.url.path for r in api["seen"]]
     assert paths == ["/api/internal/calls", "/api/internal/calls/c1/end"]
     assert "Idempotency-Key" not in api["seen"][0].headers  # keyed by twilio_call_sid server-side
+
+
+# --- F2, F3, F4 tools ---------------------------------------------------------------------
+
+
+async def test_get_quote_posts_the_lot_for_this_call_and_is_not_keyed(api):
+    from app.tools import get_quote
+
+    api["reply"] = (200, {"price_per_tonne_rupees": 10_000_000.0, "farmer_share_percent": 70.0})
+    result = await get_quote("lot-1")
+    assert result["farmer_share_percent"] == 70.0
+    request = api["seen"][0]
+    assert request.url.path == "/api/agent/quote"
+    assert json.loads(request.content) == {"call_id": "call-123", "lot_id": "lot-1"}
+    assert "Idempotency-Key" not in request.headers  # a read, not a write
+
+
+async def test_escalate_sends_a_summary_with_a_stable_key(api):
+    from app.tools import escalate_to_human
+
+    api["reply"] = (201, {"escalation_id": "e1", "status": "open"})
+    await escalate_to_human("Farmer is upset about the price")
+    await escalate_to_human("Farmer is upset about the price")
+    first, second = api["seen"]
+    assert first.url.path == "/api/agent/escalations"
+    assert first.headers["Idempotency-Key"] == second.headers["Idempotency-Key"]
+    assert json.loads(first.content)["call_id"] == "call-123"
+
+
+async def test_record_confirmation_has_no_farmer_identity_and_returns_errors_to_the_model(api):
+    from app.tools import record_confirmation
+
+    api["reply"] = (409, {"detail": "The job is 'settled', not waiting for verification"})
+    result = await record_confirmation("job-9", True)
+    assert result["error"] == "http_409"
+    body = json.loads(api["seen"][0].content)
+    assert body == {"call_id": "call-123", "job_id": "job-9", "confirmed": True, "note": ""}
+    assert not [k for k in body if "farmer" in k or "phone" in k]
+
+
+async def test_other_tools_refuse_without_an_active_call():
+    from app.tools import escalate_to_human, get_quote, record_confirmation
+
+    assert (await get_quote("l"))["error"] == "no_active_call"
+    assert (await escalate_to_human("x"))["error"] == "no_active_call"
+    assert (await record_confirmation("j", True))["error"] == "no_active_call"

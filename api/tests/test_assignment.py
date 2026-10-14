@@ -3,8 +3,6 @@ import pytest
 from app.models.factory import Factory, LotRequest
 from app.services.assignment import haversine_km, rank_factories, score_factory
 
-pytestmark = pytest.mark.tdd  # A1: remove when implemented
-
 LOT = LotRequest(residue_type="rice_straw", lat=31.5, lon=74.3, quantity_tonnes=10)
 
 

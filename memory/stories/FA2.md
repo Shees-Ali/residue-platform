@@ -1,6 +1,6 @@
 # FA2. Confirm weight and grade
 
-**Status:** todo
+**Status:** backend done (factory UI todo)
 
 ## Spec
 As a factory, I weigh the lot at the gate and accept or reject it, with an AI grade to help.
@@ -18,6 +18,8 @@ As a factory, I weigh the lot at the gate and accept or reject it, with an AI gr
 
 ## Built so far
 
+- 2026-10-14 backend: `POST /api/jobs/{id}/grade` (Gemini vision behind a `Grader` interface; stored in `grades`; always labelled a visual estimate), `POST /{id}/confirm` (accept with the weighbridge weight, or reject with a reason). Accept adjusts escrow to the final weight (top-up or refund) and pays the transporter; reject pays the transporter their estimated share, refunds the rest, marks the lot rejected.
+
 - 2026-10-13 scaffold: services/grading.py grade_photos stub (Gemini vision) and jobs confirm/grade route stubs.
 - 2026-10-13 scaffold: /factory page placeholder.
 
@@ -25,4 +27,4 @@ As a factory, I weigh the lot at the gate and accept or reject it, with an AI gr
 - None yet. Log repo-wide decisions in `../decisions.md`.
 
 ## Open
-- None yet.
+- `GeminiGrader` is not exercised against the live API (needs a key and real photos). Factory UI.

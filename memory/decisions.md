@@ -71,3 +71,23 @@ F1 verifies Google ID tokens (email must equal `VOICE_SERVICE_ACCOUNT`, email ve
 ## 2026-10-14 - Settings read the environment when built, not at import (voice)
 `voice/app/config.py` uses `default_factory`, so flags like `API_AUTH_DISABLED` can be changed per process or per test. The API keeps import-time fields for now, with `auth_bypass_active()` reading env live.
 
+## 2026-10-14 - Money model for jobs (assumed; configurable)
+Shares of gross (weight x quoted price, integer paisa, half-up): farmer 7000 bps (fixed on the job at creation, it is what was quoted), transporter 2000 (`SHARE_TRANSPORTER_BPS`), platform 1000 (the remainder). Parts come from `revenue_share.split` so they sum exactly. Escrow is funded at the estimated weight; at confirmation it is topped up (`escrow_in`) or the difference returned (`refund`) to match the weighbridge weight. All of it lives in `app/services/economics.py` and is shared by quote, offers, funding and settlement so they cannot disagree. Rejected: per-tonne-km transport pricing (more inputs, no data for it).
+
+## 2026-10-14 - Who is paid when
+Transporter is paid at factory confirmation (matches T2 "released once the factory confirms"). Farmer share and platform fee are released when the farmer says yes on the verification call. A farmer "no" freezes the rest in escrow (`disputed`) and adds an admin escalation. A factory rejection pays the transporter their estimated share, refunds the rest, farmer gets nothing, lot becomes `rejected` (the "pre-agreed cost rule"). The `verified` state is unused: `verified_at` is stamped when the job goes `confirmed -> settled`.
+
+## 2026-10-14 - Dashboard auth: role from the users table
+Firebase ID token proves identity; the role comes from `users` (not custom claims), ownership from `factories.user_uid` / `transporters.user_uid`. Local bypass (`AUTH_DISABLED`, ignored when `K_SERVICE` is set) uses the `X-Dev-Uid` header to act as a seeded user. Seeded users: `dev-admin`, `dev-factory-N`, `dev-transporter-N`, `dev-buyer-0`.
+
+## 2026-10-14 - Assignment runs inside create_lot; factory score is net delivered price
+`assign_lot` runs in the same transaction as the lot insert, so a lot always has its ranking and job or stays `open`. Score = factory price minus haversine distance x 2,500 paisa per tonne-km (assumed cost). Admin override needs a reason, only before funding, and is stored on the chosen candidate row.
+
+## 2026-10-14 - Dispatch is SQL-guarded; the tick also sends waiting jobs
+One offer at a time (`OFFER_TTL_SECONDS`, default 120). Accept is one conditional UPDATE (pending, mine, not expired) followed by a guarded job transition, so concurrent accepts have one winner (verified with two real connections). The tick expires lapsed offers (rows locked with SKIP LOCKED), offers the next nearest eligible transporter, and sends funded jobs that never got an offer; an exhausted ladder returns the job to `funded` with `offers_exhausted`. `force` (expire everything now) is admin-only; Cloud Scheduler is recognised by `SCHEDULER_SERVICE_ACCOUNT`. Admin can `redispatch` and approve or revoke transporters (tier 1/2/3 = 3/7/15 t).
+
+## 2026-10-14 - Sale split and ledger kinds for the marketplace
+Product sales split farmer 5000, factory 3000, NGO 500, platform 1500 bps (`SALE_SHARE_*_BPS`; from the test shares in the plan). Migration 0004 adds ledger kinds `release_factory` and `release_ngo`. The farmers' share of a sale is pooled (no per-farmer attribution) and the NGO is a label. Stock is decremented by one conditional UPDATE, so the last unit cannot be sold twice.
+
+## 2026-10-14 - Photo storage and grading behind interfaces
+`Storage` (Cloud Storage when `STORAGE_BUCKET` is set, in-memory otherwise) and `Grader` (Gemini when `GEMINI_API_KEY` is set, else 503) are FastAPI dependencies so tests use fakes. Photo paths must sit under `jobs/{job_id}/{kind}/`. Grading uses whichever recent photos are readable. Neither real client has been exercised against Google yet.

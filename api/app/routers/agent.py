@@ -4,38 +4,25 @@ Do not add more without a decision-log entry in memory/decisions.md.
 """
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends
 
 from app.auth.google_oidc import voice_service_caller
 from app.auth.idempotency import require_idempotency_key
-from app.db_models.tables import Call
 from app.deps import DbSession, Events
 from app.models.agent import CreateLotIn, EscalateIn, GetQuoteIn, RecordConfirmationIn
 from app.models.lot import LotReadback
-from app.routers._stub import todo
+from app.models.quote import QuoteOut
+from app.services.assignment_store import assign_lot
+from app.services.calls import farmer_id_for_call
+from app.services.escalations import create_escalation
 from app.services.idempotency import request_hash, run_idempotent
 from app.services.lot_store import create_lot_record
+from app.services.quotes import quote_for
+from app.services.verification import record_answer
 
 router = APIRouter(
     prefix="/api/agent", tags=["agent"], dependencies=[Depends(voice_service_caller)]
 )
-
-
-async def farmer_id_for_call(db: AsyncSession, call_id: str) -> uuid.UUID:
-    """Resolve the farmer from the stored call record. Never from anything the model says."""
-    try:
-        call_uuid = uuid.UUID(call_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="Unknown call") from None
-    farmer_id = (await db.execute(select(Call.farmer_id).where(Call.id == call_uuid))).first()
-    if farmer_id is None:
-        raise HTTPException(status_code=404, detail="Unknown call")
-    if farmer_id[0] is None:
-        # TODO(F1): the call-start webhook links the caller's phone to a farmer record.
-        raise HTTPException(status_code=409, detail="Call is not linked to a farmer")
-    return farmer_id[0]
 
 
 @router.post("/lots", response_model=LotReadback, status_code=201)
@@ -47,6 +34,7 @@ async def create_lot(
 ):
     """Save the caller's lot. The farmer comes from the call record; replays return the original."""
     farmer_id = await farmer_id_for_call(db, body.call_id)
+    assigned_job: list[str] = []
 
     async def work() -> tuple[int, dict]:
         readback = await create_lot_record(
@@ -60,6 +48,9 @@ async def create_lot(
             village=body.village,
             district=body.district,
         )
+        job = await assign_lot(db, uuid.UUID(readback.lot_id))  # A1: ranked in the same transaction
+        if job is not None:
+            assigned_job.append(str(job.id))
         return 201, readback.model_dump(mode="json")
 
     _, payload, replayed = await run_idempotent(
@@ -67,25 +58,40 @@ async def create_lot(
     )
     await db.commit()
     if not replayed:
-        await events.publish("lot.created")  # TODO(A2): dashboards refetch on this
+        await events.publish("lot.created")
+        for job_id in assigned_job:
+            await events.publish("job.updated", job_id)
     return payload
 
 
-@router.post("/quote")
+@router.post("/quote", response_model=QuoteOut)
 async def get_quote(db: DbSession, body: GetQuoteIn):
-    # TODO(F2)
-    todo("F2")
+    """Price per tonne, the farmer's share and when they are paid, for one of their own lots."""
+    farmer_id = await farmer_id_for_call(db, body.call_id)
+    return await quote_for(db, farmer_id, body.lot_id)
 
 
-@router.post("/escalations")
+@router.post("/escalations", status_code=201)
 async def escalate(
     db: DbSession,
     events: Events,
     body: EscalateIn,
     key: str = Depends(require_idempotency_key),
 ):
-    # TODO(F3)
-    todo("F3")
+    """The caller needs a person: save the summary and transcript to the admin queue."""
+    await farmer_id_for_call(db, body.call_id)  # the call must exist and be linked
+
+    async def work() -> tuple[int, dict]:
+        row = await create_escalation(db, body.call_id, body.summary, body.transcript)
+        return 201, {"escalation_id": str(row.id), "status": "open"}
+
+    _, payload, replayed = await run_idempotent(
+        db, key, "POST /api/agent/escalations", request_hash(body.model_dump()), work
+    )
+    await db.commit()
+    if not replayed:
+        await events.publish("escalation.created")
+    return payload
 
 
 @router.post("/confirmations")
@@ -95,5 +101,19 @@ async def record_confirmation(
     body: RecordConfirmationIn,
     key: str = Depends(require_idempotency_key),
 ):
-    # TODO(F4)
-    todo("F4")
+    """The farmer's yes or dispute on weight and payment. Yes settles; a dispute freezes."""
+
+    async def work() -> tuple[int, dict]:
+        return 200, await record_answer(db, body.call_id, body.job_id, body.confirmed, body.note)
+
+    status, payload, replayed = await run_idempotent(
+        db, key, "POST /api/agent/confirmations", request_hash(body.model_dump()), work
+    )
+    await db.commit()
+    if not replayed:
+        await events.publish("job.updated", body.job_id)
+        if payload["state"] == "settled":
+            await events.publish("ledger.updated", body.job_id)
+        else:
+            await events.publish("escalation.created", body.job_id)
+    return payload

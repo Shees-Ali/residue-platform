@@ -1,9 +1,6 @@
-import pytest
 
 from app.models.ledger import LedgerEntry
 from app.services.ledger import escrow_balanced
-
-pytestmark = pytest.mark.tdd  # A3: remove when implemented
 
 
 def e(kind, amt):

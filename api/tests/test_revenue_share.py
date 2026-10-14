@@ -2,8 +2,6 @@ import pytest
 
 from app.services.revenue_share import BPS_TOTAL, split
 
-pytestmark = pytest.mark.tdd  # FA3: remove when implemented
-
 SHARES = {"farmer": 5000, "factory": 3000, "ngo": 500, "platform": 1500}
 
 

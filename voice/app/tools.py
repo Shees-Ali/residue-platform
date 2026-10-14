@@ -48,21 +48,66 @@ async def create_lot(
 
 
 async def get_quote(lot_id: str) -> dict:
-    """Return price per tonne, payment timing and revenue share for the lot."""
-    # TODO(F2)
-    raise NotImplementedError
+    """Tell the caller the price per tonne, their share and when they are paid, for their lot.
+
+    Args:
+        lot_id: the lot_id returned by create_lot earlier in this call.
+
+    Returns price_per_tonne_rupees, farmer_share_percent, farmer_per_tonne_rupees,
+    est_farmer_amount_rupees and payment_timing. Say these in plain words; never invent a price.
+    Returns {error, message} if there is no quote yet.
+    """
+    call_id = current_call_id.get(None)
+    if call_id is None:
+        return {"error": "no_active_call", "message": "No call is in progress."}
+    return await post(
+        "/api/agent/quote",
+        call_id,
+        "get_quote",
+        {"call_id": call_id, "lot_id": lot_id},
+        write=False,
+    )
 
 
 async def escalate_to_human(summary: str) -> dict:
-    """Hand the call to a person; the transcript and summary go to the admin queue."""
-    # TODO(F3)
-    raise NotImplementedError
+    """Hand the call to a person when you cannot help or the caller is upset or confused.
+
+    Args:
+        summary: one or two sentences on what the caller needs, in English, for the admin queue.
+
+    Tell the caller a person will contact them soon.
+    """
+    call_id = current_call_id.get(None)
+    if call_id is None:
+        return {"error": "no_active_call", "message": "No call is in progress."}
+    # TODO(F3): pass the running transcript once the transport layer keeps one.
+    return await post(
+        "/api/agent/escalations",
+        call_id,
+        "escalate_to_human",
+        {"call_id": call_id, "summary": summary, "transcript": ""},
+    )
 
 
 async def record_confirmation(job_id: str, confirmed: bool, note: str = "") -> dict:
-    """Record the farmer's yes or dispute on weight and payment."""
-    # TODO(F4)
-    raise NotImplementedError
+    """Record the farmer's yes or no on the weight and payment amount, on a verification call.
+
+    Args:
+        job_id: the job being verified (given to you at the start of the verification call).
+        confirmed: true only if the farmer clearly agrees with the weight and the amount.
+        note: if they disagree, what they said, in a few words.
+
+    A yes releases their payout; a no freezes it and alerts an admin.
+    """
+    call_id = current_call_id.get(None)
+    if call_id is None:
+        return {"error": "no_active_call", "message": "No call is in progress."}
+    return await post(
+        "/api/agent/confirmations",
+        call_id,
+        "record_confirmation",
+        {"call_id": call_id, "job_id": job_id, "confirmed": confirmed, "note": note},
+    )
 
 
 TOOLS = [create_lot, get_quote, escalate_to_human, record_confirmation]

@@ -3,15 +3,10 @@ import os
 import uuid
 from datetime import datetime, timedelta
 
-import httpx
 import pytest
 from sqlalchemy import func, select, text
 
-from app.config import get_settings
-from app.db import async_url, get_session
-from app.db_models.tables import Call, Lot
-from app.main import app
-from app.services.events import FakeEvents, get_events
+from app.db_models.tables import Call, Job, Lot
 from app.services.lots import PKT
 
 pytestmark = pytest.mark.skipif(not os.getenv("DATABASE_URL"), reason="DATABASE_URL not set")
@@ -34,37 +29,6 @@ def lot_body(call_id: str, **over) -> dict:
         "district": "Lahore",
     }
     return body | over
-
-
-@pytest.fixture
-async def api(monkeypatch):
-    from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-    from sqlalchemy.pool import NullPool
-
-    monkeypatch.setenv("AUTH_DISABLED", "true")
-    monkeypatch.delenv("K_SERVICE", raising=False)
-    engine = create_async_engine(async_url(get_settings().database_url), poolclass=NullPool)
-    conn = await engine.connect()
-    outer = await conn.begin()
-    # route code commits; with savepoint mode that releases a savepoint, not the outer transaction
-    session = AsyncSession(
-        bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False
-    )
-    events = FakeEvents()
-
-    async def session_override():
-        yield session
-
-    app.dependency_overrides[get_session] = session_override
-    app.dependency_overrides[get_events] = lambda: events
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
-        c.events, c.session = events, session
-        yield c
-    app.dependency_overrides.clear()
-    await session.close()
-    await outer.rollback()
-    await conn.close()
-    await engine.dispose()
 
 
 async def start_call(api, sid="CA-test-1", phone=PHONE) -> str:
@@ -139,13 +103,18 @@ async def test_create_lot_saves_a_complete_lot_and_returns_the_readback(api):
     ).scalar_one()
     for col in Lot.__table__.columns:
         assert getattr(lot, col.key) is not None, f"lots.{col.key} is empty"
-    assert lot.status == "open"
+    assert lot.status == "assigned"  # A1 ran in the same transaction
+    job = (await api.session.execute(select(Job).where(Job.lot_id == lot.id))).scalar_one()
+    assert (job.state, job.est_weight_kg, job.farmer_share_bps) == ("created", 2500, 7000)
     assert str(lot.call_id) == call_id
     farmer_of_call = (
         await api.session.execute(select(Call.farmer_id).where(Call.id == uuid.UUID(call_id)))
     ).scalar_one()
     assert lot.farmer_id == farmer_of_call  # identity came from the call record
-    assert api.events.sent == [{"type": "lot.created", "job_id": None}]
+    assert api.events.sent == [
+        {"type": "lot.created", "job_id": None},
+        {"type": "job.updated", "job_id": str(job.id)},
+    ]
 
 
 async def test_replay_with_same_key_returns_the_same_lot_and_inserts_once(api):
@@ -156,7 +125,7 @@ async def test_replay_with_same_key_returns_the_same_lot_and_inserts_once(api):
     assert first.json() == second.json()
     count = (await api.session.execute(select(func.count()).select_from(Lot))).scalar()
     assert count == 1
-    assert len(api.events.sent) == 1  # a replay does not announce a second lot
+    assert len(api.events.sent) == 2  # lot.created + job.updated once; a replay adds none
 
 
 async def test_same_key_with_a_different_payload_is_409(api):

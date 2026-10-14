@@ -41,6 +41,10 @@ def make(rng: random.Random, n_farmers: int, n_transporters: int, n_factories: i
     districts = list(DISTRICTS)
     rows: dict[str, list[dict]] = {
         "residue_types": [{"code": c, "label": label} for c, label in RESIDUES.items()],
+        "users": [
+            {"uid": "dev-admin", "role": "admin", "display_name": "Dev Admin"},
+            {"uid": "dev-buyer-0", "role": "buyer", "display_name": "Dev Buyer"},
+        ],
         "villages": [], "farmers": [], "transporters": [],
         "factories": [], "factory_residues": [], "products": [],
     }
@@ -59,16 +63,25 @@ def make(rng: random.Random, n_farmers: int, n_transporters: int, n_factories: i
         )
     for i in range(n_transporters):
         lat, lon = jitter(rng, *DISTRICTS[rng.choice(districts)])
+        rows["users"].append(
+            {"uid": f"dev-transporter-{i}", "role": "transporter",
+             "display_name": f"Dev Transporter {i}"}
+        )
         rows["transporters"].append(
             {"id": sid("transporter", str(i)), "phone": FAKE_PHONE.format(1000 + i),
+             "user_uid": f"dev-transporter-{i}",
              "tier": rng.choice([1, 2, 3]), "max_tonnes": rng.choice([3, 5, 10]),
              "lat": lat, "lon": lon, "approved": True}
         )
     for i in range(n_factories):
         lat, lon = jitter(rng, *DISTRICTS[rng.choice(districts)])
         factory_id = sid("factory", str(i))
+        rows["users"].append(
+            {"uid": f"dev-factory-{i}", "role": "factory", "display_name": f"Dev Factory {i}"}
+        )
         rows["factories"].append(
-            {"id": factory_id, "name": f"Synthetic Factory {i}", "lat": lat, "lon": lon,
+            {"id": factory_id, "name": f"Synthetic Factory {i}", "user_uid": f"dev-factory-{i}",
+             "lat": lat, "lon": lon,
              "price_per_tonne": rng.randint(400_000, 900_000)}  # paisa
         )
         for code in rng.sample(list(RESIDUES), k=rng.randint(1, 3)):
@@ -90,7 +103,7 @@ async def load(rows: dict) -> None:
     from app.db_models import tables as t
 
     order = [
-        ("residue_types", t.ResidueType), ("villages", t.Village), ("farmers", t.Farmer),
+        ("users", t.User), ("residue_types", t.ResidueType), ("villages", t.Village), ("farmers", t.Farmer),
         ("transporters", t.Transporter), ("factories", t.Factory),
         ("factory_residues", t.FactoryResidue), ("products", t.Product),
     ]
@@ -105,7 +118,15 @@ async def load(rows: dict) -> None:
                     for r in data
                 ]
             if data:
-                await conn.execute(insert(model).values(data).on_conflict_do_nothing())
+                stmt = insert(model).values(data)
+                if name in ("factories", "transporters"):
+                    # rows seeded before users existed get linked on re-run
+                    stmt = stmt.on_conflict_do_update(
+                        index_elements=["id"], set_={"user_uid": stmt.excluded.user_uid}
+                    )
+                else:
+                    stmt = stmt.on_conflict_do_nothing()
+                await conn.execute(stmt)
             print(f"{name}: {len(data)}")
     await get_engine().dispose()
 

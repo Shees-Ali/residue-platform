@@ -48,6 +48,9 @@ JOB_STATES = (
 )
 OFFER_STATUSES = ("pending", "accepted", "expired", "withdrawn")
 PHOTO_KINDS = ("pickup", "delivery", "weighbridge")
-LEDGER_KINDS = ("escrow_in", "release_farmer", "release_transporter", "platform_fee", "refund")
+LEDGER_KINDS = (
+    "escrow_in", "release_farmer", "release_transporter", "platform_fee", "refund",
+    "release_factory", "release_ngo",  # product sales (FA3/B1)
+)
 SPLIT_PARTIES = ("farmer", "factory", "ngo", "platform")
 ORDER_STATUSES = ("placed", "paid", "cancelled")

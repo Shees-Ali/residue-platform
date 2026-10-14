@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from fastapi import HTTPException
 
-from app.main import app
 from app.routers.agent import farmer_id_for_call
 
 
@@ -43,16 +42,9 @@ async def test_call_without_a_linked_farmer_is_a_conflict():
 
 
 def test_get_session_is_503_when_database_not_configured(monkeypatch, client):
-    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setenv("AUTH_DISABLED", "true")
     import app.db as db
 
     monkeypatch.setattr(db, "_engine", None)
     monkeypatch.setattr(db, "get_settings", lambda: MagicMock(database_url=""))
-    from app.auth.firebase import current_user
-
-    app.dependency_overrides[current_user] = lambda: {"role": "admin"}
-    try:
-        assert client.get("/api/lots").status_code == 503
-    finally:
-        app.dependency_overrides.clear()
-
+    assert client.get("/api/lots").status_code == 503

@@ -67,3 +67,6 @@ Open: handlers are still 501 stubs, each story implements its own (F1 first: lot
 
 ## F1 additions (2026-10-14)
 Migration `0003` adds `request_hash`, `status_code`, `response` to `idempotency_keys`. Routes: `POST /api/internal/calls`, `POST /api/internal/calls/{id}/end` (voice service account, not model tools) and a real `POST /api/agent/lots`. Seed now has 30 named villages (`app/services/places.py`), 5 districts. DB-backed route tests use a session in savepoint mode so route commits roll back at test end.
+
+## Backend flows additions (2026-10-14)
+Migration `0004` extends `ledger_entries.kind` with `release_factory` and `release_ngo` (product sales). No other schema change: assignment, dispatch, delivery, settlement, escalations and the marketplace use the existing tables. Job state graph and rules: `app/services/job_states.py`; money rules: `app/services/economics.py`; both described in `backend-flows.md`. Seed now also creates users (`dev-admin`, `dev-buyer-0`, one per factory and transporter) and links them.

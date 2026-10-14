@@ -13,6 +13,7 @@ dependencies = [
   "google-cloud-firestore>=2.19",  # events feed only
   "google-auth>=2.34",
   "google-genai>=0.3",
+  "google-cloud-storage>=2.18",  # photo uploads; imported lazily, only when STORAGE_BUCKET is set
   "requests>=2.32",
 ]
 

@@ -1,12 +1,8 @@
 from datetime import UTC, datetime, timedelta
 
-import pytest
-
 from app.models.offer import Offer
 from app.services.assignment import is_offer_expired
 from app.services.dispatch import next_transporter, tick
-
-pytestmark = pytest.mark.tdd  # A2: remove when implemented
 
 NOW = datetime(2026, 10, 13, 12, 0, tzinfo=UTC)
 

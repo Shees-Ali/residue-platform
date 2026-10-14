@@ -3,7 +3,8 @@ from typing import Literal
 from pydantic import BaseModel
 
 LedgerKind = Literal[
-    "escrow_in", "release_farmer", "release_transporter", "platform_fee", "refund"
+    "escrow_in", "release_farmer", "release_transporter", "platform_fee", "refund",
+    "release_factory", "release_ngo",
 ]
 
 

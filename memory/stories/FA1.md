@@ -1,6 +1,6 @@
 # FA1. Fund escrow for assigned lots
 
-**Status:** todo
+**Status:** backend done (factory UI todo)
 
 ## Spec
 As a factory, I see lots assigned to me and fund escrow so dispatch can start.
@@ -18,6 +18,8 @@ As a factory, I see lots assigned to me and fund escrow so dispatch can start.
 
 ## Built so far
 
+- 2026-10-14 backend: `GET /api/jobs` (role-scoped), `/{id}`, `POST /{id}/fund` (owning factory): `escrow_in`, `funded`, then the first offer. No offer exists before funding. Tests in `test_dispatch_flow.py`.
+
 - 2026-10-13 scaffold: POST /api/ledger/escrow stub.
 - 2026-10-13 scaffold: /factory page placeholder.
 
@@ -25,4 +27,4 @@ As a factory, I see lots assigned to me and fund escrow so dispatch can start.
 - None yet. Log repo-wide decisions in `../decisions.md`.
 
 ## Open
-- None yet.
+- Factory dashboard UI. Funding is simulated; no real payment partner.
