@@ -17,6 +17,7 @@ import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DemoProvider } from "./demo-state";
+import { DomainProvider } from "./domain-state";
 
 interface Role {
   name: string;
@@ -43,6 +44,7 @@ export function ResidueShell({ children }: { children: ReactNode }) {
   const role = roles.find((r) => r.path === pathname) ?? roles[0];
   return (
     <DemoProvider>
+      <DomainProvider>
       <div className="app-shell">
         <aside className="sidebar">
           <Link to="/market" className="brand">
@@ -178,6 +180,7 @@ export function ResidueShell({ children }: { children: ReactNode }) {
           <Button onClick={() => setHelp(false)}>Got it</Button>
         </DialogContent>
       </Dialog>
+      </DomainProvider>
     </DemoProvider>
   );
 }

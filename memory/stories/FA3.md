@@ -20,6 +20,7 @@ As a factory, I list finished products for sale and see how each sale is split.
 
 - 2026-10-13 scaffold: services/revenue_share.py split stub (bps, integer cents); failing tests in api/tests/test_revenue_share.py; products/orders route stubs.
 - 2026-10-13 scaffold: /factory page placeholder.
+- 2026-10-15 web: four-way revenue split (largest-remainder, bps) ported to TS (`web/src/lib/domain/revenueShare.ts`), mirrored tests green; B1 `createOrder` in the reducer applies it and `settle` uses it for the farmer share. API side still 501.
 
 ## Decisions
 - None yet. Log repo-wide decisions in `../decisions.md`.
