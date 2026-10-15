@@ -11,6 +11,7 @@ import {
   Wheat,
   CircleHelp,
   PhoneCall,
+  Settings as SettingsIcon,
   type LucideIcon,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
@@ -35,7 +36,8 @@ export const roles: Role[] = [
 ];
 
 const callNav: Role = { name: "Call", label: "Call widget", path: "/call", icon: PhoneCall };
-const allNav: Role[] = [...roles, callNav];
+const settingsNav: Role = { name: "Settings", label: "My details", path: "/settings", icon: SettingsIcon };
+const allNav: Role[] = [...roles, callNav, settingsNav];
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);

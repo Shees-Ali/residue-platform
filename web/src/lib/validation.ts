@@ -111,6 +111,52 @@ export function validateProfile(v: ProfileValues): Errors {
   return e;
 }
 
+export const MAX_LOAD_HELP = "Max load must be more than 0 and at most 100 tonnes";
+
+export interface ProfileEditValues {
+  role: string;
+  name: string;
+  /** The number as E.164 when valid, "" otherwise; `typed` is what is in the box. */
+  phone: string;
+  typed: { text: string; country: CountryCode } | null;
+  district: string;
+  village: string;
+  /** Whether the base place is being changed (then both district and village are needed). */
+  placeChanged: boolean;
+  factoryName: string;
+  price: string;
+  residues: string[];
+  /** Admin editing a transporter. */
+  tier?: string;
+  maxTonnes?: string;
+}
+
+/** Errors for the Settings form and the admin's edit of a person, keyed by the API field names. */
+export function validateProfileEdit(v: ProfileEditValues): Errors {
+  const e: Errors = {};
+  const add = (key: string, msg: string | undefined) => {
+    if (msg) e[key] = msg;
+  };
+  add("display_name", validateText(v.name, "Name", 2, 80));
+  if (v.typed?.text && !v.phone) add("phone", phoneProblem(v.typed.text, v.typed.country) ?? PHONE_HELP);
+  if (v.role === "transporter" && !v.phone && !v.typed?.text) add("phone", PHONE_HELP);
+  if ((v.role === "transporter" || v.role === "factory") && v.placeChanged) {
+    add("district", v.district ? undefined : "District is required");
+    add("village", validateText(v.village, "Village or area", 2, 80));
+  }
+  if (v.role === "factory") {
+    add("factory.name", validateText(v.factoryName, "Factory name", 2, 120));
+    add("factory.price_per_tonne", validatePrice(v.price));
+    add("factory.residues", v.residues.length ? undefined : "Choose at least one residue you buy");
+  }
+  if (v.tier !== undefined && !["1", "2", "3"].includes(v.tier)) add("transporter.tier", "Tier must be 1, 2 or 3");
+  if (v.maxTonnes !== undefined && v.maxTonnes.trim() !== "") {
+    const n = Number(v.maxTonnes);
+    add("transporter.max_tonnes", Number.isFinite(n) && n > 0 && n <= 100 ? undefined : MAX_LOAD_HELP);
+  }
+  return e;
+}
+
 /** One line for a toast, the same wording the API uses for its `detail`. */
 export function summarize(errors: Errors): string {
   const messages = Object.values(errors);

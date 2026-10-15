@@ -108,7 +108,10 @@ class Transporter(Base):
     approved_at: Mapped[datetime | None] = mapped_column(TS)
     lat: Mapped[float] = mapped_column(Float)
     lon: Mapped[float] = mapped_column(Float)
+    district: Mapped[str | None] = mapped_column(Text)  # the base as typed, for the edit form
+    village: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = created_at()
+    updated_at: Mapped[datetime | None] = mapped_column(TS)
 
 
 class Factory(Base):
@@ -120,7 +123,10 @@ class Factory(Base):
     lat: Mapped[float] = mapped_column(Float)
     lon: Mapped[float] = mapped_column(Float)
     price_per_tonne: Mapped[int] = mapped_column(BigInteger)  # minor units
+    district: Mapped[str | None] = mapped_column(Text)
+    village: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = created_at()
+    updated_at: Mapped[datetime | None] = mapped_column(TS)
 
 
 class FactoryResidue(Base):

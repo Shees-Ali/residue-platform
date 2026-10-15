@@ -12,6 +12,7 @@ import { useAuth } from "@/auth/AuthProvider";
 import { JobStages, PhotoStrip, QueryBoundary, SectionHead, STATE_LABEL, type Job } from "./common";
 import { JobMoneyDialog } from "./AdminLedger";
 import { FactoryOrders, FactoryProducts } from "./FactoryProducts";
+import { MyDetailsLink } from "./MyDetailsLink";
 import { TrackDialog } from "./TrackViews";
 import { Weighbridge } from "./Weighbridge";
 
@@ -33,6 +34,7 @@ export function FactoryHome() {
         eyebrow="FACTORY DASHBOARD"
         title="From residue to resources."
         description="Fund the loads matched to you, then follow each one until it is weighed and paid."
+        action={<MyDetailsLink label="Edit my factory" />}
       />
       <QueryBoundary q={jobs} what="your jobs">
         {(all) => {

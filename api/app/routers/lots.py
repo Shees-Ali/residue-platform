@@ -12,20 +12,23 @@ from app.deps import DbSession, Events
 from app.models.job import JobOut
 from app.models.lot import (
     AdminLotIn,
+    LotEditIn,
+    LotEditOut,
     LotOut,
     LotReadback,
     MineLotIn,
     OverrideIn,
     RankingEntry,
 )
-from app.services.assignment_store import assign_lot, override_factory
+from app.services.assignment_store import assign_lot, override_factory, reassign_lot
 from app.services.idempotency import request_hash, run_idempotent
 from app.services.job_views import Viewer, job_out
 from app.services.lot_errors import as_field_errors
-from app.services.lot_store import create_lot_record
+from app.services.lot_store import create_lot_record, edit_lot_record
 from app.services.lot_views import get_lot_out, lot_out, lot_query
 from app.services.lots import LotError
 from app.services.registration import ensure_farmer
+from app.validation import FieldErrors
 
 router = APIRouter(prefix="/api/lots", tags=["lots"])
 admin_only = as_admin
@@ -162,6 +165,34 @@ async def create_my_lot(
         for job_id in assigned_job:
             await events.publish("job.updated", job_id)
     return payload
+
+
+@router.patch("/{lot_id}", response_model=LotEditOut)
+async def edit_lot(
+    db: DbSession,
+    events: Events,
+    lot_id: uuid.UUID,
+    body: LotEditIn,
+    user: AuthUser = admin_only,
+):
+    """Admin: change a lot until escrow is funded; the factory is ranked again."""
+    if not any(getattr(body, f) is not None for f in body.model_fields_set):
+        raise FieldErrors([("body", "Change at least one field")], code="empty")
+    lot = await db.get(Lot, lot_id)
+    if lot is None:
+        raise HTTPException(404, "Unknown lot")
+    try:
+        async with db.begin_nested():  # a refused edit leaves nothing changed
+            await edit_lot_record(db, lot, body)
+            job, dropped = await reassign_lot(db, lot_id)
+    except LotError as e:
+        raise as_field_errors(e) from None
+    out = await get_lot_out(db, lot_id)
+    await db.commit()
+    await events.publish("lot.updated")
+    if job:
+        await events.publish("job.updated", str(job.id))
+    return LotEditOut(**out.model_dump(), override_dropped=dropped)
 
 
 @router.get("/{lot_id}", response_model=LotOut)

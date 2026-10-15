@@ -119,12 +119,13 @@ async def test_create_lot_saves_a_complete_lot_and_returns_the_readback(api):
 
 async def test_replay_with_same_key_returns_the_same_lot_and_inserts_once(api):
     call_id = await start_call(api)
+    before = (await api.session.execute(select(func.count()).select_from(Lot))).scalar()
     first = await post_lot(api, call_id, key="same")
     second = await post_lot(api, call_id, key="same")
     assert second.status_code == 201
     assert first.json() == second.json()
     count = (await api.session.execute(select(func.count()).select_from(Lot))).scalar()
-    assert count == 1
+    assert count == before + 1  # other lots may already exist in the local database
     assert len(api.events.sent) == 2  # lot.created + job.updated once; a replay adds none
 
 
@@ -180,5 +181,7 @@ async def test_unknown_village_falls_back_to_the_district_centroid(api):
     r = await post_lot(api, call_id, village="Chak 99 Unknown")
     assert r.status_code == 201
     assert r.json()["place_match"] == "district"
-    lot = (await api.session.execute(select(Lot))).scalar_one()
+    lot = (
+        await api.session.execute(select(Lot).where(Lot.id == uuid.UUID(r.json()["lot_id"])))
+    ).scalar_one()
     assert (lot.lat, lot.lon) == (31.52, 74.36) and lot.village_id is None

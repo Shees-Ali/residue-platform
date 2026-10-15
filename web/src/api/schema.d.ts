@@ -81,7 +81,11 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Edit Lot
+         * @description Admin: change a lot until escrow is funded; the factory is ranked again.
+         */
+        patch: operations["edit_lot_api_lots__lot_id__patch"];
         trace?: never;
     };
     "/api/lots/{lot_id}/ranking": {
@@ -934,6 +938,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Profile
+         * @description My editable details (name, phone, base place, factory price and residues).
+         */
+        get: operations["get_profile_api_me_profile_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Patch Profile
+         * @description Change my own details. Only the fields sent change; a refused edit changes nothing.
+         */
+        patch: operations["patch_profile_api_me_profile_patch"];
+        trace?: never;
+    };
     "/api/users": {
         parameters: {
             query?: never;
@@ -1026,6 +1054,30 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/users/{uid}/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get User Profile
+         * @description Admin: one person's editable details.
+         */
+        get: operations["get_user_profile_api_users__uid__profile_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Patch User Profile
+         * @description Admin: change anyone's details, a transporter's tier and max load included.
+         */
+        patch: operations["patch_user_profile_api_users__uid__profile_patch"];
         trace?: never;
     };
     "/api/residue-types": {
@@ -1302,8 +1354,26 @@ export interface components {
              */
             created_at: string;
         };
+        /** FactoryEditIn */
+        FactoryEditIn: {
+            /** Name */
+            name?: string | null;
+            /** Price Per Tonne */
+            price_per_tonne?: number | null;
+            /** Residues */
+            residues?: string[] | null;
+        };
         /** FactoryProfileIn */
         FactoryProfileIn: {
+            /** Name */
+            name: string;
+            /** Price Per Tonne */
+            price_per_tonne: number;
+            /** Residues */
+            residues: string[];
+        };
+        /** FactoryProfileOut */
+        FactoryProfileOut: {
             /** Name */
             name: string;
             /** Price Per Tonne */
@@ -1554,6 +1624,77 @@ export interface components {
             photo_path: string;
             /** Weight Kg */
             weight_kg: number;
+        };
+        /**
+         * LotEditIn
+         * @description Admin: change a lot that is not funded yet. Same rules as reporting it.
+         */
+        LotEditIn: {
+            /** Quantity Tonnes */
+            quantity_tonnes?: number | null;
+            /** Pickup Date */
+            pickup_date?: string | null;
+            /** Pickup Part */
+            pickup_part?: string | null;
+            /** Village */
+            village?: string | null;
+            /** District */
+            district?: string | null;
+        };
+        /** LotEditOut */
+        LotEditOut: {
+            /** Id */
+            id: string;
+            /** Farmer Id */
+            farmer_id: string;
+            /** Farmer Name */
+            farmer_name?: string | null;
+            /** Farmer Phone */
+            farmer_phone?: string | null;
+            /** Residue Type */
+            residue_type: string;
+            /** Residue Label */
+            residue_label?: string | null;
+            /** Quantity Tonnes */
+            quantity_tonnes: number;
+            /** Village */
+            village?: string | null;
+            /** District */
+            district?: string | null;
+            /** Place Match */
+            place_match?: string | null;
+            /** Lat */
+            lat: number;
+            /** Lon */
+            lon: number;
+            /** Status */
+            status: string;
+            /** Factory Name */
+            factory_name?: string | null;
+            /** Quoted Price Per Tonne */
+            quoted_price_per_tonne?: number | null;
+            /** Farmer Share Bps */
+            farmer_share_bps?: number | null;
+            /** Est Farmer Payout */
+            est_farmer_payout?: number | null;
+            /** Pickup From */
+            pickup_from: string | null;
+            /** Pickup To */
+            pickup_to: string | null;
+            /** Job Id */
+            job_id?: string | null;
+            /** Job State */
+            job_state?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Override Dropped
+             * @default false
+             */
+            override_dropped: boolean;
         };
         /** LotOut */
         LotOut: {
@@ -1861,6 +2002,40 @@ export interface components {
             /** Active */
             active?: boolean | null;
         };
+        /** ProfileEditIn */
+        ProfileEditIn: {
+            /** Display Name */
+            display_name?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /** District */
+            district?: string | null;
+            /** Village */
+            village?: string | null;
+            factory?: components["schemas"]["FactoryEditIn"] | null;
+            transporter?: components["schemas"]["TransporterAdminEditIn"] | null;
+        };
+        /** ProfileOut */
+        ProfileOut: {
+            /** Uid */
+            uid: string;
+            /** Email */
+            email: string | null;
+            /** Role */
+            role: string;
+            /** Status */
+            status: string;
+            /** Display Name */
+            display_name: string;
+            /** Phone */
+            phone: string | null;
+            /** District */
+            district?: string | null;
+            /** Village */
+            village?: string | null;
+            factory?: components["schemas"]["FactoryProfileOut"] | null;
+            transporter?: components["schemas"]["TransporterProfileOut"] | null;
+        };
         /**
          * QuoteOut
          * @description What the agent says to the farmer. Rupee fields are for speaking, paisa fields are exact.
@@ -2049,6 +2224,16 @@ export interface components {
             /** Distance From Target M */
             distance_from_target_m?: number | null;
         };
+        /**
+         * TransporterAdminEditIn
+         * @description Only an admin may send this.
+         */
+        TransporterAdminEditIn: {
+            /** Tier */
+            tier?: number | null;
+            /** Max Tonnes */
+            max_tonnes?: number | null;
+        };
         /** TransporterOut */
         TransporterOut: {
             /** Id */
@@ -2071,6 +2256,15 @@ export interface components {
             lat: number;
             /** Lon */
             lon: number;
+        };
+        /** TransporterProfileOut */
+        TransporterProfileOut: {
+            /** Tier */
+            tier: number;
+            /** Max Tonnes */
+            max_tonnes: number;
+            /** Approved */
+            approved: boolean;
         };
         /** UploadUrlIn */
         UploadUrlIn: {
@@ -2357,6 +2551,45 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LotOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_lot_api_lots__lot_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path: {
+                lot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotEditIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotEditOut"];
                 };
             };
             /** @description Validation Error */
@@ -3989,11 +4222,84 @@ export interface operations {
             };
         };
     };
+    get_profile_api_me_profile_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+                "x-dev-phone"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_profile_api_me_profile_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+                "x-dev-phone"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileEditIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_users_api_users_get: {
         parameters: {
             query?: {
                 status?: ("active" | "pending" | "suspended") | null;
                 role?: ("admin" | "transporter" | "factory" | "buyer" | "farmer") | null;
+                q?: string | null;
                 limit?: number;
                 offset?: number;
             };
@@ -4158,6 +4464,80 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_user_profile_api_users__uid__profile_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path: {
+                uid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_user_profile_api_users__uid__profile_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path: {
+                uid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileEditIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileOut"];
                 };
             };
             /** @description Validation Error */

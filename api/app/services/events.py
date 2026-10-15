@@ -11,6 +11,7 @@ log = logging.getLogger(__name__)
 
 EVENT_TYPES = (
     "lot.created",
+    "lot.updated",
     "job.updated",
     "offer.created",
     "offer.updated",

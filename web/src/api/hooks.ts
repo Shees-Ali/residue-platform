@@ -15,6 +15,7 @@ export const LEDGER_KEY = ["ledger"] as const;
 export const IMPACT_KEY = ["impact"] as const;
 export const PRODUCTS_KEY = ["products"] as const;
 export const ORDERS_KEY = ["orders"] as const;
+export const PROFILE_KEY = ["profile"] as const;
 export const ESCALATIONS_KEY = ["escalations"] as const;
 
 const POLL = 8_000; // events are a no-op locally, so live screens poll
@@ -181,4 +182,37 @@ export function useVillages(district: string) {
     meta: { silent: true }, // suggestions are optional, so a failure is not worth a toast
   });
   return q.data?.map((v) => v.name) ?? [];
+}
+
+/** My own editable details (name, phone, base place, factory price and residues). */
+export function useProfile() {
+  return useQuery({
+    queryKey: PROFILE_KEY,
+    queryFn: () => unwrap(api.GET("/api/me/profile")),
+  });
+}
+
+export const USERS_KEY = ["users"] as const;
+
+export interface UserFilter {
+  q?: string;
+  role?: "admin" | "transporter" | "factory" | "buyer" | "farmer";
+  status?: "active" | "pending" | "suspended";
+}
+
+/** Admin: every account, filtered by name or email, role and status. */
+export function useUsers(filter: UserFilter) {
+  return useQuery({
+    queryKey: [...USERS_KEY, filter],
+    queryFn: () =>
+      unwrap(api.GET("/api/users", { params: { query: { ...filter, q: filter.q || undefined, limit: 200 } } })),
+  });
+}
+
+/** Admin: one person's editable details. */
+export function useUserProfile(uid: string) {
+  return useQuery({
+    queryKey: [...PROFILE_KEY, "user", uid],
+    queryFn: () => unwrap(api.GET("/api/users/{uid}/profile", { params: { path: { uid } } })),
+  });
 }

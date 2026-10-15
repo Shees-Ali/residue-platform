@@ -7,6 +7,7 @@ import { AdminDispatch } from "./AdminDispatch";
 import { AdminLedger, EscalationQueue, ImpactPanel } from "./AdminLedger";
 import { AdminLotsSection } from "./AdminLotsSection";
 import { LiveMap } from "./TrackViews";
+import { AdminPeople } from "./AdminPeople";
 
 function StatsStrip() {
   const stats = useStats();
@@ -45,6 +46,7 @@ export function AdminHome() {
       />
       <PendingApprovals />
       <StatsStrip />
+      <AdminPeople />
       <AdminLotsSection />
       <AdminDispatch />
       <LiveMap />

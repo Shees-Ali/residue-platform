@@ -70,6 +70,27 @@ Web `LIMITS` in `lib/validation.ts` = API limit. The input stops typing at the m
 ## Farmer phone is optional for now (2026-10-16)
 SMS verification is off while Firebase phone sign-in is not set up. `REQUIRE_VERIFIED_PHONE=false` (API) and `VITE_REQUIRE_VERIFIED_PHONE=false` (web). Off: a farmer signs up with no phone or an unverified typed one (still a valid mobile number if typed), and gets a farmer record at once. On: the SMS flow as before. Always on when `K_SERVICE` is set (Cloud Run). An unverified phone can link earlier phone-made lots, so switch it on before real use.
 
+## Edit my details, and admin edits (confirmed 2026-10-16)
+`PATCH /api/me/profile` (own record), `PATCH /api/users/{uid}/profile` (admin, anyone), `PATCH /api/lots/{id}` (admin). Partial bodies; nothing changes if any field is invalid; edits apply at once.
+
+| Field | Rule | Message |
+|---|---|---|
+| display_name | 2 to 80 | "Name must be at least 2 characters" |
+| phone | transporter required; others optional; valid mobile with country code; a farmer phone already linked elsewhere is a 409 | the phone messages |
+| factory.name | 2 to 120 | "Factory name must be at least 2 characters" |
+| factory.price_per_tonne | paisa 100 to 100,000,000 | "Price must be between PKR 1 and PKR 1,000,000 per tonne" |
+| factory.residues | 1 to 10 distinct known codes | "Choose at least one residue you buy" |
+| district | a served district | "District must be one of ..." |
+| village | 2 to 80, unknown falls back to the district centre | "Village or area must be at least 2 characters" |
+| body | at least one field; no unknown fields | "Change at least one field" |
+| tier, max_tonnes via self-edit | refused | "Only an admin can change tier" |
+| transporter.tier (admin) | 1 to 3; resets max load to the tier default unless max load is sent | "Tier must be 1, 2 or 3" |
+| transporter.max_tonnes (admin) | more than 0, at most 100 | "Max load must be more than 0 and at most 100 tonnes" |
+| lot fields (admin) | same as reporting a lot | the report-residue messages |
+| lot already funded | refused (409) | "This lot is already funded and can no longer be changed" |
+| suspended account editing | refused (403) | "Your account is suspended. Contact an admin." |
+| users search `q` (admin) | up to 80 chars | "Search must be at most 80 characters" |
+
 ## Open
 - Pakistani mobile numbers only? Currently any E.164 number is accepted (so test numbers work); tighten to `+923xxxxxxxxx` if wanted.
 - Password rules follow the table above; Firebase itself only requires 6.

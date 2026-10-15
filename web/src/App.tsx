@@ -10,6 +10,7 @@ import Call from "./pages/Call";
 import Health from "./pages/Health";
 import Login from "./pages/auth/Login";
 import Pending from "./pages/auth/Pending";
+import Settings from "./pages/Settings";
 import Signup from "./pages/auth/Signup";
 
 function Shell() {
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="/factory" element={guarded("/factory", <FactoryHome />)} />
           <Route path="/market" element={guarded("/market", <Marketplace />)} />
           <Route path="/admin" element={guarded("/admin", <AdminHome />)} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/call" element={guarded("/call", <Call />)} />
         </Route>
       </Route>

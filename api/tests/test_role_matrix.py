@@ -72,9 +72,17 @@ ROUTES: dict[tuple[str, str], tuple[set[str], dict | None]] = {
     ("POST", "/api/users/{uid}/reject"): (ADMIN, None),
     ("POST", "/api/users/{uid}/suspend"): (ADMIN, None),
     ("POST", "/api/users/{uid}/reactivate"): (ADMIN, None),
+    ("GET", "/api/users/{uid}/profile"): (ADMIN, None),
+    ("PATCH", "/api/users/{uid}/profile"): (ADMIN, None),
+    ("PATCH", "/api/lots/{lot_id}"): (ADMIN, None),
 }
 # Any signed-in person, including one who has not picked a role yet.
-SELF_ROUTES = {("GET", "/api/me"), ("POST", "/api/me/register")}
+SELF_ROUTES = {
+    ("GET", "/api/me"),
+    ("POST", "/api/me/register"),
+    ("GET", "/api/me/profile"),  # own row only, any status (a pending account may fix its details)
+    ("PATCH", "/api/me/profile"),
+}
 # Needs a signed-in farmer (their own token phone), so it is covered in test_lot_forms.
 FARMER_ONLY_ROUTES = {("POST", "/api/me/link-phone")}
 # The local photo store: writing needs any signed-in person, reading is open (an img tag cannot

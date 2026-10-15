@@ -53,25 +53,25 @@ describe("navigation", () => {
       .getAllByRole("link")
       .map((a) => a.textContent);
 
-  test("a buyer sees only the marketplace", () => {
+  test("a buyer sees only the marketplace and their details", () => {
     renderAt("/market", signedIn("buyer"));
-    expect(links()).toEqual(["Marketplace"]);
+    expect(links()).toEqual(["Marketplace", "My details"]);
   });
 
-  test("a transporter sees only their dashboard", () => {
+  test("a transporter sees only their dashboard and their details", () => {
     renderAt("/transporter", signedIn("transporter"));
-    expect(links()).toEqual(["Transporter Dashboard"]);
+    expect(links()).toEqual(["Transporter Dashboard", "My details"]);
   });
 
   test("a factory sees its dashboard and the marketplace", () => {
     renderAt("/factory", signedIn("factory"));
-    expect(links()).toEqual(["Factory Dashboard", "Marketplace"]);
+    expect(links()).toEqual(["Factory Dashboard", "Marketplace", "My details"]);
   });
 
   test("an admin sees everything", async () => {
     renderAt("/admin", signedIn("admin"));
     await screen.findByRole("heading", { name: ADMIN });
-    expect(links()).toHaveLength(6);
+    expect(links()).toHaveLength(7); // every page plus My details
   });
 
   test("there is no demo role switcher any more", async () => {

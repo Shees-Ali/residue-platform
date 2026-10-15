@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/toast";
 import { haversineKm } from "@/lib/domain/assignment";
 import { useLocationTracker } from "@/lib/useLocationTracker";
 import { LegDialog } from "./LegDialog";
+import { MyDetailsLink } from "./MyDetailsLink";
 import { JobStages, PhotoStrip, QueryBoundary, SectionHead, mmss, secondsLeft, useNow, type Job } from "./common";
 
 type Offer = components["schemas"]["OfferOut"];
@@ -33,6 +34,7 @@ export function TransporterHome() {
         eyebrow="TRANSPORTER DASHBOARD"
         title="Move harvests forward."
         description="Take a nearby load before the clock runs out, then record the pickup and the delivery."
+        action={<MyDetailsLink />}
       />
       <QueryBoundary q={offers} what="your offers">
         {(all) => (

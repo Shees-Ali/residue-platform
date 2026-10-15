@@ -12,6 +12,7 @@ import { Field } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
 import { useFormErrors } from "@/lib/useFormErrors";
+import { LotEditDialog, canEditLot } from "./LotEditDialog";
 import type { JobState } from "@/lib/domain/types";
 
 export type Lot = components["schemas"]["LotOut"];
@@ -112,6 +113,7 @@ export function MyRequests() {
 export function AdminLots() {
   const lots = useLots();
   const [ranked, setRanked] = useState<Lot | null>(null);
+  const [editing, setEditing] = useState<Lot | null>(null);
   return (
     <>
       <Async q={lots}>
@@ -161,6 +163,16 @@ export function AdminLots() {
                         <Button size="sm" variant="ghost" onClick={() => setRanked(lot)} disabled={!lot.job_id}>
                           Ranking
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditing(lot)}
+                          disabled={!canEditLot(lot)}
+                          title={canEditLot(lot) ? undefined : "Locked after funding"}
+                          aria-label={`Edit lot of ${lot.farmer_name ?? "a farmer"}`}
+                        >
+                          {canEditLot(lot) ? "Edit" : "Locked"}
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -171,6 +183,7 @@ export function AdminLots() {
         }
       </Async>
       {ranked && <RankingDialog lot={ranked} onClose={() => setRanked(null)} />}
+      {editing && <LotEditDialog lot={editing} onClose={() => setEditing(null)} />}
     </>
   );
 }

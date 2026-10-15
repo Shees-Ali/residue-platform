@@ -21,3 +21,4 @@ Job states: created, funded, offered, accepted, picked up, delivered, confirmed,
 | [A3](stories/A3.md) | Run the ledger and impact numbers | built (API and web) | the check passes in unit tests and on screen, and the counter rises at settlement. |
 | [B1](stories/B1.md) | Browse and order products | built (API and web) | an order reduces stock and creates the sale record that feeds the split. |
 | [AUTH](stories/AUTH.md) | Sign in with the right role | built (needs a live Firebase check) | a new transporter waits for approval, a buyer cannot open admin pages, and every API route rejects the wrong role. |
+| [PROFILE](stories/PROFILE.md) | Edit my details; admin edits | built (API and web) | a factory's new price and residues rank the next lot, and the admin can edit anyone, tiers and unfunded lots. |

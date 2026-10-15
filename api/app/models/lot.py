@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from app.validation import Phone, text
 
@@ -100,3 +100,24 @@ class RankingEntry(BaseModel):
 class OverrideIn(BaseModel):
     factory_id: text(1, 36)
     reason: text(3, 500)
+
+
+class LotEditIn(BaseModel):
+    """Admin: change a lot that is not funded yet. Same rules as reporting it."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    quantity_tonnes: float | None = None
+    pickup_date: text(1, 10) | None = None  # YYYY-MM-DD
+    pickup_part: text(1, 80) | None = None
+    village: text(1, 80) | None = None
+    district: text(1, 80) | None = None
+
+    @field_validator("quantity_tonnes")
+    @classmethod
+    def _quantity(cls, v):
+        return v if v is None else check_quantity(v)
+
+
+class LotEditOut(LotOut):
+    override_dropped: bool = False  # a manual factory choice was replaced by the new ranking

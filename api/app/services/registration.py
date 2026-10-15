@@ -19,6 +19,7 @@ from app.db_models.tables import (
 )
 from app.models.me import MeOut, RegisterIn, UserOut
 from app.services.dispatch import TIER_MAX_TONNES
+from app.services.lot_errors import as_field_errors
 from app.services.lots import LotError, PlaceMatch, VillageRow, canonical_district, match_place
 from app.validation import PHONE_HELP, FieldErrors
 
@@ -29,9 +30,7 @@ async def _place(db: AsyncSession, village: str | None, district: str | None) ->
     try:
         canon = canonical_district(district or "")
     except LotError as e:
-        err = FieldErrors([("district", e.message)])
-        err.valid = e.valid
-        raise err from None
+        raise as_field_errors(e) from None  # "District must be one of Lahore, ..."
     villages = [
         VillageRow(v.id, v.name, v.lat, v.lon)
         for v in (await db.execute(select(Village).where(Village.district == canon))).scalars()
@@ -175,21 +174,27 @@ async def _create_transporter(db: AsyncSession, user: User, body: RegisterIn) ->
             max_tonnes=TIER_MAX_TONNES[1],
             lat=place.lat,
             lon=place.lon,
+            district=place.district,
+            village=place.village,
         )
     )
     await db.flush()
 
 
-async def _create_factory(db: AsyncSession, user: User, body: RegisterIn) -> None:
-    profile = body.factory
-    assert profile is not None  # _require_fields checked
+async def check_residues(db: AsyncSession, residues: list[str]) -> None:
     known = set((await db.execute(select(ResidueType.code))).scalars())
-    unknown = sorted(set(profile.residues) - known)
+    unknown = sorted(set(residues) - known)
     if unknown:
         raise FieldErrors(
             [("factory.residues", f"Unknown residue types: {', '.join(unknown)}")],
             code="unknown_residue",
         )
+
+
+async def _create_factory(db: AsyncSession, user: User, body: RegisterIn) -> None:
+    profile = body.factory
+    assert profile is not None  # _require_fields checked
+    await check_residues(db, profile.residues)
     place = await _place(db, body.village, body.district)
     factory = Factory(
         user_uid=user.uid,
@@ -197,6 +202,8 @@ async def _create_factory(db: AsyncSession, user: User, body: RegisterIn) -> Non
         lat=place.lat,
         lon=place.lon,
         price_per_tonne=profile.price_per_tonne,
+        district=place.district,
+        village=place.village,
     )
     db.add(factory)
     await db.flush()

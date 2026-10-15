@@ -11,6 +11,46 @@ from app.main import app
 from tests.helpers import PRICE, scalar, tomorrow
 
 
+async def seed_synthetic_accounts(session) -> None:
+    """The dev-* users, factories, transporters, farmers and products that seed/seed.py makes.
+
+    Tests need them, but they are inserted inside each test's rolled-back transaction, so the
+    local database holds only real accounts. Reference data (villages, residues) stays in the
+    database itself.
+    """
+    import random
+    import sys
+    from datetime import UTC, datetime
+    from pathlib import Path
+
+    from sqlalchemy.dialects.postgresql import insert
+
+    from app.db_models import tables as t
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "seed"))
+    import seed as seed_module
+
+    rows = seed_module.make(random.Random(42), 20, 8, 4)
+    now = datetime.now(UTC)
+    for name, model in (
+        ("users", t.User),
+        ("farmers", t.Farmer),
+        ("transporters", t.Transporter),
+        ("factories", t.Factory),
+        ("factory_residues", t.FactoryResidue),
+        ("products", t.Product),
+    ):
+        data = rows[name]
+        if name == "transporters":
+            data = [
+                {**{k: v for k, v in r.items() if k != "approved"}, "approved_at": now}
+                for r in data
+            ]
+        if name == "farmers":  # the village ids belong to the seeded villages, which may be absent
+            data = [{k: v for k, v in r.items() if k != "village_id"} for r in data]
+        await session.execute(insert(model).values(data).on_conflict_do_nothing())
+
+
 @pytest.fixture
 def client() -> TestClient:
     return TestClient(app)
@@ -58,6 +98,7 @@ async def api(monkeypatch):
         bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False
     )
     events, storage, grader = FakeEvents(), FakeStorage(), CannedGrader()
+    await seed_synthetic_accounts(session)  # rolled back with the test: the database stays clean
 
     async def session_override():
         yield session

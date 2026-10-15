@@ -38,24 +38,16 @@ async def load_factories(db: AsyncSession) -> list[Factory]:
     ]
 
 
-async def assign_lot(db: AsyncSession, lot_id: uuid.UUID) -> Job | None:
-    """Rank factories, store the ranking, create the job. None when no factory accepts the lot.
-
-    Idempotent: a lot that already has a job returns it. The caller commits.
-    """
-    existing = (await db.execute(select(Job).where(Job.lot_id == lot_id))).scalar_one_or_none()
-    if existing is not None:
-        return existing
-    lot = await db.get(Lot, lot_id)
-    request = LotRequest(
+def _request_for(lot: Lot) -> LotRequest:
+    return LotRequest(
         residue_type=lot.residue_code,
         lat=lot.lat,
         lon=lot.lon,
         quantity_tonnes=float(lot.quantity_tonnes),
     )
-    ranked = rank_factories(await load_factories(db), request)
-    if not ranked:
-        return None  # the lot stays `open` until a factory that accepts it exists
+
+
+def _store_ranking(db: AsyncSession, lot: Lot, ranked: list[Factory], request: LotRequest) -> None:
     for rank, f in enumerate(ranked, start=1):
         db.add(
             FactoryCandidate(
@@ -68,6 +60,22 @@ async def assign_lot(db: AsyncSession, lot_id: uuid.UUID) -> Job | None:
                 chosen=rank == 1,
             )
         )
+
+
+async def assign_lot(db: AsyncSession, lot_id: uuid.UUID) -> Job | None:
+    """Rank factories, store the ranking, create the job. None when no factory accepts the lot.
+
+    Idempotent: a lot that already has a job returns it. The caller commits.
+    """
+    existing = (await db.execute(select(Job).where(Job.lot_id == lot_id))).scalar_one_or_none()
+    if existing is not None:
+        return existing
+    lot = await db.get(Lot, lot_id)
+    request = _request_for(lot)
+    ranked = rank_factories(await load_factories(db), request)
+    if not ranked:
+        return None  # the lot stays `open` until a factory that accepts it exists
+    _store_ranking(db, lot, ranked, request)
     best = ranked[0]
     job = Job(
         lot_id=lot.id,
@@ -81,6 +89,45 @@ async def assign_lot(db: AsyncSession, lot_id: uuid.UUID) -> Job | None:
     db.add(job)
     await db.flush()
     return job
+
+
+async def reassign_lot(db: AsyncSession, lot_id: uuid.UUID) -> tuple[Job | None, bool]:
+    """Rank again after the lot changed. Only before escrow is funded (the caller checks).
+
+    Replaces the ranking and moves the existing job to the new best factory, price and weight.
+    Returns the job (None when no factory accepts the lot now) and whether an admin override
+    was dropped by the new ranking.
+    """
+    lot = await db.get(Lot, lot_id)
+    job = (
+        await db.execute(select(Job).where(Job.lot_id == lot_id).with_for_update())
+    ).scalar_one_or_none()
+    old = (
+        await db.execute(select(FactoryCandidate).where(FactoryCandidate.lot_id == lot_id))
+    ).scalars().all()
+    dropped = any(c.overridden_by_uid for c in old)
+    for c in old:
+        await db.delete(c)
+    await db.flush()
+    request = _request_for(lot)
+    ranked = rank_factories(await load_factories(db), request)
+    if not ranked:
+        if job is not None:
+            await db.delete(job)  # still `created`: nothing hangs off it yet
+        lot.status = "open"
+        await db.flush()
+        return None, dropped
+    _store_ranking(db, lot, ranked, request)
+    best = ranked[0]
+    if job is None:
+        job = Job(lot_id=lot.id, farmer_share_bps=get_shares().farmer_bps, state="created")
+        db.add(job)
+    job.factory_id = uuid.UUID(best.id)
+    job.quoted_price_per_tonne = best.price_per_tonne_cents
+    job.est_weight_kg = round(float(lot.quantity_tonnes) * 1000)
+    lot.status = "assigned"
+    await db.flush()
+    return job, dropped
 
 
 async def override_factory(

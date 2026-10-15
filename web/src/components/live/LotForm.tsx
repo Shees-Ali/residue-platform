@@ -31,7 +31,7 @@ interface Props {
 }
 
 const newKey = () => globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
-const PART_LABEL = { morning: "Morning (6 to 12)", afternoon: "Afternoon (12 to 5)", evening: "Evening (5 to 8)" };
+export const PART_LABEL = { morning: "Morning (6 to 12)", afternoon: "Afternoon (12 to 5)", evening: "Evening (5 to 8)" };
 
 /** Report residue. The farmer reports their own; the admin enters one for a farmer by phone.
  * Both send the same fields the voice agent collects, with the same rules as the API. */
