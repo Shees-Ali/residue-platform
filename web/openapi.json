@@ -34,7 +34,13 @@
           "lots"
         ],
         "summary": "List Lots",
+        "description": "Admin: every lot. Farmer: only their own (matched through their verified phone).",
         "operationId": "list_lots_api_lots_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "status",
@@ -158,6 +164,11 @@
         "summary": "Create Lot For Farmer",
         "description": "Admin enters a lot by hand for a farmer (found or created by phone).",
         "operationId": "create_lot_for_farmer_api_lots_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "authorization",
@@ -233,6 +244,11 @@
         ],
         "summary": "Get Lot",
         "operationId": "get_lot_api_lots__lot_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "lot_id",
@@ -307,6 +323,11 @@
         ],
         "summary": "Get Ranking",
         "operationId": "get_ranking_api_lots__lot_id__ranking_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "lot_id",
@@ -385,6 +406,11 @@
         ],
         "summary": "Override",
         "operationId": "override_api_lots__lot_id__override_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "lot_id",
@@ -469,6 +495,11 @@
         ],
         "summary": "Get Jobs Root",
         "operationId": "get_jobs_root_api_jobs_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "state",
@@ -577,6 +608,11 @@
         ],
         "summary": "Get Jobs Job Id",
         "operationId": "get_jobs_job_id_api_jobs__job_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "job_id",
@@ -652,6 +688,11 @@
         "summary": "Post Jobs Job Id Fund",
         "description": "Fund escrow (simulated). Starts dispatch: the nearest eligible transporter gets an offer.",
         "operationId": "post_jobs_job_id_fund_api_jobs__job_id__fund_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "job_id",
@@ -727,6 +768,11 @@
         "summary": "Post Jobs Job Id Redispatch",
         "description": "Offer a funded job again, e.g. after approving a transporter when every one passed.",
         "operationId": "post_jobs_job_id_redispatch_api_jobs__job_id__redispatch_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "job_id",
@@ -802,6 +848,11 @@
         "summary": "Post Jobs Job Id Photo Url",
         "description": "Signed URL to upload one photo to storage; send the path back on pickup or deliver.",
         "operationId": "post_jobs_job_id_photo_url_api_jobs__job_id__photos_upload_url_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "job_id",
@@ -886,6 +937,11 @@
         ],
         "summary": "Post Jobs Job Id Pickup",
         "operationId": "post_jobs_job_id_pickup_api_jobs__job_id__pickup_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "job_id",
@@ -970,6 +1026,11 @@
         ],
         "summary": "Post Jobs Job Id Deliver",
         "operationId": "post_jobs_job_id_deliver_api_jobs__job_id__deliver_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "job_id",
@@ -1055,6 +1116,11 @@
         "summary": "Post Jobs Job Id Grade",
         "description": "AI visual estimate of the delivered lot. Never replaces the weighbridge confirmation.",
         "operationId": "post_jobs_job_id_grade_api_jobs__job_id__grade_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "job_id",
@@ -1140,6 +1206,11 @@
         "summary": "Post Jobs Job Id Confirm",
         "description": "Weigh and decide. Accept sets the final weight and pays the transporter; reject records the\nreason and applies the cost rule (transporter paid their share, the rest refunded).",
         "operationId": "post_jobs_job_id_confirm_api_jobs__job_id__confirm_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "job_id",
@@ -1225,6 +1296,11 @@
         "summary": "Post Jobs Job Id Verification Call",
         "description": "Open a verification call for the job's farmer. TODO(F4): the voice service dials it.",
         "operationId": "post_jobs_job_id_verification_call_api_jobs__job_id__verification_call_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "job_id",
@@ -1300,6 +1376,11 @@
         "summary": "Get Offers Root",
         "description": "The signed-in transporter's offers, open ones first, with what they need to decide.",
         "operationId": "get_offers_root_api_offers_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "authorization",
@@ -1370,6 +1451,11 @@
         "summary": "Post Offers Offer Id Accept",
         "description": "Accept before the offer expires. Exactly one caller can win; the rest get 409.",
         "operationId": "post_offers_offer_id_accept_api_offers__offer_id__accept_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "offer_id",
@@ -1445,6 +1531,11 @@
         "summary": "Get Ledger Root",
         "description": "Every ledger entry, newest first (admin).",
         "operationId": "get_ledger_root_api_ledger_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "kind",
@@ -1570,6 +1661,11 @@
         "summary": "Get Ledger Check",
         "description": "Escrow in equals releases plus fees plus refunds, for every finished job and order.",
         "operationId": "get_ledger_check_api_ledger_check_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "authorization",
@@ -1634,8 +1730,13 @@
           "ledger"
         ],
         "summary": "Get Ledger Mine",
-        "description": "The transporter's payouts: pending until the factory confirms, then released.",
+        "description": "Your payouts. Transporter: pending until the factory confirms, then released.\nFarmer: pending until the job settles, then released.",
         "operationId": "get_ledger_mine_api_ledger_mine_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "authorization",
@@ -1706,6 +1807,11 @@
         "summary": "Get Products Root",
         "description": "The marketplace: buyers and admins see what is for sale, a factory sees all of its own.",
         "operationId": "get_products_root_api_products_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "authorization",
@@ -1773,6 +1879,11 @@
         ],
         "summary": "Post Products Root",
         "operationId": "post_products_root_api_products_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "authorization",
@@ -1848,6 +1959,11 @@
         ],
         "summary": "Patch Product",
         "operationId": "patch_product_api_products__product_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -1933,6 +2049,11 @@
         "summary": "Post Orders Root",
         "description": "Place an order (payment is simulated). Reduces stock and writes the four-way split.",
         "operationId": "post_orders_root_api_orders_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "authorization",
@@ -2007,6 +2128,11 @@
         "summary": "Get Orders Root",
         "description": "A buyer's own orders, a factory's orders for its products, or all of them (admin).",
         "operationId": "get_orders_root_api_orders_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "authorization",
@@ -2077,6 +2203,11 @@
         "summary": "Get Orders Order Id Split",
         "description": "How the sale is divided; shares add to 10000 bps and amounts to the order total.",
         "operationId": "get_orders_order_id_split_api_orders__order_id__split_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "order_id",
@@ -2647,6 +2778,11 @@
         "summary": "Get Escalations",
         "description": "The admin queue: farmers who asked for a person, and disputes (open ones by default).",
         "operationId": "get_escalations_api_escalations_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "status",
@@ -2756,6 +2892,11 @@
         ],
         "summary": "Post Escalation Resolve",
         "operationId": "post_escalation_resolve_api_escalations__escalation_id__resolve_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "escalation_id",
@@ -2822,8 +2963,13 @@
           "impact"
         ],
         "summary": "Get Impact",
-        "description": "Tonnes kept out of burning, plus a record per settled lot (farmer, place, date, weight).",
+        "description": "Tonnes kept out of burning. The per-lot records name farmers, so only admins get them.",
         "operationId": "get_impact_api_impact_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "limit",
@@ -2901,6 +3047,11 @@
         ],
         "summary": "Get Transporters",
         "operationId": "get_transporters_api_transporters_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "approved",
@@ -2987,6 +3138,11 @@
         "summary": "Approve Transporter",
         "description": "Approve (or re-tier) a transporter. The tier sets the largest job they are offered.",
         "operationId": "approve_transporter_api_transporters__transporter_id__approve_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "transporter_id",
@@ -3035,7 +3191,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ApproveIn"
+                "$ref": "#/components/schemas/app__models__transporter__ApproveIn"
               }
             }
           }
@@ -3072,6 +3228,11 @@
         "summary": "Revoke Transporter",
         "description": "Stop offering jobs to this transporter. Jobs they already accepted are unaffected.",
         "operationId": "revoke_transporter_api_transporters__transporter_id__revoke_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "transporter_id",
@@ -3138,6 +3299,701 @@
           }
         }
       }
+    },
+    "/api/me": {
+      "get": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Get Me",
+        "description": "Who the signed-in person is. 404 `not_registered` means: show the signup form.",
+        "operationId": "get_me_api_me_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
+          },
+          {
+            "name": "x-dev-phone",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Phone"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/register": {
+      "post": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Register Me",
+        "description": "First sign-in: pick a role. Farmers and buyers are active at once; transporters and\nfactories wait for an admin. Admin is never self-selected.",
+        "operationId": "register_me_api_me_register_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
+          },
+          {
+            "name": "x-dev-phone",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Phone"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "List Users",
+        "description": "Accounts, newest first. `?status=pending` is the approval queue.",
+        "operationId": "list_users_api_users_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "active",
+                    "pending",
+                    "suspended"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "admin",
+                    "transporter",
+                    "factory",
+                    "buyer",
+                    "farmer"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Role"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserOut"
+                  },
+                  "title": "Response List Users Api Users Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{uid}/approve": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Approve User",
+        "description": "Approve a pending transporter or factory. `tier` sets a transporter's largest job.",
+        "operationId": "approve_user_api_users__uid__approve_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "title": "Uid"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/app__models__me__ApproveIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{uid}/reject": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Reject User",
+        "operationId": "reject_user_api_users__uid__reject_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Uid"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{uid}/suspend": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Suspend User",
+        "description": "Block an active account. A transporter also stops receiving offers.",
+        "operationId": "suspend_user_api_users__uid__suspend_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Uid"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{uid}/reactivate": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Reactivate User",
+        "operationId": "reactivate_user_api_users__uid__reactivate_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Uid"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3150,6 +4006,8 @@
           },
           "residue_type": {
             "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
             "title": "Residue Type"
           },
           "quantity_tonnes": {
@@ -3158,18 +4016,26 @@
           },
           "pickup_date": {
             "type": "string",
+            "maxLength": 10,
+            "minLength": 1,
             "title": "Pickup Date"
           },
           "pickup_part": {
             "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
             "title": "Pickup Part"
           },
           "village": {
             "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
             "title": "Village"
           },
           "district": {
             "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
             "title": "District"
           }
         },
@@ -3185,21 +4051,6 @@
         ],
         "title": "AdminLotIn",
         "description": "Manual lot entry by an admin on behalf of a farmer (same validation as the agent)."
-      },
-      "ApproveIn": {
-        "properties": {
-          "tier": {
-            "type": "integer",
-            "maximum": 3.0,
-            "minimum": 1.0,
-            "title": "Tier"
-          }
-        },
-        "type": "object",
-        "required": [
-          "tier"
-        ],
-        "title": "ApproveIn"
       },
       "CallEndIn": {
         "properties": {
@@ -3374,10 +4225,14 @@
           },
           "summary": {
             "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
             "title": "Summary"
           },
           "transcript": {
             "type": "string",
+            "maxLength": 50000,
+            "minLength": 0,
             "title": "Transcript",
             "default": ""
           }
@@ -3438,6 +4293,37 @@
           "created_at"
         ],
         "title": "EscalationOut"
+      },
+      "FactoryProfileIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Name"
+          },
+          "price_per_tonne": {
+            "type": "integer",
+            "title": "Price Per Tonne"
+          },
+          "residues": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z_]{2,40}$"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Residues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "price_per_tonne",
+          "residues"
+        ],
+        "title": "FactoryProfileIn"
       },
       "GetQuoteIn": {
         "properties": {
@@ -4148,6 +5034,69 @@
         "title": "LotReadback",
         "description": "Everything the agent needs to read a saved lot back to the farmer."
       },
+      "MeOut": {
+        "properties": {
+          "uid": {
+            "type": "string",
+            "title": "Uid"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "farmer_linked": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Farmer Linked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "uid",
+          "email",
+          "role",
+          "status",
+          "display_name",
+          "phone"
+        ],
+        "title": "MeOut"
+      },
       "OfferOut": {
         "properties": {
           "id": {
@@ -4304,10 +5253,14 @@
         "properties": {
           "factory_id": {
             "type": "string",
+            "maxLength": 36,
+            "minLength": 1,
             "title": "Factory Id"
           },
           "reason": {
             "type": "string",
+            "maxLength": 500,
+            "minLength": 3,
             "title": "Reason"
           }
         },
@@ -4604,6 +5557,8 @@
           },
           "note": {
             "type": "string",
+            "maxLength": 1000,
+            "minLength": 0,
             "title": "Note",
             "default": ""
           }
@@ -4615,6 +5570,80 @@
           "confirmed"
         ],
         "title": "RecordConfirmationIn"
+      },
+      "RegisterIn": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "farmer",
+              "buyer",
+              "transporter",
+              "factory"
+            ],
+            "title": "Role"
+          },
+          "display_name": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Display Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "village": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Village"
+          },
+          "district": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District"
+          },
+          "factory": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FactoryProfileIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "display_name"
+        ],
+        "title": "RegisterIn",
+        "description": "Self-signup. `admin` is not a choice: it is granted only by BOOTSTRAP_ADMIN_EMAILS.\n\nWhich of the optional fields a role needs is checked in `services.registration`, so every\nmissing field is reported at once. Rules: memory/validation-rules.md."
       },
       "SplitLine": {
         "properties": {
@@ -4780,6 +5809,70 @@
         ],
         "title": "UploadUrlOut"
       },
+      "UserOut": {
+        "properties": {
+          "uid": {
+            "type": "string",
+            "title": "Uid"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "details": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Details",
+            "default": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "uid",
+          "email",
+          "role",
+          "status",
+          "display_name",
+          "phone",
+          "created_at"
+        ],
+        "title": "UserOut"
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -4847,6 +5940,40 @@
           "farmer_phone"
         ],
         "title": "VerificationCallOut"
+      },
+      "app__models__me__ApproveIn": {
+        "properties": {
+          "tier": {
+            "type": "integer",
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Tier",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "title": "ApproveIn"
+      },
+      "app__models__transporter__ApproveIn": {
+        "properties": {
+          "tier": {
+            "type": "integer",
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Tier"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tier"
+        ],
+        "title": "ApproveIn"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   }

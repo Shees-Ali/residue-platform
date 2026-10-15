@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from app.validation import Phone, text
+
 
 class LotReadback(BaseModel):
     """Everything the agent needs to read a saved lot back to the farmer."""
@@ -37,13 +39,13 @@ class LotOut(BaseModel):
 class AdminLotIn(BaseModel):
     """Manual lot entry by an admin on behalf of a farmer (same validation as the agent)."""
 
-    farmer_phone: str
-    residue_type: str
+    farmer_phone: Phone
+    residue_type: text(1, 80)
     quantity_tonnes: float
-    pickup_date: str
-    pickup_part: str
-    village: str
-    district: str
+    pickup_date: text(1, 10)
+    pickup_part: text(1, 80)
+    village: text(1, 80)
+    district: text(1, 80)
 
 
 class RankingEntry(BaseModel):
@@ -58,5 +60,5 @@ class RankingEntry(BaseModel):
 
 
 class OverrideIn(BaseModel):
-    factory_id: str
-    reason: str
+    factory_id: text(1, 36)
+    reason: text(3, 500)

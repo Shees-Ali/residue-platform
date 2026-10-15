@@ -31,6 +31,7 @@ from app.db_models.base import (
     PHOTO_KINDS,
     ROLES,
     SPLIT_PARTIES,
+    USER_STATUSES,
     Base,
     created_at,
     one_of,
@@ -55,9 +56,12 @@ def uid_fk(**kw):
 
 class User(Base):
     __tablename__ = "users"
-    __table_args__ = (one_of("role", ROLES, "role"),)
+    __table_args__ = (one_of("role", ROLES, "role"), one_of("status", USER_STATUSES, "status"))
     uid: Mapped[str] = mapped_column(Text, primary_key=True)  # Firebase uid
     role: Mapped[str] = mapped_column(Text)
+    # pending = signed up as transporter/factory, waiting for an admin; suspended = blocked
+    status: Mapped[str] = mapped_column(Text, server_default=text("'active'"))
+    email: Mapped[str | None] = mapped_column(Text, unique=True)
     display_name: Mapped[str] = mapped_column(Text, server_default=text("''"))
     phone: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = created_at()
@@ -82,6 +86,7 @@ class ResidueType(Base):
 class Farmer(Base):
     __tablename__ = "farmers"
     id: Mapped[uuid.UUID] = uuid_pk()
+    user_uid: Mapped[str | None] = uid_fk(nullable=True, unique=True)  # dashboard login, if any
     phone: Mapped[str] = mapped_column(Text, unique=True)
     name: Mapped[str] = mapped_column(Text, server_default=text("''"))
     village_id: Mapped[uuid.UUID | None] = fk("villages.id", nullable=True)

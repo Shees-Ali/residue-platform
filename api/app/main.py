@@ -1,4 +1,8 @@
+import os
+
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.routers import (
@@ -10,15 +14,32 @@ from app.routers import (
     jobs,
     ledger,
     lots,
+    me,
     offers,
     orders,
     products,
     transporters,
+    users,
 )
 from app.services.job_states import InvalidTransition
 from app.services.lots import LotError
+from app.validation import FieldErrors, field_errors_handler, request_validation_handler
 
 app = FastAPI(title="Residue API", version="0.1.0")
+
+# The deployed web origin (Firebase Hosting). Local dev goes through the Vite proxy instead.
+_origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
+if _origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_origins,
+        allow_methods=["*"],
+        allow_headers=["Authorization", "Content-Type", "Idempotency-Key"],
+    )
+
+
+app.add_exception_handler(RequestValidationError, request_validation_handler)
+app.add_exception_handler(FieldErrors, field_errors_handler)
 
 
 @app.exception_handler(LotError)
@@ -42,6 +63,6 @@ async def health() -> dict:
 
 for r in (
     lots, jobs, offers, ledger, products, orders, dispatch, agent, internal, escalations, impact,
-    transporters,
+    transporters, me, users,
 ):
     app.include_router(r.router)

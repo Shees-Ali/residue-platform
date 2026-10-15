@@ -7,9 +7,9 @@ Conventions: UUID pks (`gen_random_uuid()`), `timestamptz`, money `BIGINT` minor
 ## Tables
 
 ### People and places
-- `users` (uid TEXT PK = Firebase uid, role in admin|transporter|factory|buyer, display_name, phone)
+- `users` (uid TEXT PK = Firebase uid, role in admin|transporter|factory|buyer|farmer, status active|pending|suspended, email UNIQUE, display_name, phone)
 - `villages` (id, name, district, lat, lon) - seeded; UNIQUE(name, district)
-- `farmers` (id, phone UNIQUE, name, village_id FK, preferred_language)
+- `farmers` (id, user_uid FK UNIQUE nullable = dashboard login, phone UNIQUE, name, village_id FK, preferred_language)
 - `transporters` (id, user_uid FK, phone, tier, max_tonnes, approved_at NULL, lat, lon)
 - `factories` (id, user_uid FK, name, lat, lon, price_per_tonne)
 - `residue_types` (code PK, label)
@@ -70,3 +70,5 @@ Migration `0003` adds `request_hash`, `status_code`, `response` to `idempotency_
 
 ## Backend flows additions (2026-10-14)
 Migration `0004` extends `ledger_entries.kind` with `release_factory` and `release_ngo` (product sales). No other schema change: assignment, dispatch, delivery, settlement, escalations and the marketplace use the existing tables. Job state graph and rules: `app/services/job_states.py`; money rules: `app/services/economics.py`; both described in `backend-flows.md`. Seed now also creates users (`dev-admin`, `dev-buyer-0`, one per factory and transporter) and links them.
+
+Migration `0005` (auth and roles) adds the `farmer` role, `users.status` (default `active`, so seeded users keep working) and `users.email`, and `farmers.user_uid`. Self-signup creates the `users` row plus the role profile row (`transporters` with `approved_at` NULL, or `factories` with `factory_residues`) in one savepoint; admin approval sets `status` and, for transporters, `approved_at` and tier. Rules: `app/services/registration.py`; routes `app/routers/me.py`, `users.py`.

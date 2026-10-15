@@ -16,3 +16,16 @@ if (!window.matchMedia) {
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
+
+// No test talks to Firebase or the network. Individual tests override the API mocks.
+vi.mock("@/lib/firebase", () => ({
+  auth: { currentUser: null, signOut: vi.fn() },
+  googleProvider: {},
+  db: {},
+}));
+vi.mock("@/api/client", () => ({
+  api: {
+    GET: vi.fn(async () => ({ data: [], response: { status: 200 } })),
+    POST: vi.fn(async () => ({ error: { detail: "not mocked" }, response: { status: 400 } })),
+  },
+}));

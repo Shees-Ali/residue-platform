@@ -3,13 +3,14 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 
-from app.auth.firebase import AuthUser, as_factory, current_user
+from app.auth.firebase import AuthUser, as_factory, require_role
 from app.auth.owners import factory_of
 from app.db_models.tables import Factory, Product
 from app.deps import DbSession
 from app.models.market import ProductIn, ProductOut, ProductPatch
 
 router = APIRouter(prefix="/api/products", tags=["products"])
+as_shopper = Depends(require_role("buyer", "factory", "admin"))
 
 
 def _out(product: Product, factory_name: str) -> ProductOut:
@@ -25,7 +26,7 @@ def _out(product: Product, factory_name: str) -> ProductOut:
 
 
 @router.get("", response_model=list[ProductOut])
-async def get_products_root(db: DbSession, user: AuthUser = Depends(current_user)):
+async def get_products_root(db: DbSession, user: AuthUser = as_shopper):
     """The marketplace: buyers and admins see what is for sale, a factory sees all of its own."""
     query = select(Product, Factory.name).join(Factory, Factory.id == Product.factory_id)
     if user.role == "factory":

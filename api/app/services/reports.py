@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db_models.tables import Farmer, Job, LedgerEntry, Lot, Offer, Village
 from app.models.ledger import LedgerEntry as LedgerEntryModel
 from app.models.reports import ImpactOut, ImpactRecord, LedgerCheckOut, PayoutOut
+from app.services.economics import gross, job_shares, payouts
 from app.services.ledger import escrow_balanced
 
 FINAL_JOB_STATES = ("settled", "rejected")
@@ -101,6 +102,42 @@ async def transporter_payouts(db: AsyncSession, transporter_id: uuid.UUID) -> li
         ).scalar() or 0
         out.append(
             PayoutOut(job_id=str(job.id), state=job.state, status="pending", amount=int(estimate))
+        )
+    return out
+
+
+async def farmer_payouts(db: AsyncSession, user_uid: str) -> list[PayoutOut]:
+    """The farmer's cut per job: the quoted estimate until it settles, then what was released."""
+    jobs = (
+        await db.execute(
+            select(Job)
+            .join(Lot, Lot.id == Job.lot_id)
+            .join(Farmer, Farmer.id == Lot.farmer_id)
+            .where(Farmer.user_uid == user_uid)
+            .order_by(Job.created_at.desc())
+        )
+    ).scalars().all()
+    out = []
+    for job in jobs:
+        released = (
+            await db.execute(
+                select(func.coalesce(func.sum(LedgerEntry.amount), 0)).where(
+                    LedgerEntry.job_id == job.id, LedgerEntry.kind == "release_farmer"
+                )
+            )
+        ).scalar()
+        if released:
+            out.append(
+                PayoutOut(
+                    job_id=str(job.id), state=job.state, status="released", amount=int(released)
+                )
+            )
+            continue
+        estimate = payouts(
+            gross(job.est_weight_kg, job.quoted_price_per_tonne), job_shares(job.farmer_share_bps)
+        )["farmer"]
+        out.append(
+            PayoutOut(job_id=str(job.id), state=job.state, status="pending", amount=estimate)
         )
     return out
 

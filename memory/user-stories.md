@@ -20,3 +20,4 @@ Job states: created, funded, offered, accepted, picked up, delivered, confirmed,
 | [A2](stories/A2.md) | Watch jobs and handle escalations | backend done | an unanswered offer moves to the next transporter without anyone clicking. |
 | [A3](stories/A3.md) | Run the ledger and impact numbers | backend done | the check passes in unit tests and on screen, and the counter rises at settlement. |
 | [B1](stories/B1.md) | Browse and order products | backend done | an order reduces stock and creates the sale record that feeds the split. |
+| [AUTH](stories/AUTH.md) | Sign in with the right role | built (needs a live Firebase check) | a new transporter waits for approval, a buyer cannot open admin pages, and every API route rejects the wrong role. |

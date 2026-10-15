@@ -30,6 +30,8 @@ router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 
 async def visible_job(db, user: AuthUser, job_id: str) -> JobOut:
     """A job the caller may see: admin all, a factory its own, a transporter its assigned ones."""
+    if user.role not in ("admin", "factory", "transporter"):
+        raise HTTPException(403, "Forbidden")
     job = await load_job(db, job_id)
     if user.role == "factory":
         if job.factory_id != (await factory_of(db, user)).id:
@@ -37,8 +39,6 @@ async def visible_job(db, user: AuthUser, job_id: str) -> JobOut:
     elif user.role == "transporter":
         if job.transporter_id != (await transporter_of(db, user)).id:
             raise HTTPException(404, "Unknown job")
-    elif user.role != "admin":
-        raise HTTPException(403, "Forbidden")
     return await job_out(db, job.id)
 
 

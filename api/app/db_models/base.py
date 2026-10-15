@@ -38,7 +38,8 @@ def one_of(column: str, values: tuple[str, ...], name: str) -> CheckConstraint:
     return CheckConstraint(f"{column} IN ({listed})", name=name)
 
 
-ROLES = ("admin", "transporter", "factory", "buyer")
+ROLES = ("admin", "transporter", "factory", "buyer", "farmer")
+USER_STATUSES = ("active", "pending", "suspended")
 CALL_KINDS = ("intake", "verification")
 LOT_STATUSES = ("open", "assigned", "rejected")
 ESCALATION_STATUSES = ("open", "resolved")

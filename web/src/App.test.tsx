@@ -1,8 +1,8 @@
-import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
-import App from "./App";
+import { screen } from "@testing-library/react";
+import { renderAt, signedIn } from "@/test/renderApp";
+import type { Role } from "@/lib/auth";
 
-const cases: [string, string][] = [
+const pages: [string, string][] = [
   ["/farmer", "Assalam-o-Alaikum, Aslam!"],
   ["/transporter", "Move harvests forward."],
   ["/factory", "From residue to resources."],
@@ -11,29 +11,26 @@ const cases: [string, string][] = [
   ["/call", "Call widget (browser fallback)"],
 ];
 
-test.each(cases)("route %s renders", (path, heading) => {
-  render(
-    <MemoryRouter initialEntries={[path]}>
-      <App />
-    </MemoryRouter>,
-  );
-  expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
+// An admin may open every page.
+test.each(pages)("admin can open %s", async (path, heading) => {
+  renderAt(path, signedIn("admin"));
+  expect(await screen.findByRole("heading", { name: heading })).toBeInTheDocument();
 });
 
-test("root redirects to the marketplace", () => {
-  render(
-    <MemoryRouter initialEntries={["/"]}>
-      <App />
-    </MemoryRouter>,
-  );
-  expect(screen.getByRole("heading", { name: "Good for you. Better for the planet." })).toBeInTheDocument();
+const homes: [Role, string][] = [
+  ["farmer", "Assalam-o-Alaikum, Aslam!"],
+  ["transporter", "Move harvests forward."],
+  ["factory", "From residue to resources."],
+  ["buyer", "Good for you. Better for the planet."],
+  ["admin", "A growing circular economy."],
+];
+
+test.each(homes)("the root sends a %s to their own page", async (role, heading) => {
+  renderAt("/", signedIn(role));
+  expect(await screen.findByRole("heading", { name: heading })).toBeInTheDocument();
 });
 
-test("health page", () => {
-  render(
-    <MemoryRouter initialEntries={["/health"]}>
-      <App />
-    </MemoryRouter>,
-  );
+test("health page is public", () => {
+  renderAt("/health", { status: "signedOut" });
   expect(screen.getByTestId("health")).toHaveTextContent("ok");
 });

@@ -1,11 +1,11 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   Leaf,
   Truck,
   Factory,
   ShoppingBag,
   LayoutDashboard,
-  ChevronDown,
+  LogOut,
   ArrowUpRight,
   Recycle,
   Wheat,
@@ -16,6 +16,8 @@ import {
 import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useAuth } from "@/auth/AuthProvider";
+import { canAccess, homeFor, type Role as AccountRole } from "@/lib/auth";
 import { DemoProvider } from "./demo-state";
 import { DomainProvider } from "./domain-state";
 
@@ -35,19 +37,27 @@ export const roles: Role[] = [
 ];
 
 const callNav: Role = { name: "Call", label: "Call widget", path: "/call", icon: PhoneCall };
-const navItems: Role[] = [...roles, callNav];
+const allNav: Role[] = [...roles, callNav];
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] ?? "?") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
+}
 
 export function ResidueShell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const [help, setHelp] = useState(false);
-  const role = roles.find((r) => r.path === pathname) ?? roles[0];
+  const [leaving, setLeaving] = useState(false);
+  // Show only the pages this person's role may open.
+  const navItems = allNav.filter((r) => canAccess(r.path, user?.role as AccountRole | undefined));
+  const home = user ? homeFor(user.role as AccountRole) : "/";
   return (
     <DemoProvider>
       <DomainProvider>
       <div className="app-shell">
         <aside className="sidebar">
-          <Link to="/market" className="brand">
+          <Link to={home} className="brand">
             <span className="brand-mark">
               <Leaf size={28} />
             </span>
@@ -111,32 +121,36 @@ export function ResidueShell({ children }: { children: ReactNode }) {
               Growing a greener Pakistan
             </span>
             <div className="role-switch">
-              <span>Demo role</span>
-              <div className="role-select-wrap">
-                <select
-                  aria-label="Demo Role Switcher"
-                  value={role.path}
-                  onChange={(e) => {
-                    const target = roles.find((r) => r.path === e.target.value);
-                    if (target) void navigate(target.path);
-                  }}
-                >
-                  {roles.map((r) => (
-                    <option key={r.name} value={r.path}>
-                      {r.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={14} />
+              <div className="user-chip">
+                <span className="avatar" aria-hidden="true">
+                  {initials(user?.display_name || user?.email || "?")}
+                </span>
+                <span>
+                  {user?.display_name || user?.email}
+                  <br />
+                  <span className="role-badge">{user?.role}</span>
+                </span>
               </div>
               <span className="header-divider" />
-              <span className="avatar">
-                {role.name === "Farmer" ? "MA" : role.name.slice(0, 2).toUpperCase()}
-              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                loading={leaving}
+                onClick={async () => {
+                  setLeaving(true);
+                  try {
+                    await signOut();
+                  } finally {
+                    setLeaving(false);
+                  }
+                }}
+              >
+                <LogOut size={15} /> Sign out
+              </Button>
             </div>
           </header>
           <div className="mobile-nav">
-            <Link to="/market" className="mobile-brand">
+            <Link to={home} className="mobile-brand">
               <Leaf />
               Residue Platform
             </Link>

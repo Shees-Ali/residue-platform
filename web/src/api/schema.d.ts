@@ -28,7 +28,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Lots */
+        /**
+         * List Lots
+         * @description Admin: every lot. Farmer: only their own (matched through their verified phone).
+         */
         get: operations["list_lots_api_lots_get"];
         put?: never;
         /**
@@ -371,7 +374,8 @@ export interface paths {
         };
         /**
          * Get Ledger Mine
-         * @description The transporter's payouts: pending until the factory confirms, then released.
+         * @description Your payouts. Transporter: pending until the factory confirms, then released.
+         *     Farmer: pending until the job settles, then released.
          */
         get: operations["get_ledger_mine_api_ledger_mine_get"];
         put?: never;
@@ -651,7 +655,7 @@ export interface paths {
         };
         /**
          * Get Impact
-         * @description Tonnes kept out of burning, plus a record per settled lot (farmer, place, date, weight).
+         * @description Tonnes kept out of burning. The per-lot records name farmers, so only admins get them.
          */
         get: operations["get_impact_api_impact_get"];
         put?: never;
@@ -719,6 +723,141 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Me
+         * @description Who the signed-in person is. 404 `not_registered` means: show the signup form.
+         */
+        get: operations["get_me_api_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register Me
+         * @description First sign-in: pick a role. Farmers and buyers are active at once; transporters and
+         *     factories wait for an admin. Admin is never self-selected.
+         */
+        post: operations["register_me_api_me_register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Users
+         * @description Accounts, newest first. `?status=pending` is the approval queue.
+         */
+        get: operations["list_users_api_users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/{uid}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve User
+         * @description Approve a pending transporter or factory. `tier` sets a transporter's largest job.
+         */
+        post: operations["approve_user_api_users__uid__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/{uid}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject User */
+        post: operations["reject_user_api_users__uid__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/{uid}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suspend User
+         * @description Block an active account. A transporter also stops receiving offers.
+         */
+        post: operations["suspend_user_api_users__uid__suspend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/{uid}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reactivate User */
+        post: operations["reactivate_user_api_users__uid__reactivate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -742,11 +881,6 @@ export interface components {
             village: string;
             /** District */
             district: string;
-        };
-        /** ApproveIn */
-        ApproveIn: {
-            /** Tier */
-            tier: number;
         };
         /** CallEndIn */
         CallEndIn: {
@@ -857,6 +991,15 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /** FactoryProfileIn */
+        FactoryProfileIn: {
+            /** Name */
+            name: string;
+            /** Price Per Tonne */
+            price_per_tonne: number;
+            /** Residues */
+            residues: string[];
         };
         /** GetQuoteIn */
         GetQuoteIn: {
@@ -1097,6 +1240,23 @@ export interface components {
             /** Pickup Text */
             pickup_text: string;
         };
+        /** MeOut */
+        MeOut: {
+            /** Uid */
+            uid: string;
+            /** Email */
+            email: string | null;
+            /** Role */
+            role: string;
+            /** Status */
+            status: string;
+            /** Display Name */
+            display_name: string;
+            /** Phone */
+            phone: string | null;
+            /** Farmer Linked */
+            farmer_linked?: boolean | null;
+        };
         /**
          * OfferOut
          * @description What a transporter sees: where, how much, how long they have.
@@ -1274,6 +1434,29 @@ export interface components {
              */
             note: string;
         };
+        /**
+         * RegisterIn
+         * @description Self-signup. `admin` is not a choice: it is granted only by BOOTSTRAP_ADMIN_EMAILS.
+         *
+         *     Which of the optional fields a role needs is checked in `services.registration`, so every
+         *     missing field is reported at once. Rules: memory/validation-rules.md.
+         */
+        RegisterIn: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "farmer" | "buyer" | "transporter" | "factory";
+            /** Display Name */
+            display_name: string;
+            /** Phone */
+            phone?: string | null;
+            /** Village */
+            village?: string | null;
+            /** District */
+            district?: string | null;
+            factory?: components["schemas"]["FactoryProfileIn"] | null;
+        };
         /** SplitLine */
         SplitLine: {
             /** Party */
@@ -1349,6 +1532,33 @@ export interface components {
              */
             method: string;
         };
+        /** UserOut */
+        UserOut: {
+            /** Uid */
+            uid: string;
+            /** Email */
+            email: string | null;
+            /** Role */
+            role: string;
+            /** Status */
+            status: string;
+            /** Display Name */
+            display_name: string;
+            /** Phone */
+            phone: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Details
+             * @default {}
+             */
+            details: {
+                [key: string]: unknown;
+            };
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -1372,6 +1582,19 @@ export interface components {
             farmer_id: string;
             /** Farmer Phone */
             farmer_phone: string;
+        };
+        /** ApproveIn */
+        app__models__me__ApproveIn: {
+            /**
+             * Tier
+             * @default 1
+             */
+            tier: number;
+        };
+        /** ApproveIn */
+        app__models__transporter__ApproveIn: {
+            /** Tier */
+            tier: number;
         };
     };
     responses: never;
@@ -2721,7 +2944,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ApproveIn"];
+                "application/json": components["schemas"]["app__models__transporter__ApproveIn"];
             };
         };
         responses: {
@@ -2766,6 +2989,255 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TransporterOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_me_api_me_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+                "x-dev-phone"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    register_me_api_me_register_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+                "x-dev-phone"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_users_api_users_get: {
+        parameters: {
+            query?: {
+                status?: ("active" | "pending" | "suspended") | null;
+                role?: ("admin" | "transporter" | "factory" | "buyer" | "farmer") | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_user_api_users__uid__approve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path: {
+                uid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["app__models__me__ApproveIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_user_api_users__uid__reject_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path: {
+                uid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suspend_user_api_users__uid__suspend_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path: {
+                uid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reactivate_user_api_users__uid__reactivate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+            };
+            path: {
+                uid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
                 };
             };
             /** @description Validation Error */

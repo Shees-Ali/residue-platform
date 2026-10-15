@@ -53,6 +53,8 @@ async def get_orders_order_id_split(
     db: DbSession, order_id: str, user: AuthUser = Depends(current_user)
 ):
     """How the sale is divided; shares add to 10000 bps and amounts to the order total."""
+    if user.role not in ("buyer", "factory", "admin"):
+        raise HTTPException(403, "Forbidden")
     key = _key(order_id, "order")
     order = await db.get(Order, key)
     if order is None:
@@ -63,6 +65,4 @@ async def get_orders_order_id_split(
         product = await db.get(Product, order.product_id)
         if product.factory_id != (await factory_of(db, user)).id:
             raise HTTPException(404, "Unknown order")
-    elif user.role not in ("buyer", "admin"):
-        raise HTTPException(403, "Forbidden")
     return await order_out(db, key)

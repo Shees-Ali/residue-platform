@@ -1,10 +1,10 @@
 import uuid
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
-from app.auth.firebase import AuthUser, as_admin
+from app.auth.firebase import AuthUser, as_admin, require_role
 from app.db_models.tables import Factory, FactoryCandidate, Farmer, Job, Lot
 from app.deps import DbSession, Events
 from app.models.job import JobOut
@@ -15,6 +15,7 @@ from app.services.lot_store import create_lot_record
 
 router = APIRouter(prefix="/api/lots", tags=["lots"])
 admin_only = as_admin
+admin_or_farmer = Depends(require_role("admin", "farmer"))
 
 
 def _lot_out(lot: Lot, job: Job | None) -> LotOut:
@@ -41,15 +42,19 @@ def _uuid(value: str, what: str) -> uuid.UUID:
         raise HTTPException(404, f"Unknown {what}") from None
 
 
-@router.get("", response_model=list[LotOut], dependencies=[admin_only])
+@router.get("", response_model=list[LotOut])
 async def list_lots(
     db: DbSession,
     status: str | None = None,
     farmer_id: str | None = None,
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
+    user: AuthUser = admin_or_farmer,
 ):
+    """Admin: every lot. Farmer: only their own (matched through their verified phone)."""
     query = select(Lot, Job).outerjoin(Job, Job.lot_id == Lot.id)
+    if user.role == "farmer":
+        query = query.join(Farmer, Farmer.id == Lot.farmer_id).where(Farmer.user_uid == user.uid)
     if status:
         query = query.where(Lot.status == status)
     if farmer_id:
@@ -95,15 +100,14 @@ async def create_lot_for_farmer(
     return readback
 
 
-@router.get("/{lot_id}", response_model=LotOut, dependencies=[admin_only])
-async def get_lot(db: DbSession, lot_id: str):
-    row = (
-        await db.execute(
-            select(Lot, Job).outerjoin(Job, Job.lot_id == Lot.id).where(
-                Lot.id == _uuid(lot_id, "lot")
-            )
-        )
-    ).first()
+@router.get("/{lot_id}", response_model=LotOut)
+async def get_lot(db: DbSession, lot_id: str, user: AuthUser = admin_or_farmer):
+    query = select(Lot, Job).outerjoin(Job, Job.lot_id == Lot.id).where(
+        Lot.id == _uuid(lot_id, "lot")
+    )
+    if user.role == "farmer":  # someone else's lot looks like a missing one
+        query = query.join(Farmer, Farmer.id == Lot.farmer_id).where(Farmer.user_uid == user.uid)
+    row = (await db.execute(query)).first()
     if row is None:
         raise HTTPException(404, "Unknown lot")
     return _lot_out(*row)

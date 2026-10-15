@@ -12,5 +12,8 @@ router = APIRouter(prefix="/api/impact", tags=["impact"])
 async def get_impact(
     db: DbSession, limit: int = Query(50, ge=1, le=200), user: AuthUser = Depends(current_user)
 ):
-    """Tonnes kept out of burning, plus a record per settled lot (farmer, place, date, weight)."""
-    return await impact(db, limit)
+    """Tonnes kept out of burning. The per-lot records name farmers, so only admins get them."""
+    out = await impact(db, limit)
+    if user.role != "admin":
+        out.records = []
+    return out

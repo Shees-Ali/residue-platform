@@ -19,6 +19,12 @@ def get_settings() -> Settings:
     return Settings()
 
 
+def bootstrap_admin_emails() -> set[str]:
+    """BOOTSTRAP_ADMIN_EMAILS (comma list): a signup with a verified email in it becomes admin."""
+    raw = os.getenv("BOOTSTRAP_ADMIN_EMAILS", "")
+    return {e.strip().lower() for e in raw.split(",") if e.strip()}
+
+
 def auth_bypass_active() -> bool:
     """Local-dev only: AUTH_DISABLED=true skips Google token checks.
 

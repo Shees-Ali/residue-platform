@@ -1,16 +1,17 @@
 import uuid
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 
-from app.auth.firebase import AuthUser, as_admin, as_transporter
+from app.auth.firebase import AuthUser, as_admin, require_role
 from app.auth.owners import transporter_of
 from app.db_models.tables import LedgerEntry
 from app.deps import DbSession
 from app.models.reports import LedgerCheckOut, LedgerEntryOut, PayoutOut
-from app.services.reports import ledger_check, transporter_payouts
+from app.services.reports import farmer_payouts, ledger_check, transporter_payouts
 
 router = APIRouter(prefix="/api/ledger", tags=["ledger"])
+as_payee = Depends(require_role("transporter", "farmer"))
 
 
 @router.get("", response_model=list[LedgerEntryOut])
@@ -54,6 +55,9 @@ async def get_ledger_check(db: DbSession, user: AuthUser = as_admin):
 
 
 @router.get("/mine", response_model=list[PayoutOut])
-async def get_ledger_mine(db: DbSession, user: AuthUser = as_transporter):
-    """The transporter's payouts: pending until the factory confirms, then released."""
+async def get_ledger_mine(db: DbSession, user: AuthUser = as_payee):
+    """Your payouts. Transporter: pending until the factory confirms, then released.
+    Farmer: pending until the job settles, then released."""
+    if user.role == "farmer":
+        return await farmer_payouts(db, user.uid)
     return await transporter_payouts(db, (await transporter_of(db, user)).id)

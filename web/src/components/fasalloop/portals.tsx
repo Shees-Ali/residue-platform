@@ -17,6 +17,7 @@ import { rankFactories } from '@/lib/domain/assignment';
 import { seedDomain } from '@/lib/domain/seed';
 import type { Grade, Job, ResidueType } from '@/lib/domain/types';
 import field from '@/assets/punjab-field.jpg';
+import { PendingApprovals } from './approvals';
 
 function Field({label,children}:{label:string;children:React.ReactNode}){return <label className="form-field"><span>{label}</span>{children}</label>;}
 const RESIDUE_LABEL: Record<ResidueType,string> = { rice_straw:'Rice straw', wheat_straw:'Wheat straw', cotton_stalk:'Cotton stalk', sugarcane_trash:'Sugarcane trash' };
@@ -308,6 +309,7 @@ export function AdminDashboard(){
   })();
 
   return <><PageHeading eyebrow="ADMIN OVERVIEW" title="A growing circular economy." description="One connected view of farms, jobs, factories, and impact." action={<Button variant="outline" onClick={()=>setResetOpen(true)}><RotateCcw/>Reset demo</Button>}/>
+  <PendingApprovals/>
   <div className="stats-grid admin-stats">
     <Stat label="Farmers" value={state.farmers.length} icon={Users} note="In the sample records"/>
     <Stat label="Live jobs" value={state.jobs.filter(j=>!['settled','rejected','disputed'].includes(j.state)).length} icon={Truck} note="Across the pipeline" tone="gold"/>

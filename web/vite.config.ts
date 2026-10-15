@@ -7,5 +7,5 @@ export default defineConfig({
   plugins: [react()],
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   server: { port: 5173, proxy: { "/api": "http://localhost:8000" } },
-  test: { environment: "jsdom", globals: true, setupFiles: ["./src/setupTests.ts"] },
+  test: { environment: "jsdom", globals: true, setupFiles: ["./src/setupTests.ts"], clearMocks: true },
 });

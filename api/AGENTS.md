@@ -13,3 +13,5 @@ Read `../AGENTS.md` first, then `../memory/implementation-plan.md` and the story
 - `/api/agent/*` has exactly four routes, requires Google ID token and `Idempotency-Key` on writes, and never reads farmer identity from the body.
 - Money is integer minor units; shares are basis points.
 - Update the story file and `../memory/decisions.md` in the same commit.
+
+- Validation first (see ../AGENTS.md): new fields get their constraints and messages confirmed in `../memory/validation-rules.md` before code; use the shared types in `app/validation.py` and raise `FieldErrors` for rules that depend on other data.

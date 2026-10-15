@@ -6,6 +6,8 @@ recoverable 422 {error, message, valid} so the agent can ask the farmer again.
 """
 from pydantic import BaseModel
 
+from app.validation import text
+
 
 class CreateLotIn(BaseModel):
     call_id: str
@@ -24,12 +26,12 @@ class GetQuoteIn(BaseModel):
 
 class EscalateIn(BaseModel):
     call_id: str
-    summary: str
-    transcript: str = ""
+    summary: text(1, 2000)
+    transcript: text(0, 50000) = ""
 
 
 class RecordConfirmationIn(BaseModel):
     call_id: str
     job_id: str
     confirmed: bool
-    note: str = ""
+    note: text(0, 1000) = ""

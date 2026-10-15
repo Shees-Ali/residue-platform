@@ -2,11 +2,11 @@
 import uuid
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db_models.tables import Factory as FactoryRow
-from app.db_models.tables import FactoryCandidate, FactoryResidue, Job, Lot
+from app.db_models.tables import FactoryCandidate, FactoryResidue, Job, Lot, User
 from app.models.factory import Factory, LotRequest
 from app.services.assignment import haversine_km, rank_factories, score_factory
 from app.services.economics import get_shares
@@ -18,7 +18,14 @@ async def load_factories(db: AsyncSession) -> list[Factory]:
         await db.execute(select(FactoryResidue.factory_id, FactoryResidue.residue_code))
     ).all():
         residues.setdefault(fid, []).append(code)
-    rows = (await db.execute(select(FactoryRow))).scalars().all()
+    # A factory whose owner is still pending (or suspended) is never offered lots.
+    rows = (
+        await db.execute(
+            select(FactoryRow)
+            .outerjoin(User, User.uid == FactoryRow.user_uid)
+            .where(or_(FactoryRow.user_uid.is_(None), User.status == "active"))
+        )
+    ).scalars().all()
     return [
         Factory(
             id=str(f.id),
