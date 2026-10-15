@@ -1,12 +1,16 @@
+import asyncio
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.db import new_session
 from app.routers import (
     agent,
+    devupload,
     dispatch,
     escalations,
     impact,
@@ -18,14 +22,33 @@ from app.routers import (
     offers,
     orders,
     products,
+    refdata,
+    stats,
+    tracking,
     transporters,
     users,
 )
+from app.services.dispatch_loop import loop_seconds, run_forever
+from app.services.events import get_events
 from app.services.job_states import InvalidTransition
 from app.services.lots import LotError
 from app.validation import FieldErrors, field_errors_handler, request_validation_handler
 
-app = FastAPI(title="Residue API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """Start the local dispatch loop when DISPATCH_LOOP_SECONDS is set (never on Cloud Run)."""
+    task = None
+    seconds = loop_seconds()
+    if seconds:
+        task = asyncio.create_task(run_forever(new_session, get_events(), seconds))
+    yield
+    if task:
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+
+
+app = FastAPI(title="Residue API", version="0.1.0", lifespan=lifespan)
 
 # The deployed web origin (Firebase Hosting). Local dev goes through the Vite proxy instead.
 _origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
@@ -63,6 +86,6 @@ async def health() -> dict:
 
 for r in (
     lots, jobs, offers, ledger, products, orders, dispatch, agent, internal, escalations, impact,
-    transporters, me, users,
+    transporters, me, users, refdata, stats, tracking, devupload,
 ):
     app.include_router(r.router)

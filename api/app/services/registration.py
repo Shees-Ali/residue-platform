@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.bootstrap import is_bootstrap_admin
 from app.auth.firebase import Claims
+from app.config import phone_verification_required
 from app.db_models.tables import (
     Factory,
     FactoryResidue,
@@ -44,6 +45,7 @@ async def me_out(db: AsyncSession, user: User) -> MeOut:
         linked = (
             await db.execute(select(Farmer.id).where(Farmer.user_uid == user.uid))
         ).first() is not None
+        linked = linked or not phone_verification_required()  # the record is made on first use
     return MeOut(
         uid=user.uid,
         email=user.email,
@@ -71,6 +73,8 @@ async def register(db: AsyncSession, claims: Claims, body: RegisterIn) -> User:
         _require_fields(body)
     status = "pending" if role in NEEDS_APPROVAL else "active"
     phone = body.phone if role == "transporter" else claims.phone
+    if role == "farmer" and not phone_verification_required():
+        phone = phone or body.phone  # optional and unverified until SMS is switched on
     user = User(
         uid=claims.uid,
         role=role,
@@ -110,15 +114,35 @@ def _require_fields(body: RegisterIn) -> None:
         raise FieldErrors(missing, code="required")
 
 
+async def ensure_farmer(db: AsyncSession, user: User) -> Farmer | None:
+    """The farmer record of this login. Made on the spot when SMS verification is not required
+    (a farmer may have no phone); otherwise None until the phone is verified."""
+    farmer = (
+        await db.execute(select(Farmer).where(Farmer.user_uid == user.uid))
+    ).scalar_one_or_none()
+    if farmer is None and not phone_verification_required():
+        await _link_farmer(db, user)
+        farmer = (
+            await db.execute(select(Farmer).where(Farmer.user_uid == user.uid))
+        ).scalar_one_or_none()
+    return farmer
+
+
 async def _link_farmer(db: AsyncSession, user: User) -> None:
-    """Attach the farmer record for the phone on the token. No verified phone, no link."""
+    """Attach the farmer record for the phone on the user. With no phone: a record only when
+    verification is not required."""
     if not user.phone:
+        if not phone_verification_required():
+            db.add(Farmer(phone=None, name=user.display_name, user_uid=user.uid))
+            await db.flush()
         return
     farmer = (
         await db.execute(select(Farmer).where(Farmer.phone == user.phone))
     ).scalar_one_or_none()
     if farmer is None:
         db.add(Farmer(phone=user.phone, name=user.display_name, user_uid=user.uid))
+    elif farmer.user_uid == user.uid:
+        return  # already linked to this login: linking again changes nothing
     elif farmer.user_uid is not None:
         raise FieldErrors(
             [("phone", "That phone number is already linked to another account")],
@@ -128,6 +152,17 @@ async def _link_farmer(db: AsyncSession, user: User) -> None:
         farmer.user_uid = user.uid
         farmer.name = farmer.name or user.display_name
     await db.flush()
+
+
+async def link_farmer_phone(db: AsyncSession, user: User, claims: Claims) -> None:
+    """Attach the farmer record for the SMS-verified phone on the token, for a farmer who signed up
+    without one. The number comes from the token, never from the request body."""
+    if not claims.phone:
+        raise FieldErrors([("phone", "Verify your phone number to continue")], code="not_verified")
+    if user.phone and user.phone != claims.phone:
+        user.phone = claims.phone
+    user.phone = claims.phone
+    await _link_farmer(db, user)
 
 
 async def _create_transporter(db: AsyncSession, user: User, body: RegisterIn) -> None:

@@ -73,12 +73,45 @@ test("a factory cannot submit without a residue", async () => {
   expect(await screen.findByRole("alert")).toHaveTextContent("Choose at least one residue");
 });
 
-test("a farmer cannot finish until the phone is verified", async () => {
+test("a farmer can finish with no phone at all", async () => {
+  vi.mocked(api.POST).mockResolvedValueOnce({
+    data: me("farmer", { display_name: "Asma" }),
+    response: { status: 201 },
+  } as never);
   start();
+  expect(screen.getByLabelText("Phone (optional)")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Finish" }));
-  // inline under the field, and again in the toast
-  expect(await screen.findAllByText("Phone must include the country code, like +923001234567")).toHaveLength(2);
+  await waitFor(() =>
+    expect(api.POST).toHaveBeenCalledWith("/api/me/register", {
+      body: { role: "farmer", display_name: "Asma" },
+    }),
+  );
+});
+
+test("a farmer's phone is sent when given", async () => {
+  vi.mocked(api.POST).mockResolvedValueOnce({ data: me("farmer"), response: { status: 201 } } as never);
+  start();
+  fireEvent.change(screen.getByLabelText("Phone (optional)"), { target: { value: "0313 1087151" } });
+  fireEvent.click(screen.getByRole("button", { name: "Finish" }));
+  await waitFor(() =>
+    expect(api.POST).toHaveBeenCalledWith("/api/me/register", {
+      body: { role: "farmer", display_name: "Asma", phone: "+923131087151" },
+    }),
+  );
+});
+
+test("a phone that was typed must still be a real mobile number", async () => {
+  start();
+  fireEvent.change(screen.getByLabelText("Phone (optional)"), { target: { value: "0350 12" } });
+  fireEvent.click(screen.getByRole("button", { name: "Finish" }));
+  expect(await screen.findAllByText(/not a valid Pakistan mobile number/)).not.toHaveLength(0);
   expect(api.POST).not.toHaveBeenCalled();
+});
+
+test("every text input stops at its limit", () => {
+  start();
+  expect(screen.getByLabelText("Your name")).toHaveAttribute("maxLength", "80");
+  expect(screen.getByLabelText("Phone (optional)")).toHaveAttribute("maxLength", "22");
 });
 
 test("a refusal from the API is shown to the person", async () => {

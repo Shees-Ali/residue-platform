@@ -2,7 +2,7 @@ import { fireEvent, screen, within } from "@testing-library/react";
 import { me, renderAt, signedIn } from "@/test/renderApp";
 
 const MARKET = "Good for you. Better for the planet.";
-const FARMER = "Assalam-o-Alaikum, Aslam!";
+const FARMER = "Assalam-o-Alaikum, Test!";
 const ADMIN = "A growing circular economy.";
 
 describe("who ends up where", () => {

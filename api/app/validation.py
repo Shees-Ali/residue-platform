@@ -6,6 +6,7 @@ so the web can mark the exact field and a toast can show the summary.
 import re
 from typing import Annotated, Any
 
+import phonenumbers
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -23,6 +24,18 @@ LABELS = {
     "district": "District",
     "role": "Role",
     "tier": "Tier",
+    "category": "Category",
+    "unit": "Unit",
+    "description": "Description",
+    "unit_price": "Price",
+    "stock": "Stock",
+    "quantity": "Quantity",
+    "lat": "Latitude",
+    "lon": "Longitude",
+    "photo_path": "Photo",
+    "weight_kg": "Weight",
+    "final_weight_kg": "Final weight",
+    "content_type": "Content type",
     "status": "Status",
     "reason": "Reason",
     "summary": "Summary",
@@ -41,18 +54,50 @@ def label(field: str) -> str:
     return LABELS.get(key) or parts[-1].replace("_", " ").capitalize()
 
 
+DEFAULT_REGION = "PK"  # a number written with a leading 0 is read as a Pakistani one
+
+
+def _example(region: str) -> str:
+    sample = phonenumbers.example_number_for_type(region, phonenumbers.PhoneNumberType.MOBILE)
+    if sample is None:
+        return "+923001234567"
+    return phonenumbers.format_number(sample, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+
+
 def normalize_phone(value: Any) -> Any:
-    """Clean a typed phone number into E.164, or raise ValueError with a helpful message."""
+    """Check a phone number strictly and return it as E.164 (+923001234567), or raise ValueError.
+
+    The country code is required: a leading + (or 00), or a leading 0 for a Pakistani number.
+    The number must then be a real number for its own country, not just any string of digits.
+    """
     if not isinstance(value, str):
         return value
-    raw = re.sub(r"[\s\-().]", "", value.strip())
+    raw = re.sub(r"[^\d+]", "", value)  # drops spaces, dashes, brackets, invisible marks
     if raw.startswith("00"):
         raw = "+" + raw[2:]
-    elif re.fullmatch(r"03\d{9}", raw):  # a local Pakistani mobile: 0300 1234567
-        raw = "+92" + raw[1:]
-    if not _PHONE.match(raw):
-        raise ValueError(PHONE_HELP)
-    return raw
+    if not raw.startswith("+") and not raw.startswith("0"):
+        raise ValueError(PHONE_HELP)  # no country code
+    try:
+        parsed = phonenumbers.parse(raw, None if raw.startswith("+") else DEFAULT_REGION)
+    except phonenumbers.NumberParseException:
+        raise ValueError(PHONE_HELP) from None
+    if not phonenumbers.is_valid_number(parsed):
+        region = (
+            phonenumbers.region_code_for_number(parsed)
+            or phonenumbers.region_code_for_country_code(parsed.country_code)
+        )
+        raise ValueError(
+            f"That is not a valid phone number for {region} (+{parsed.country_code}), "
+            f"like {_example(region)}"
+        )
+    kinds = (
+        phonenumbers.PhoneNumberType.MOBILE,
+        phonenumbers.PhoneNumberType.FIXED_LINE_OR_MOBILE,  # countries that do not tell them apart
+    )
+    if phonenumbers.number_type(parsed) not in kinds:
+        region = phonenumbers.region_code_for_number(parsed) or DEFAULT_REGION
+        raise ValueError(f"That is not a mobile number for {region}, like {_example(region)}")
+    return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
 
 
 Phone = Annotated[str, BeforeValidator(normalize_phone)]
@@ -98,6 +143,8 @@ def _message(field: str, err: dict) -> str:
     """Turn a Pydantic error into a sentence that names the field and the rule."""
     name, kind, ctx = label(field), err["type"], err.get("ctx") or {}
     if kind == "missing":
+        if field in ("lat", "lon"):
+            return "Allow location access to record this step"
         return f"{name} is required"
     if kind == "string_too_short":
         n = ctx.get("min_length", 1)

@@ -8,7 +8,7 @@ import { useAuth } from "@/auth/AuthProvider";
 import { RedirectIfSettled } from "@/auth/guards";
 import { useAction } from "@/auth/useAction";
 import { useFormErrors } from "@/lib/useFormErrors";
-import { summarize, validateEmail, validateLoginPassword, type Errors } from "@/lib/validation";
+import { LIMITS, summarize, validateEmail, validateLoginPassword, type Errors } from "@/lib/validation";
 
 export default function Login() {
   const { signInWithGoogle, signInWithEmail, state } = useAuth();
@@ -71,6 +71,7 @@ export default function Login() {
             <Field label="Email" error={form.errors.email}>
               <input
                 type="email"
+                maxLength={LIMITS.email.max}
                 autoComplete="email"
                 value={email}
                 onChange={(e) => {
@@ -83,6 +84,7 @@ export default function Login() {
             <Field label="Password" error={form.errors.password}>
               <input
                 type="password"
+                maxLength={LIMITS.password.max}
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => {

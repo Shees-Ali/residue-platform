@@ -118,6 +118,23 @@ test("a failed account lookup is toasted with the reason, not swallowed", async 
   expect(await screen.findByRole("alert")).toHaveTextContent("clock is behind");
 });
 
+test("signing in again as the same person looks the account up again and resumes step 2", async () => {
+  // First the lookup fails (server hiccup), so the person is signed in to Firebase but has no account state.
+  vi.mocked(api.GET).mockResolvedValueOnce({ error: { detail: "Server error" }, response: { status: 500 } } as never);
+  renderLive();
+  setUser({ uid: "u5", email: "half@b.pk", displayName: "Half Way" });
+  await act(async () => hooks.notify(auth.currentUser));
+  await waitFor(() => expect(api.GET).toHaveBeenCalledTimes(1));
+
+  // They sign in again with the same account. Firebase announces nothing (same person), and the
+  // account is not registered yet: they must land on step 2, not stay on the sign-in page.
+  vi.mocked(api.GET).mockResolvedValueOnce({ error: { detail: {} }, response: { status: 404 } } as never);
+  vi.mocked(signInWithEmailAndPassword).mockResolvedValue({} as never);
+  fillAndSubmit();
+  expect(await screen.findByRole("heading", { name: "How will you use it?" })).toBeInTheDocument();
+  expect(api.GET).toHaveBeenCalledTimes(2);
+});
+
 test("a loading account state disables the login form, even before anything is clicked", () => {
   renderAt("/login", { status: "loading" });
   expect(screen.getByLabelText("Email")).toBeDisabled();

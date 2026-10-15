@@ -23,7 +23,12 @@ RESIDUES = {
     "cotton_stalk": "Cotton stalk",
     "sugarcane_trash": "Sugarcane trash",
 }
-PRODUCT_NAMES = ["Biomass pellets", "Compressed briquettes", "Compost"]
+PRODUCTS = [
+    ("Biomass pellets", "Clean Energy", "per 25 kg bag", "Dense pellets for boilers and stoves, pressed from rice straw."),
+    ("Compressed briquettes", "Clean Energy", "per 10 kg pack", "Slow-burning briquettes for heating and cooking."),
+    ("Compost", "Farming & Garden", "per 25 kg bag", "Rich compost made from crop residue, ready for the field."),
+]
+PRODUCT_NAMES = [p[0] for p in PRODUCTS]
 FAKE_PHONE = "+92300000{:04d}"  # fake numbers, never real
 NS = uuid.UUID("6f1d2a52-5b5e-4c0e-9d61-0a7d0f5a1c11")  # fixed namespace for deterministic ids
 
@@ -86,10 +91,11 @@ def make(rng: random.Random, n_farmers: int, n_transporters: int, n_factories: i
         )
         for code in rng.sample(list(RESIDUES), k=rng.randint(1, 3)):
             rows["factory_residues"].append({"factory_id": factory_id, "residue_code": code})
-        for j, name in enumerate(PRODUCT_NAMES):
+        for j, (name, category, unit, description) in enumerate(PRODUCTS):
             rows["products"].append(
                 {"id": sid("product", f"{i}-{j}"), "factory_id": factory_id, "name": name,
-                 "unit_price": rng.randint(5_000, 40_000), "stock": rng.randint(50, 500)}
+                 "unit_price": rng.randint(5_000, 40_000), "stock": rng.randint(50, 500),
+                 "category": category, "unit": unit, "description": description}
             )
     return rows
 

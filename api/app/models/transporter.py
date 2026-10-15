@@ -5,6 +5,8 @@ from pydantic import BaseModel, Field
 
 class TransporterOut(BaseModel):
     id: str
+    user_uid: str | None = None
+    display_name: str | None = None
     phone: str
     tier: int
     max_tonnes: float

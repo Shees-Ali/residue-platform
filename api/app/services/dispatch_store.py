@@ -148,6 +148,43 @@ async def expire_and_advance(
     return result
 
 
+async def decline_offer(
+    db: AsyncSession, offer_id: uuid.UUID, transporter: Transporter, now: datetime | None = None
+) -> uuid.UUID:
+    """The transporter passes: expire the offer now and send the job to the next transporter.
+
+    Same outcome as the offer lapsing, without waiting for the clock. Returns the job id.
+    """
+    now = now or _now()
+    passed = (
+        await db.execute(
+            update(Offer)
+            .where(
+                Offer.id == offer_id,
+                Offer.transporter_id == transporter.id,
+                Offer.status == "pending",
+            )
+            .values(status="expired")
+            .returning(Offer.job_id)
+        )
+    ).first()
+    if passed is None:
+        known = (
+            await db.execute(
+                select(Offer.id).where(Offer.id == offer_id, Offer.transporter_id == transporter.id)
+            )
+        ).first()
+        if known is None:
+            raise HTTPException(404, "Unknown offer")
+        raise HTTPException(409, "This offer is no longer open")
+    job = (
+        await db.execute(select(Job).where(Job.id == passed[0]).with_for_update())
+    ).scalar_one()
+    if job.state == "offered" and await make_next_offer(db, job, now) is None:
+        await transition(db, job.id, "offered", "funded")  # everyone has been asked
+    return job.id
+
+
 async def accept_offer(
     db: AsyncSession, offer_id: uuid.UUID, transporter: Transporter, now: datetime | None = None
 ) -> uuid.UUID:

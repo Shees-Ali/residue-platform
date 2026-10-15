@@ -49,6 +49,11 @@
             "schema": {
               "anyOf": [
                 {
+                  "enum": [
+                    "open",
+                    "assigned",
+                    "rejected"
+                  ],
                   "type": "string"
                 },
                 {
@@ -128,6 +133,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "responses": {
@@ -201,6 +222,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "requestBody": {
@@ -220,6 +257,119 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LotReadback"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/lots/mine": {
+      "post": {
+        "tags": [
+          "lots"
+        ],
+        "summary": "Create My Lot",
+        "description": "A farmer reports their own residue on the web. Same checks and assignment as a phone call.\n\nA double click or a retry with the same Idempotency-Key returns the same lot.",
+        "operationId": "create_my_lot_api_lots_mine_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
+          },
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MineLotIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LotOut"
                 }
               }
             }
@@ -289,6 +439,22 @@
                 }
               ],
               "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
             }
           }
         ],
@@ -368,6 +534,22 @@
                 }
               ],
               "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
             }
           }
         ],
@@ -451,6 +633,22 @@
                 }
               ],
               "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
             }
           }
         ],
@@ -571,6 +769,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "responses": {
@@ -584,6 +798,106 @@
                     "$ref": "#/components/schemas/JobOut"
                   },
                   "title": "Response Get Jobs Root Api Jobs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs/{job_id}/offers": {
+      "get": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Get Job Offers",
+        "description": "Who was offered this job, in order, and what each did (admin).",
+        "operationId": "get_job_offers_api_jobs__job_id__offers_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JobOfferOut"
+                  },
+                  "title": "Response Get Job Offers Api Jobs  Job Id  Offers Get"
                 }
               }
             }
@@ -653,6 +967,22 @@
                 }
               ],
               "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
             }
           }
         ],
@@ -734,6 +1064,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "responses": {
@@ -813,6 +1159,22 @@
                 }
               ],
               "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
             }
           }
         ],
@@ -894,6 +1256,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "requestBody": {
@@ -936,6 +1314,7 @@
           "jobs"
         ],
         "summary": "Post Jobs Job Id Pickup",
+        "description": "Pickup: the photo (already uploaded), the weight and where the transporter is.",
         "operationId": "post_jobs_job_id_pickup_api_jobs__job_id__pickup_post",
         "security": [
           {
@@ -983,6 +1362,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "requestBody": {
@@ -1025,6 +1420,7 @@
           "jobs"
         ],
         "summary": "Post Jobs Job Id Deliver",
+        "description": "Delivery at the factory: the photo, the weight and where the transporter is.",
         "operationId": "post_jobs_job_id_deliver_api_jobs__job_id__deliver_post",
         "security": [
           {
@@ -1071,6 +1467,22 @@
                 }
               ],
               "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
             }
           }
         ],
@@ -1162,6 +1574,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "requestBody": {
@@ -1252,6 +1680,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "requestBody": {
@@ -1271,6 +1715,414 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs/{job_id}/location": {
+      "post": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Post Jobs Job Id Location",
+        "description": "The transporter's phone sends where it is while the job is in progress.",
+        "operationId": "post_jobs_job_id_location_api_jobs__job_id__location_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PingIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PingOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs/{job_id}/track": {
+      "get": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Get Jobs Job Id Track",
+        "description": "The map data for one job: farm, factory, the track and a rough arrival time.",
+        "operationId": "get_jobs_job_id_track_api_jobs__job_id__track_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs/{job_id}/verify": {
+      "post": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Post Jobs Job Id Verify",
+        "description": "The farmer confirms the weight and payment (settles) or disputes it (freezes the money).\n\nThe phone call does the same through /api/agent/confirmations; both end in the same code.",
+        "operationId": "post_jobs_job_id_verify_api_jobs__job_id__verify_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs/{job_id}/ledger": {
+      "get": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Get Jobs Job Id Ledger",
+        "description": "The money movements for one job: escrow in, payouts, refunds (admin or owning factory).",
+        "operationId": "get_jobs_job_id_ledger_api_jobs__job_id__ledger_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LedgerEntryOut"
+                  },
+                  "title": "Response Get Jobs Job Id Ledger Api Jobs  Job Id  Ledger Get"
                 }
               }
             }
@@ -1341,6 +2193,22 @@
                 }
               ],
               "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
             }
           }
         ],
@@ -1413,6 +2281,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "responses": {
@@ -1429,6 +2313,95 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/offers/{offer_id}/decline": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Post Offers Offer Id Decline",
+        "description": "Pass on an offer. The job goes straight to the next transporter.",
+        "operationId": "post_offers_offer_id_decline_api_offers__offer_id__decline_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Offer Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -1496,6 +2469,22 @@
                 }
               ],
               "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
             }
           }
         ],
@@ -1623,6 +2612,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "responses": {
@@ -1698,6 +2703,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "responses": {
@@ -1768,6 +2789,22 @@
                 }
               ],
               "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
             }
           }
         ],
@@ -1844,6 +2881,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "responses": {
@@ -1915,6 +2968,22 @@
                 }
               ],
               "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
             }
           }
         ],
@@ -2005,6 +3074,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "requestBody": {
@@ -2086,6 +3171,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "requestBody": {
@@ -2164,6 +3265,22 @@
                 }
               ],
               "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
             }
           }
         ],
@@ -2248,6 +3365,22 @@
                 }
               ],
               "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
             }
           }
         ],
@@ -2855,6 +3988,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "responses": {
@@ -2938,6 +4087,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "responses": {
@@ -3013,6 +4178,22 @@
                 }
               ],
               "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
             }
           }
         ],
@@ -3100,6 +4281,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "responses": {
@@ -3183,6 +4380,22 @@
                 }
               ],
               "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
             }
           }
         ],
@@ -3273,6 +4486,22 @@
                 }
               ],
               "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
             }
           }
         ],
@@ -3516,6 +4745,109 @@
         }
       }
     },
+    "/api/me/link-phone": {
+      "post": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Link Phone",
+        "description": "A farmer who has no linked record verifies their phone (SMS) and calls this.",
+        "operationId": "link_phone_api_me_link_phone_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
+          },
+          {
+            "name": "x-dev-phone",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Phone"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/users": {
       "get": {
         "tags": [
@@ -3628,6 +4960,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "responses": {
@@ -3713,6 +5061,22 @@
                 }
               ],
               "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
             }
           }
         ],
@@ -3810,6 +5174,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "responses": {
@@ -3890,6 +5270,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "responses": {
@@ -3969,6 +5365,22 @@
               ],
               "title": "X-Dev-Uid"
             }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
           }
         ],
         "responses": {
@@ -3994,15 +5406,708 @@
           }
         }
       }
+    },
+    "/api/residue-types": {
+      "get": {
+        "tags": [
+          "reference"
+        ],
+        "summary": "Get Residue Types",
+        "operationId": "get_residue_types_api_residue_types_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ResidueTypeOut"
+                  },
+                  "title": "Response Get Residue Types Api Residue Types Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/districts": {
+      "get": {
+        "tags": [
+          "reference"
+        ],
+        "summary": "Get Districts",
+        "operationId": "get_districts_api_districts_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response Get Districts Api Districts Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/villages": {
+      "get": {
+        "tags": [
+          "reference"
+        ],
+        "summary": "Get Villages",
+        "description": "Known villages in a district, for suggestions. Any other village name is still accepted.",
+        "operationId": "get_villages_api_villages_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "district",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "District"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VillageOut"
+                  },
+                  "title": "Response Get Villages Api Villages Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stats": {
+      "get": {
+        "tags": [
+          "stats"
+        ],
+        "summary": "Get Stats",
+        "description": "The admin overview numbers in one call.",
+        "operationId": "get_stats_api_stats_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tracking/active": {
+      "get": {
+        "tags": [
+          "tracking"
+        ],
+        "summary": "Get Active Tracks",
+        "description": "Every load on the move with its last position. A factory sees only its own.",
+        "operationId": "get_active_tracks_api_tracking_active_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActiveTrack"
+                  },
+                  "title": "Response Get Active Tracks Api Tracking Active Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dev-upload/{path}": {
+      "put": {
+        "tags": [
+          "dev"
+        ],
+        "summary": "Put Photo",
+        "operationId": "put_photo_api_dev_upload__path__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Path"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-dev-uid",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Uid"
+            }
+          },
+          {
+            "name": "x-dev-email",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Dev-Email"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "dev"
+        ],
+        "summary": "Get Photo",
+        "operationId": "get_photo_api_dev_upload__path__get",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "ActiveTrack": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "residue_type": {
+            "type": "string",
+            "title": "Residue Type"
+          },
+          "quantity_tonnes": {
+            "type": "number",
+            "title": "Quantity Tonnes"
+          },
+          "village": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Village"
+          },
+          "factory_name": {
+            "type": "string",
+            "title": "Factory Name"
+          },
+          "pickup": {
+            "$ref": "#/components/schemas/Place"
+          },
+          "factory": {
+            "$ref": "#/components/schemas/Place"
+          },
+          "last": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrackPoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "heading_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Heading To"
+          },
+          "distance_to_target_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance To Target Km"
+          },
+          "eta_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eta Minutes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "state",
+          "residue_type",
+          "quantity_tonnes",
+          "village",
+          "factory_name",
+          "pickup",
+          "factory"
+        ],
+        "title": "ActiveTrack"
+      },
       "AdminLotIn": {
         "properties": {
           "farmer_phone": {
             "type": "string",
             "title": "Farmer Phone"
+          },
+          "farmer_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80,
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Farmer Name"
           },
           "residue_type": {
             "type": "string",
@@ -4066,11 +6171,13 @@
           },
           "transcript": {
             "type": "string",
+            "maxLength": 50000,
             "title": "Transcript",
             "default": ""
           },
           "summary": {
             "type": "string",
+            "maxLength": 2000,
             "title": "Summary",
             "default": ""
           }
@@ -4164,6 +6271,7 @@
           },
           "reason": {
             "type": "string",
+            "maxLength": 500,
             "title": "Reason",
             "default": ""
           }
@@ -4178,10 +6286,12 @@
         "properties": {
           "call_id": {
             "type": "string",
+            "maxLength": 64,
             "title": "Call Id"
           },
           "residue_type": {
             "type": "string",
+            "maxLength": 40,
             "title": "Residue Type"
           },
           "quantity_tonnes": {
@@ -4190,18 +6300,22 @@
           },
           "pickup_date": {
             "type": "string",
+            "maxLength": 10,
             "title": "Pickup Date"
           },
           "pickup_part": {
             "type": "string",
+            "maxLength": 20,
             "title": "Pickup Part"
           },
           "village": {
             "type": "string",
+            "maxLength": 80,
             "title": "Village"
           },
           "district": {
             "type": "string",
+            "maxLength": 80,
             "title": "District"
           }
         },
@@ -4221,6 +6335,7 @@
         "properties": {
           "call_id": {
             "type": "string",
+            "maxLength": 64,
             "title": "Call Id"
           },
           "summary": {
@@ -4251,8 +6366,26 @@
             "title": "Id"
           },
           "call_id": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Call Id"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
           },
           "summary": {
             "type": "string",
@@ -4286,7 +6419,6 @@
         "type": "object",
         "required": [
           "id",
-          "call_id",
           "summary",
           "transcript",
           "status",
@@ -4329,10 +6461,12 @@
         "properties": {
           "call_id": {
             "type": "string",
+            "maxLength": 64,
             "title": "Call Id"
           },
           "lot_id": {
             "type": "string",
+            "maxLength": 64,
             "title": "Lot Id"
           }
         },
@@ -4390,7 +6524,8 @@
           "photo_path": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 300
               },
               {
                 "type": "null"
@@ -4533,6 +6668,68 @@
         ],
         "title": "ImpactRecord"
       },
+      "JobOfferOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence"
+          },
+          "transporter_id": {
+            "type": "string",
+            "title": "Transporter Id"
+          },
+          "transporter_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transporter Name"
+          },
+          "transporter_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transporter Phone"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "payout_amount": {
+            "type": "integer",
+            "title": "Payout Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "sequence",
+          "transporter_id",
+          "status",
+          "expires_at",
+          "payout_amount"
+        ],
+        "title": "JobOfferOut",
+        "description": "One step of the offer ladder, as the admin sees it."
+      },
       "JobOut": {
         "properties": {
           "id": {
@@ -4568,6 +6765,17 @@
               }
             ],
             "title": "Transporter Id"
+          },
+          "transporter_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transporter Name"
           },
           "state": {
             "type": "string",
@@ -4606,6 +6814,83 @@
             ],
             "title": "Village"
           },
+          "district": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District"
+          },
+          "pickup_lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup Lat"
+          },
+          "pickup_lon": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup Lon"
+          },
+          "factory_lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Factory Lat"
+          },
+          "factory_lon": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Factory Lon"
+          },
+          "farmer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Farmer Name"
+          },
+          "farmer_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Farmer Phone"
+          },
           "quoted_price_per_tonne": {
             "type": "integer",
             "title": "Quoted Price Per Tonne"
@@ -4629,6 +6914,21 @@
             ],
             "title": "Final Weight Kg"
           },
+          "escrow_amount": {
+            "type": "integer",
+            "title": "Escrow Amount",
+            "default": 0
+          },
+          "est_farmer_payout": {
+            "type": "integer",
+            "title": "Est Farmer Payout",
+            "default": 0
+          },
+          "est_transporter_payout": {
+            "type": "integer",
+            "title": "Est Transporter Payout",
+            "default": 0
+          },
           "rejection_reason": {
             "anyOf": [
               {
@@ -4639,6 +6939,14 @@
               }
             ],
             "title": "Rejection Reason"
+          },
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoOut"
+            },
+            "type": "array",
+            "title": "Photos",
+            "default": []
           },
           "offers_exhausted": {
             "type": "boolean",
@@ -4855,8 +7163,28 @@
       },
       "LegIn": {
         "properties": {
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "accuracy_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accuracy M"
+          },
           "photo_path": {
             "type": "string",
+            "maxLength": 300,
             "title": "Photo Path"
           },
           "weight_kg": {
@@ -4866,10 +7194,13 @@
         },
         "type": "object",
         "required": [
+          "lat",
+          "lon",
           "photo_path",
           "weight_kg"
         ],
-        "title": "LegIn"
+        "title": "LegIn",
+        "description": "Record a pickup or delivery: the photo, the weight and where the transporter is."
       },
       "LotOut": {
         "properties": {
@@ -4881,13 +7212,79 @@
             "type": "string",
             "title": "Farmer Id"
           },
+          "farmer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Farmer Name"
+          },
+          "farmer_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Farmer Phone"
+          },
           "residue_type": {
             "type": "string",
             "title": "Residue Type"
           },
+          "residue_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Residue Label"
+          },
           "quantity_tonnes": {
             "type": "number",
             "title": "Quantity Tonnes"
+          },
+          "village": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Village"
+          },
+          "district": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District"
+          },
+          "place_match": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Match"
           },
           "lat": {
             "type": "number",
@@ -4900,6 +7297,50 @@
           "status": {
             "type": "string",
             "title": "Status"
+          },
+          "factory_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Factory Name"
+          },
+          "quoted_price_per_tonne": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quoted Price Per Tonne"
+          },
+          "farmer_share_bps": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Farmer Share Bps"
+          },
+          "est_farmer_payout": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Est Farmer Payout"
           },
           "pickup_from": {
             "anyOf": [
@@ -5097,6 +7538,55 @@
         ],
         "title": "MeOut"
       },
+      "MineLotIn": {
+        "properties": {
+          "residue_type": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Residue Type"
+          },
+          "quantity_tonnes": {
+            "type": "number",
+            "title": "Quantity Tonnes"
+          },
+          "pickup_date": {
+            "type": "string",
+            "maxLength": 10,
+            "minLength": 1,
+            "title": "Pickup Date"
+          },
+          "pickup_part": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Pickup Part"
+          },
+          "village": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Village"
+          },
+          "district": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "District"
+          }
+        },
+        "type": "object",
+        "required": [
+          "residue_type",
+          "quantity_tonnes",
+          "pickup_date",
+          "pickup_part",
+          "village",
+          "district"
+        ],
+        "title": "MineLotIn",
+        "description": "A farmer reporting their own residue on the web. Who they are comes from the login."
+      },
       "OfferOut": {
         "properties": {
           "id": {
@@ -5187,7 +7677,6 @@
           },
           "quantity": {
             "type": "integer",
-            "exclusiveMinimum": 0.0,
             "title": "Quantity"
           }
         },
@@ -5208,6 +7697,17 @@
             "type": "string",
             "title": "Product Id"
           },
+          "product_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Name"
+          },
           "quantity": {
             "type": "integer",
             "title": "Quantity"
@@ -5219,6 +7719,18 @@
           "status": {
             "type": "string",
             "title": "Status"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
           },
           "splits": {
             "items": {
@@ -5299,30 +7811,163 @@
         ],
         "title": "PayoutOut"
       },
+      "PhotoOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "weight_kg": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Kg"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "url",
+          "created_at"
+        ],
+        "title": "PhotoOut"
+      },
+      "PingIn": {
+        "properties": {
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "accuracy_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accuracy M"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lat",
+          "lon"
+        ],
+        "title": "PingIn",
+        "description": "A position sent while the job is in progress."
+      },
+      "PingOut": {
+        "properties": {
+          "recorded": {
+            "type": "boolean",
+            "title": "Recorded"
+          }
+        },
+        "type": "object",
+        "required": [
+          "recorded"
+        ],
+        "title": "PingOut"
+      },
+      "Place": {
+        "properties": {
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lat",
+          "lon"
+        ],
+        "title": "Place"
+      },
       "ProductIn": {
         "properties": {
           "name": {
             "type": "string",
-            "maxLength": 120,
-            "minLength": 1,
             "title": "Name"
           },
           "unit_price": {
             "type": "integer",
-            "exclusiveMinimum": 0.0,
             "title": "Unit Price"
           },
           "stock": {
             "type": "integer",
-            "minimum": 0.0,
             "title": "Stock"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "Clean Energy",
+              "Farming & Garden",
+              "Building Materials",
+              "Home & Living"
+            ],
+            "title": "Category"
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 2,
+            "title": "Unit"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 0,
+            "title": "Description",
+            "default": ""
           }
         },
         "type": "object",
         "required": [
           "name",
           "unit_price",
-          "stock"
+          "stock",
+          "category",
+          "unit"
         ],
         "title": "ProductIn"
       },
@@ -5352,6 +7997,18 @@
             "type": "integer",
             "title": "Stock"
           },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
           "active": {
             "type": "boolean",
             "title": "Active"
@@ -5365,6 +8022,9 @@
           "name",
           "unit_price",
           "stock",
+          "category",
+          "unit",
+          "description",
           "active"
         ],
         "title": "ProductOut"
@@ -5374,9 +8034,7 @@
           "name": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 120,
-                "minLength": 1
+                "type": "string"
               },
               {
                 "type": "null"
@@ -5387,8 +8045,7 @@
           "unit_price": {
             "anyOf": [
               {
-                "type": "integer",
-                "exclusiveMinimum": 0.0
+                "type": "integer"
               },
               {
                 "type": "null"
@@ -5399,14 +8056,56 @@
           "stock": {
             "anyOf": [
               {
-                "type": "integer",
-                "minimum": 0.0
+                "type": "integer"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Stock"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "Clean Energy",
+                  "Farming & Garden",
+                  "Building Materials",
+                  "Home & Living"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500,
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
           },
           "active": {
             "anyOf": [
@@ -5545,10 +8244,12 @@
         "properties": {
           "call_id": {
             "type": "string",
+            "maxLength": 64,
             "title": "Call Id"
           },
           "job_id": {
             "type": "string",
+            "maxLength": 64,
             "title": "Job Id"
           },
           "confirmed": {
@@ -5645,6 +8346,24 @@
         "title": "RegisterIn",
         "description": "Self-signup. `admin` is not a choice: it is granted only by BOOTSTRAP_ADMIN_EMAILS.\n\nWhich of the optional fields a role needs is checked in `services.registration`, so every\nmissing field is reported at once. Rules: memory/validation-rules.md."
       },
+      "ResidueTypeOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "label"
+        ],
+        "title": "ResidueTypeOut"
+      },
       "SplitLine": {
         "properties": {
           "party": {
@@ -5667,6 +8386,64 @@
           "amount"
         ],
         "title": "SplitLine"
+      },
+      "StatsOut": {
+        "properties": {
+          "farmers": {
+            "type": "integer",
+            "title": "Farmers"
+          },
+          "factories": {
+            "type": "integer",
+            "title": "Factories"
+          },
+          "transporters": {
+            "type": "integer",
+            "title": "Transporters"
+          },
+          "transporters_waiting_approval": {
+            "type": "integer",
+            "title": "Transporters Waiting Approval"
+          },
+          "live_jobs": {
+            "type": "integer",
+            "title": "Live Jobs"
+          },
+          "jobs_settled": {
+            "type": "integer",
+            "title": "Jobs Settled"
+          },
+          "orders": {
+            "type": "integer",
+            "title": "Orders"
+          },
+          "tonnes_diverted": {
+            "type": "number",
+            "title": "Tonnes Diverted"
+          },
+          "escrow_held": {
+            "type": "integer",
+            "title": "Escrow Held"
+          },
+          "open_escalations": {
+            "type": "integer",
+            "title": "Open Escalations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "farmers",
+          "factories",
+          "transporters",
+          "transporters_waiting_approval",
+          "live_jobs",
+          "jobs_settled",
+          "orders",
+          "tonnes_diverted",
+          "escrow_held",
+          "open_escalations"
+        ],
+        "title": "StatsOut"
       },
       "TickIn": {
         "properties": {
@@ -5707,11 +8484,184 @@
         ],
         "title": "TickOut"
       },
+      "TrackOut": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "pickup": {
+            "$ref": "#/components/schemas/Place"
+          },
+          "factory": {
+            "$ref": "#/components/schemas/Place"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/TrackPoint"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "last": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrackPoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "heading_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Heading To"
+          },
+          "distance_to_target_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance To Target Km"
+          },
+          "eta_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eta Minutes"
+          },
+          "pickup_off_site_m": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup Off Site M"
+          },
+          "delivery_off_site_m": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Off Site M"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "state",
+          "pickup",
+          "factory",
+          "points"
+        ],
+        "title": "TrackOut",
+        "description": "Everything the map needs for one job."
+      },
+      "TrackPoint": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "accuracy_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accuracy M"
+          },
+          "distance_from_target_m": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance From Target M"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "lat",
+          "lon",
+          "at"
+        ],
+        "title": "TrackPoint"
+      },
       "TransporterOut": {
         "properties": {
           "id": {
             "type": "string",
             "title": "Id"
+          },
+          "user_uid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Uid"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
           },
           "phone": {
             "type": "string",
@@ -5776,6 +8726,11 @@
           },
           "content_type": {
             "type": "string",
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/webp"
+            ],
             "title": "Content Type",
             "default": "image/jpeg"
           }
@@ -5928,7 +8883,14 @@
             "title": "Farmer Id"
           },
           "farmer_phone": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Farmer Phone"
           }
         },
@@ -5936,10 +8898,75 @@
         "required": [
           "call_id",
           "job_id",
-          "farmer_id",
-          "farmer_phone"
+          "farmer_id"
         ],
         "title": "VerificationCallOut"
+      },
+      "VerifyIn": {
+        "properties": {
+          "confirmed": {
+            "type": "boolean",
+            "title": "Confirmed"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "confirmed"
+        ],
+        "title": "VerifyIn",
+        "description": "The farmer's answer on the web: yes, pay out, or no, I dispute the weight or payment."
+      },
+      "VerifyOut": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "farmer_amount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Farmer Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "state"
+        ],
+        "title": "VerifyOut"
+      },
+      "VillageOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "district": {
+            "type": "string",
+            "title": "District"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "district"
+        ],
+        "title": "VillageOut"
       },
       "app__models__me__ApproveIn": {
         "properties": {

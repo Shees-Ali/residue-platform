@@ -18,8 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAuth } from "@/auth/AuthProvider";
 import { canAccess, homeFor, type Role as AccountRole } from "@/lib/auth";
-import { DemoProvider } from "./demo-state";
-import { DomainProvider } from "./domain-state";
 
 interface Role {
   name: string;
@@ -53,8 +51,7 @@ export function ResidueShell({ children }: { children: ReactNode }) {
   const navItems = allNav.filter((r) => canAccess(r.path, user?.role as AccountRole | undefined));
   const home = user ? homeFor(user.role as AccountRole) : "/";
   return (
-    <DemoProvider>
-      <DomainProvider>
+    <>
       <div className="app-shell">
         <aside className="sidebar">
           <Link to={home} className="brand">
@@ -102,7 +99,7 @@ export function ResidueShell({ children }: { children: ReactNode }) {
             </span>
           </div>
           <div className="sidebar-bottom">
-            <span className="demo-pill">MVP PROTOTYPE</span>
+            <span className="demo-pill">PROTOTYPE</span>
             <Button
               variant="ghost"
               size="icon"
@@ -178,7 +175,7 @@ export function ResidueShell({ children }: { children: ReactNode }) {
             </span>
             <span className="flex items-center gap-1.5">
               <span className="live-dot" />
-              Demo prototype <ArrowUpRight size={13} />
+              Prototype <ArrowUpRight size={13} />
             </span>
           </footer>
         </div>
@@ -187,14 +184,11 @@ export function ResidueShell({ children }: { children: ReactNode }) {
         <DialogContent>
           <DialogTitle>A circular future for Punjab</DialogTitle>
           <DialogDescription>
-            Residue Platform is a visual MVP with fictional demo records. Collections connect
-            farmers, GreenCycle Industries, and transporters. Your demo changes are saved only in
-            this browser. No real orders, payments, or collections are made.
+            Residue Platform is a prototype with fictional records. Payments are simulated, and no real orders, payments or collections are made.
           </DialogDescription>
           <Button onClick={() => setHelp(false)}>Got it</Button>
         </DialogContent>
       </Dialog>
-      </DomainProvider>
-    </DemoProvider>
+    </>
   );
 }

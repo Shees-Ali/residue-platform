@@ -1,45 +1,80 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 
-from app.auth.firebase import AuthUser, as_admin, as_factory, as_transporter, current_user
+from app.auth.firebase import (
+    AuthUser,
+    as_admin,
+    as_admin_or_factory,
+    as_factory,
+    as_farmer,
+    as_transporter,
+    current_user,
+)
 from app.auth.owners import factory_of, transporter_of
-from app.db_models.tables import Farmer, Grade, Job, Lot, Photo
+from app.db_models.tables import Farmer, Grade, Job, LedgerEntry, Lot, Photo
 from app.deps import DbSession, Events
 from app.models.delivery import (
     ConfirmIn,
     GradeIn,
     GradeOut,
     LegIn,
+    PingIn,
+    PingOut,
     UploadUrlIn,
     UploadUrlOut,
     VerificationCallOut,
+    VerifyIn,
+    VerifyOut,
 )
-from app.models.job import JobOut
-from app.services.delivery import check_photo_path, check_weight, record_leg
+from app.models.job import JobOfferOut, JobOut
+from app.models.reports import LedgerEntryOut
+from app.models.tracking import TrackOut
+from app.services.delivery import (
+    check_photo_path,
+    check_photo_uploaded,
+    check_weight,
+    record_leg,
+)
 from app.services.dispatch_store import start_dispatch
 from app.services.funding import fund_job
 from app.services.grading import Grader, get_grader
 from app.services.job_flow import load_job
-from app.services.job_views import job_out, list_jobs
+from app.services.job_views import Viewer, job_ladder, job_out, list_jobs
 from app.services.settlement import confirm_delivery, reject_delivery
 from app.services.storage import Storage, get_storage, new_photo_path
-from app.services.verification import verification_call_for
+from app.services.tracking import MOVING, record_ping, track_for
+from app.services.verification import record_web_answer, verification_call_for
+from app.validation import FieldErrors
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 
 
 async def visible_job(db, user: AuthUser, job_id: str) -> JobOut:
-    """A job the caller may see: admin all, a factory its own, a transporter its assigned ones."""
-    if user.role not in ("admin", "factory", "transporter"):
+    """A job the caller may see: admin all, a factory its own, a transporter its assigned ones,
+    a farmer the job of their own lot."""
+    if user.role not in ("admin", "factory", "transporter", "farmer"):
         raise HTTPException(403, "Forbidden")
     job = await load_job(db, job_id)
+    viewer = Viewer(user.role)
     if user.role == "factory":
         if job.factory_id != (await factory_of(db, user)).id:
             raise HTTPException(404, "Unknown job")
     elif user.role == "transporter":
-        if job.transporter_id != (await transporter_of(db, user)).id:
+        carrier = await transporter_of(db, user)
+        if job.transporter_id != carrier.id:
             raise HTTPException(404, "Unknown job")
-    return await job_out(db, job.id)
+        viewer = Viewer("transporter", carrier.id)
+    elif user.role == "farmer":
+        owner = (
+            await db.execute(
+                select(Farmer.user_uid).join(Lot, Lot.farmer_id == Farmer.id).where(
+                    Lot.id == job.lot_id
+                )
+            )
+        ).scalar_one_or_none()
+        if owner != user.uid:
+            raise HTTPException(404, "Unknown job")
+    return await job_out(db, job.id, viewer)
 
 
 async def own_job_as_factory(db, user: AuthUser, job_id: str) -> tuple:
@@ -66,14 +101,26 @@ async def get_jobs_root(
     offset: int = Query(0, ge=0),
     user: AuthUser = Depends(current_user),
 ):
-    scope = {}
+    scope: dict = {}
+    viewer = Viewer(user.role)
     if user.role == "factory":
         scope["factory_id"] = (await factory_of(db, user)).id
     elif user.role == "transporter":
-        scope["transporter_id"] = (await transporter_of(db, user)).id
+        carrier = await transporter_of(db, user)
+        scope["transporter_id"] = carrier.id
+        viewer = Viewer("transporter", carrier.id)
+    elif user.role == "farmer":
+        scope["farmer_uid"] = user.uid
     elif user.role != "admin":
         raise HTTPException(403, "Forbidden")
-    return await list_jobs(db, state=state, limit=limit, offset=offset, **scope)
+    return await list_jobs(db, state=state, limit=limit, offset=offset, viewer=viewer, **scope)
+
+
+@router.get("/{job_id}/offers", response_model=list[JobOfferOut])
+async def get_job_offers(db: DbSession, job_id: str, user: AuthUser = as_admin):
+    """Who was offered this job, in order, and what each did (admin)."""
+    job = await load_job(db, job_id)
+    return await job_ladder(db, job.id)
 
 
 @router.get("/{job_id}", response_model=JobOut)
@@ -91,7 +138,7 @@ async def post_jobs_job_id_fund(
     """Fund escrow (simulated). Starts dispatch: the nearest eligible transporter gets an offer."""
     job, factory = await own_job_as_factory(db, user, job_id)
     offer = await fund_job(db, job, factory)
-    out = await job_out(db, job.id)
+    out = await job_out(db, job.id, Viewer("factory"))
     await db.commit()
     await events.publish("ledger.updated", str(job.id))
     await events.publish("job.updated", str(job.id))
@@ -110,7 +157,7 @@ async def post_jobs_job_id_redispatch(
         raise HTTPException(409, "Only a funded job waiting for a transporter can be redispatched")
     if await start_dispatch(db, job) is None:
         raise HTTPException(409, "Every eligible transporter has already been asked")
-    out = await job_out(db, job.id)
+    out = await job_out(db, job.id, Viewer("admin"))
     await db.commit()
     await events.publish("offer.created", str(job.id))
     await events.publish("job.updated", str(job.id))
@@ -133,7 +180,7 @@ async def post_jobs_job_id_photo_url(
     if body.kind not in allowed.get(user.role, ()):
         raise HTTPException(403, f"A {user.role} cannot upload a {body.kind} photo")
     await visible_job(db, user, job_id)
-    path = new_photo_path(job_id, body.kind)
+    path = new_photo_path(job_id, body.kind, body.content_type)
     return UploadUrlOut(
         path=path, upload_url=await storage.signed_upload_url(path, body.content_type)
     )
@@ -141,11 +188,17 @@ async def post_jobs_job_id_photo_url(
 
 @router.post("/{job_id}/pickup", response_model=JobOut)
 async def post_jobs_job_id_pickup(
-    db: DbSession, events: Events, job_id: str, body: LegIn, user: AuthUser = as_transporter
+    db: DbSession,
+    events: Events,
+    job_id: str,
+    body: LegIn,
+    user: AuthUser = as_transporter,
+    storage: Storage = Depends(get_storage),
 ):
+    """Pickup: the photo (already uploaded), the weight and where the transporter is."""
     job = await own_job_as_transporter(db, user, job_id)
-    await record_leg(db, job, "pickup", user.uid, body.photo_path, body.weight_kg)
-    out = await job_out(db, job.id)
+    await record_leg(db, job, "pickup", user.uid, body, storage)
+    out = await job_out(db, job.id, Viewer("transporter", job.transporter_id))
     await db.commit()
     await events.publish("job.updated", str(job.id))
     return out
@@ -153,11 +206,17 @@ async def post_jobs_job_id_pickup(
 
 @router.post("/{job_id}/deliver", response_model=JobOut)
 async def post_jobs_job_id_deliver(
-    db: DbSession, events: Events, job_id: str, body: LegIn, user: AuthUser = as_transporter
+    db: DbSession,
+    events: Events,
+    job_id: str,
+    body: LegIn,
+    user: AuthUser = as_transporter,
+    storage: Storage = Depends(get_storage),
 ):
+    """Delivery at the factory: the photo, the weight and where the transporter is."""
     job = await own_job_as_transporter(db, user, job_id)
-    await record_leg(db, job, "delivery", user.uid, body.photo_path, body.weight_kg)
-    out = await job_out(db, job.id)
+    await record_leg(db, job, "delivery", user.uid, body, storage)
+    out = await job_out(db, job.id, Viewer("transporter", job.transporter_id))
     await db.commit()
     await events.publish("job.updated", str(job.id))
     return out
@@ -181,6 +240,7 @@ async def post_jobs_job_id_grade(
         raise HTTPException(409, "A lot can be graded once it has been delivered")
     if body.photo_path:
         check_photo_path(str(job.id), "weighbridge", body.photo_path)
+        await check_photo_uploaded(storage, body.photo_path)
         db.add(
             Photo(job_id=job.id, kind="weighbridge", storage_path=body.photo_path,
                   uploaded_by_uid=user.uid)
@@ -231,17 +291,88 @@ async def post_jobs_job_id_confirm(
     if body.accept:
         if body.final_weight_kg is None:
             raise HTTPException(422, "final_weight_kg (the weighbridge weight) is required")
-        check_weight(body.final_weight_kg)
+        check_weight(body.final_weight_kg, "final_weight_kg")
         await confirm_delivery(db, job, factory, body.final_weight_kg)
     else:
-        if not body.reason.strip():
-            raise HTTPException(422, "A reason is required to reject a lot")
+        reason = body.reason.strip()
+        if len(reason) < 3 or len(reason) > 500:
+            raise FieldErrors(
+                [("reason", "Give a reason of at least 3 characters (at most 500)")],
+                code="invalid_reason",
+            )
         await reject_delivery(db, job, factory, body.reason.strip())
-    out = await job_out(db, job.id)
+    out = await job_out(db, job.id, Viewer("factory"))
     await db.commit()
     await events.publish("ledger.updated", str(job.id))
     await events.publish("job.updated", str(job.id))
     return out
+
+
+# --- location tracking ------------------------------------------------------------------
+
+
+@router.post("/{job_id}/location", response_model=PingOut)
+async def post_jobs_job_id_location(
+    db: DbSession, job_id: str, body: PingIn, user: AuthUser = as_transporter
+):
+    """The transporter's phone sends where it is while the job is in progress."""
+    job = await own_job_as_transporter(db, user, job_id)
+    if job.state not in MOVING:
+        raise HTTPException(409, "Location is only shared while a job is in progress")
+    recorded = await record_ping(db, job, body)
+    await db.commit()
+    return PingOut(recorded=recorded)
+
+
+@router.get("/{job_id}/track", response_model=TrackOut)
+async def get_jobs_job_id_track(
+    db: DbSession, job_id: str, user: AuthUser = as_admin_or_factory
+):
+    """The map data for one job: farm, factory, the track and a rough arrival time."""
+    job = await load_job(db, job_id)
+    if user.role == "factory" and job.factory_id != (await factory_of(db, user)).id:
+        raise HTTPException(404, "Unknown job")
+    return await track_for(db, job)
+
+
+# --- F4 on the web: the farmer answers --------------------------------------------------
+
+
+@router.post("/{job_id}/verify", response_model=VerifyOut)
+async def post_jobs_job_id_verify(
+    db: DbSession, events: Events, job_id: str, body: VerifyIn, user: AuthUser = as_farmer
+):
+    """The farmer confirms the weight and payment (settles) or disputes it (freezes the money).
+
+    The phone call does the same through /api/agent/confirmations; both end in the same code.
+    """
+    result = await record_web_answer(db, user.uid, job_id, body.confirmed, body.note)
+    await db.commit()
+    await events.publish("job.updated", result["job_id"])
+    await events.publish("ledger.updated", result["job_id"])
+    if result["state"] == "disputed":
+        await events.publish("escalation.created", result["job_id"])
+    return VerifyOut(**result)
+
+
+@router.get("/{job_id}/ledger", response_model=list[LedgerEntryOut])
+async def get_jobs_job_id_ledger(db: DbSession, job_id: str, user: AuthUser = as_admin_or_factory):
+    """The money movements for one job: escrow in, payouts, refunds (admin or owning factory)."""
+    job = await load_job(db, job_id)
+    if user.role == "factory" and job.factory_id != (await factory_of(db, user)).id:
+        raise HTTPException(404, "Unknown job")
+    rows = (
+        await db.execute(
+            select(LedgerEntry).where(LedgerEntry.job_id == job.id).order_by(LedgerEntry.created_at)
+        )
+    ).scalars().all()
+    return [
+        LedgerEntryOut(
+            id=str(e.id), job_id=str(e.job_id), order_id=None, kind=e.kind, amount=e.amount,
+            created_at=e.created_at,
+        )
+        for e in rows
+    ]
 
 
 # --- F4 (admin demo button; the Twilio dial-out itself belongs to the voice plan) ---------

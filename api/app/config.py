@@ -31,3 +31,12 @@ def auth_bypass_active() -> bool:
     Never honoured on Cloud Run (K_SERVICE is set there), even if the variable leaks in.
     """
     return os.getenv("AUTH_DISABLED", "").lower() == "true" and not os.getenv("K_SERVICE")
+
+
+def phone_verification_required() -> bool:
+    """REQUIRE_VERIFIED_PHONE=true: a farmer must confirm their phone by SMS before reporting.
+
+    Off by default while SMS is not set up (the farmer's phone is then optional and unverified).
+    Always on Cloud Run (K_SERVICE is set there), whatever the variable says.
+    """
+    return os.getenv("REQUIRE_VERIFIED_PHONE", "").lower() == "true" or bool(os.getenv("K_SERVICE"))

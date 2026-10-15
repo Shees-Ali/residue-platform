@@ -138,3 +138,9 @@ async def world(api):
         t1_id=str(transporters[0]),
         t2_id=str(transporters[1]),
     )
+
+
+@pytest.fixture
+def sms_required(monkeypatch):
+    """The production rule: a farmer must verify their phone by SMS before reporting."""
+    monkeypatch.setenv("REQUIRE_VERIFIED_PHONE", "true")

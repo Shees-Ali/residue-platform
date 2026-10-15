@@ -1,6 +1,12 @@
 import {
   PHONE_HELP,
   PRICE_HELP,
+  QUANTITY_HELP,
+  addDays,
+  todayPkt,
+  validateLot,
+  validatePickupDate,
+  validateQuantity,
   normalizePhone,
   pkrToPaisa,
   summarize,
@@ -105,5 +111,55 @@ describe("signup profile", () => {
   test("the summary is one sentence for one error and a list for several", () => {
     expect(summarize({ a: "Name is required" })).toBe("Name is required");
     expect(summarize({ a: "A bad", b: "B bad" })).toBe("Fix 2 fields: A bad; B bad");
+  });
+});
+
+describe("report residue form", () => {
+  const today = "2026-10-16";
+  const ok = {
+    residueType: "rice_straw", quantity: "2.5", pickupDate: "2026-10-17", pickupPart: "morning",
+    district: "Lahore", village: "Raiwind",
+  };
+
+  test("dates are compared in Pakistan time and counted in days", () => {
+    expect(todayPkt(new Date("2026-10-15T20:30:00Z"))).toBe("2026-10-16"); // already after midnight in PKT
+    expect(addDays("2026-10-30", 5)).toBe("2026-11-04");
+  });
+
+  test("quantity", () => {
+    expect(validateQuantity("")).toBe("Quantity is required");
+    for (const bad of ["0", "-1", "100.5", "abc"]) expect(validateQuantity(bad)).toBe(QUANTITY_HELP);
+    expect(validateQuantity("2.555")).toBe("Quantity can have at most 2 decimals");
+    for (const good of ["0.01", "2", "2.5", "100"]) expect(validateQuantity(good)).toBeUndefined();
+  });
+
+  test("pickup date: today to 60 days ahead", () => {
+    expect(validatePickupDate("", today)).toBe("Pickup date is required");
+    expect(validatePickupDate("2026-10-15", today)).toBe("Pickup date cannot be in the past");
+    expect(validatePickupDate("2027-01-01", today)).toBe("Pickup date must be within 60 days");
+    expect(validatePickupDate("soon", today)).toBe("Pickup date must be a real date, like 2026-10-20");
+    expect(validatePickupDate("2026-10-16", today)).toBeUndefined();
+    expect(validatePickupDate("2026-12-15", today)).toBeUndefined();
+  });
+
+  test("a good form has no errors", () => {
+    expect(validateLot(ok, { today })).toEqual({});
+  });
+
+  test("every bad field is reported at once, with the API field names", () => {
+    const errors = validateLot(
+      { ...ok, residueType: "", quantity: "", pickupDate: "2020-01-01", pickupPart: "night", district: "", village: " " },
+      { today },
+    );
+    expect(Object.keys(errors).sort()).toEqual([
+      "district", "pickup_date", "pickup_part", "quantity_tonnes", "residue_type", "village",
+    ]);
+  });
+
+  test("the admin entry also checks the farmer phone and name", () => {
+    const errors = validateLot({ ...ok, farmerPhone: "nope", farmerName: "x".repeat(81) }, { admin: true, today });
+    expect(errors.farmer_phone).toBe(PHONE_HELP);
+    expect(errors.farmer_name).toBe("Name must be at most 80 characters");
+    expect(validateLot({ ...ok, farmerPhone: "03001234567" }, { admin: true, today })).toEqual({});
   });
 });

@@ -25,7 +25,11 @@ vi.mock("@/lib/firebase", () => ({
 }));
 vi.mock("@/api/client", () => ({
   api: {
-    GET: vi.fn(async () => ({ data: [], response: { status: 200 } })),
+    GET: vi.fn(async (path: string) => ({
+      data: (await import("./test/defaults")).quiet(path),
+      response: { status: 200 },
+    })),
     POST: vi.fn(async () => ({ error: { detail: "not mocked" }, response: { status: 400 } })),
+    PATCH: vi.fn(async () => ({ error: { detail: "not mocked" }, response: { status: 400 } })),
   },
 }));

@@ -49,9 +49,11 @@ JOB_STATES = (
 )
 OFFER_STATUSES = ("pending", "accepted", "expired", "withdrawn")
 PHOTO_KINDS = ("pickup", "delivery", "weighbridge")
+LOCATION_KINDS = ("pickup", "delivery", "ping")
 LEDGER_KINDS = (
     "escrow_in", "release_farmer", "release_transporter", "platform_fee", "refund",
     "release_factory", "release_ngo",  # product sales (FA3/B1)
 )
 SPLIT_PARTIES = ("farmer", "factory", "ngo", "platform")
+PRODUCT_CATEGORIES = ("Clean Energy", "Farming & Garden", "Building Materials", "Home & Living")
 ORDER_STATUSES = ("placed", "paid", "cancelled")

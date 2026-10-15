@@ -6,7 +6,10 @@ from sqlalchemy import text
 
 from tests.helpers import ADMIN, BUYER, FACTORY, OTHER_FACTORY, scalar
 
-PRODUCT = {"name": "Biomass pellets", "unit_price": 25_000, "stock": 10}
+PRODUCT = {
+    "name": "Biomass pellets", "unit_price": 25_000, "stock": 10, "category": "Clean Energy",
+    "unit": "per 25 kg bag", "description": "Dense pellets for boilers.",
+}
 
 
 @pytest.fixture
@@ -83,7 +86,7 @@ async def test_a_sale_is_split_four_ways_and_adds_up_to_one_hundred_percent(api,
 
 async def test_split_remainders_still_add_up_exactly(api, shop):
     r = await api.post("/api/products", headers=FACTORY,
-                       json={"name": "Odd price", "unit_price": 1_001, "stock": 5})
+                       json={**PRODUCT, "name": "Odd price", "unit_price": 1_001, "stock": 5})
     body = (await order(api, r.json()["id"], 3)).json()  # total 3003 does not divide evenly
     assert body["total"] == 3_003 and body["amounts_total"] == 3_003
 

@@ -1,32 +1,36 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import type { ConfirmationResult } from "firebase/auth";
 import { Leaf } from "lucide-react";
 import { ApiError } from "@/api/query";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { useToast } from "@/components/ui/toast";
-import { firebaseMessage, useAuth, type RegisterBody } from "@/auth/AuthProvider";
+import { useAuth, type RegisterBody } from "@/auth/AuthProvider";
 import { RedirectIfSettled } from "@/auth/guards";
-import { confirmPhoneCode, sendPhoneCode } from "@/auth/phone";
+import { PhoneVerifier } from "@/auth/PhoneVerifier";
+import { PHONE_HELP, phoneProblem, type CountryCode } from "@/lib/phone";
 import { useAction } from "@/auth/useAction";
 import { SIGNUP_ROLES, type Role } from "@/lib/auth";
 import { DISTRICTS, RESIDUES } from "@/lib/places";
 import { useFormErrors } from "@/lib/useFormErrors";
 import {
-  normalizePhone,
+  LIMITS,
   pkrToPaisa,
   summarize,
   validateConfirm,
   validateEmail,
   validateNewPassword,
-  validatePhone,
   validateProfile,
   validateText,
   type Errors,
 } from "@/lib/validation";
 
 type SignupRole = Exclude<Role, "admin">;
+
+/** Farmers confirm their phone by SMS only when this is on (it matches the API's REQUIRE_VERIFIED_PHONE).
+ * Off: the farmer's phone is an optional, unverified field. */
+const REQUIRE_SMS = import.meta.env.VITE_REQUIRE_VERIFIED_PHONE === "true";
 
 export default function Signup() {
   const { state } = useAuth();
@@ -105,6 +109,7 @@ function AccountStep() {
           <Field label="Email" error={form.errors.email}>
             <input
               type="email"
+              maxLength={LIMITS.email.max}
               autoComplete="email"
               value={email}
               onChange={(e) => {
@@ -117,6 +122,7 @@ function AccountStep() {
           <Field label="Password" error={form.errors.password} hint="8 or more characters, with a letter and a number">
             <input
               type="password"
+              maxLength={LIMITS.password.max}
               autoComplete="new-password"
               value={password}
               onChange={(e) => {
@@ -129,6 +135,7 @@ function AccountStep() {
           <Field label="Confirm password" error={form.errors.confirm}>
             <input
               type="password"
+              maxLength={LIMITS.password.max}
               autoComplete="new-password"
               value={confirm}
               onChange={(e) => {
@@ -156,6 +163,7 @@ function ProfileStep({ defaultName }: { defaultName: string }) {
   const [role, setRole] = useState<SignupRole>("farmer");
   const [name, setName] = useState(defaultName);
   const [phone, setPhone] = useState("");
+  const [phoneTyped, setPhoneTyped] = useState<{ text: string; country: CountryCode } | null>(null);
   const [district, setDistrict] = useState<string>(DISTRICTS[0]);
   const [village, setVillage] = useState("");
   const [factoryName, setFactoryName] = useState("");
@@ -165,54 +173,12 @@ function ProfileStep({ defaultName }: { defaultName: string }) {
   const form = useFormErrors();
   const toast = useToast();
 
-  // farmer phone verification
-  const [code, setCode] = useState("");
-  const [sent, setSent] = useState<ConfirmationResult | null>(null);
-  const [verified, setVerified] = useState(false);
-
-  async function sendCode() {
-    const problem = validatePhone(phone);
-    if (problem) {
-      form.fail({ phone: problem });
-      toast.error(problem);
-      return;
-    }
-    setBusy(true);
-    try {
-      setSent(await sendPhoneCode(normalizePhone(phone)!, "recaptcha-container"));
-      toast.info("We sent a 6-digit code by SMS.");
-    } catch (e) {
-      const message = firebaseMessage(e);
-      if (message) toast.error(message);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function verify() {
-    if (!sent) return;
-    if (!/^\d{6}$/.test(code.trim())) {
-      form.fail({ code: "Enter the 6-digit code from the SMS" });
-      return;
-    }
-    setBusy(true);
-    try {
-      await confirmPhoneCode(sent, code.trim());
-      setVerified(true);
-      form.reset();
-    } catch (e) {
-      const message = firebaseMessage(e);
-      form.fail({ code: message || "That code is not right." });
-      if (message) toast.error(message);
-    } finally {
-      setBusy(false);
-    }
-  }
+  const [verified, setVerified] = useState(false); // farmer: the SMS code was confirmed
 
   function body(): RegisterBody {
     const base: RegisterBody = { role, display_name: name.trim() };
     if (role === "transporter") {
-      return { ...base, phone: normalizePhone(phone) ?? phone.trim(), district, village: village.trim() };
+      return { ...base, phone, district, village: village.trim() };
     }
     if (role === "factory") {
       return {
@@ -222,14 +188,18 @@ function ProfileStep({ defaultName }: { defaultName: string }) {
         factory: { name: factoryName.trim(), price_per_tonne: pkrToPaisa(price) ?? 0, residues },
       };
     }
-    return base;
+    return phone ? { ...base, phone } : base; // a farmer: the optional phone, only when given
   }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     // The farmer phone is verified by SMS, not typed into the body, so it needs the code step.
     const errors = validateProfile({ role, name, phone, district, village, factoryName, price, residues });
-    if (role === "farmer" && !verified) errors.phone ??= "Verify your phone number to continue";
+    if (role === "farmer" && REQUIRE_SMS && !verified) errors.phone ??= "Verify your phone number to continue";
+    // optional, but if something was typed it has to be a real mobile number
+    if (role === "farmer" && !REQUIRE_SMS && phoneTyped?.text && !phone) {
+      errors.phone = phoneProblem(phoneTyped.text, phoneTyped.country) ?? PHONE_HELP;
+    }
     if (Object.keys(errors).length) {
       form.fail(errors);
       toast.error(summarize(errors));
@@ -316,6 +286,8 @@ function ProfileStep({ defaultName }: { defaultName: string }) {
               <input
                 type="number"
                 inputMode="decimal"
+                min={1}
+                max={1_000_000}
                 value={price}
                 onChange={(e) => {
                   setPrice(e.target.value);
@@ -375,61 +347,41 @@ function ProfileStep({ defaultName }: { defaultName: string }) {
         )}
 
         {role === "transporter" && (
-          <Field label="Phone (like +923001234567)" error={err.phone}>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => {
-                setPhone(e.target.value);
-                form.clear("phone");
-              }}
-              onBlur={() => form.set("phone", phone ? validatePhone(phone) : undefined)}
-            />
-          </Field>
+          <PhoneInput
+            label="Phone"
+            value={phone}
+            error={err.phone}
+            onChange={(e164) => {
+              setPhone(e164);
+              form.clear("phone");
+            }}
+          />
         )}
 
-        {role === "farmer" && (
-          <div className="auth-stack">
-            <Field label="Your phone number (like +923001234567)" error={err.phone}>
-              <input
-                type="tel"
-                disabled={verified}
-                value={phone}
-                onChange={(e) => {
-                  setPhone(e.target.value);
-                  form.clear("phone");
-                }}
-              />
-            </Field>
-            <p className="auth-note">
-              We text you a code. It proves the number is yours, so you see only your own lots and payments.
-            </p>
-            {verified ? (
-              <p className="auth-note" role="status">Phone verified.</p>
-            ) : sent ? (
-              <div className="form-grid">
-                <Field label="6-digit code" error={err.code}>
-                  <input
-                    inputMode="numeric"
-                    maxLength={6}
-                    value={code}
-                    onChange={(e) => {
-                      setCode(e.target.value.replace(/\D/g, ""));
-                      form.clear("code");
-                    }}
-                  />
-                </Field>
-                <Button type="button" loading={busy} onClick={() => void verify()}>
-                  Verify code
-                </Button>
-              </div>
-            ) : (
-              <Button type="button" variant="outline" loading={busy} onClick={() => void sendCode()}>
-                Send code
-              </Button>
-            )}
-            <div id="recaptcha-container" />
-          </div>
+        {role === "farmer" && !REQUIRE_SMS && (
+          <PhoneInput
+            label="Phone (optional)"
+            value={phone}
+            error={err.phone}
+            hint="Optional. Add it to see requests made earlier by phone."
+            onChange={(e164, s) => {
+              setPhone(e164);
+              setPhoneTyped({ text: s.text, country: s.country });
+              form.clear("phone");
+            }}
+          />
+        )}
+
+        {role === "farmer" && REQUIRE_SMS && (
+          <PhoneVerifier
+            error={err.phone}
+            onChange={() => form.clear("phone")}
+            onVerified={(verifiedPhone) => {
+              setPhone(verifiedPhone);
+              setVerified(true);
+              form.clear("phone");
+            }}
+          />
         )}
 
         <Button type="submit" loading={busy}>

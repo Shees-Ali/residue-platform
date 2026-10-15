@@ -49,7 +49,20 @@ def test_phones_are_cleaned_to_e164(typed, clean):
     assert normalize_phone(typed) == clean
 
 
-@pytest.mark.parametrize("typed", ["", "abc", "12345", "+0123456789", "+92", "+9230012345678901"])
+@pytest.mark.parametrize(
+    "typed",
+    [
+        "‎+923131087151",  # a left-to-right mark, as in a number copied from a contact
+        " ‪+92 313 1087151‬",
+        "+92 313 1087151",  # non-breaking spaces
+        "﻿+923131087151​",
+    ],
+)
+def test_invisible_marks_in_a_copied_number_are_dropped(typed):
+    assert normalize_phone(typed) == "+923131087151"
+
+
+@pytest.mark.parametrize("typed", ["", "abc", "12345", "+0123456789", "+92", "3131087151"])
 def test_bad_phones_say_what_is_expected(typed):
     with pytest.raises(ValueError, match="country code, like \\+923001234567"):
         normalize_phone(typed)
@@ -226,3 +239,38 @@ async def test_names_are_trimmed(api):
         "/api/me/register", headers=who("v-11"), json={"role": "buyer", "display_name": "  Bilal  "}
     )
     assert r.json()["display_name"] == "Bilal"
+
+
+@pytest.mark.parametrize(
+    "typed, region",
+    [
+        ("+9230012345678901", "PK"),  # too long
+        ("+92300123", "PK"),  # too short
+        ("+923501234567", "PK"),  # 35x is not a mobile prefix
+        ("+919999", "IN"),
+        ("+44712345678901", "GB"),
+    ],
+)
+def test_a_real_country_code_with_an_invalid_number_names_the_country(typed, region):
+    with pytest.raises(ValueError, match=f"not a valid phone number for {region}"):
+        normalize_phone(typed)
+
+
+@pytest.mark.parametrize(
+    "typed, clean",
+    [
+        ("+14155552671", "+14155552671"),  # US
+        ("+44 7400 123456", "+447400123456"),  # UK mobile
+        ("+91 98765 43210", "+919876543210"),  # India
+        ("0313 1087151", "+923131087151"),  # a Pakistani number written locally
+    ],
+)
+def test_numbers_from_other_countries_are_checked_by_their_own_rules(typed, clean):
+    assert normalize_phone(typed) == clean
+
+
+def test_a_landline_is_not_accepted_because_we_send_sms():
+    with pytest.raises(ValueError, match="not a mobile number for GB"):
+        normalize_phone("+44 20 7183 8750")  # a London landline
+    with pytest.raises(ValueError, match="not a mobile number for PK"):
+        normalize_phone("+92 42 3576 1234")  # a Lahore landline

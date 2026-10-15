@@ -133,8 +133,9 @@ async def farmer_payouts(db: AsyncSession, user_uid: str) -> list[PayoutOut]:
                 )
             )
             continue
+        weight = job.final_weight_kg or job.est_weight_kg  # the weighbridge weight once known
         estimate = payouts(
-            gross(job.est_weight_kg, job.quoted_price_per_tonne), job_shares(job.farmer_share_bps)
+            gross(weight, job.quoted_price_per_tonne), job_shares(job.farmer_share_bps)
         )["farmer"]
         out.append(
             PayoutOut(job_id=str(job.id), state=job.state, status="pending", amount=estimate)

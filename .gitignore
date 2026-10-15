@@ -12,3 +12,4 @@ __pycache__/
 seed/out/
 web/src/api/schema.d.ts.tmp
 *.egg-info/
+api/.dev_uploads/

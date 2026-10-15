@@ -28,3 +28,5 @@ As a factory, I see lots assigned to me and fund escrow so dispatch can start.
 
 ## Open
 - Factory dashboard UI. Funding is simulated; no real payment partner.
+
+- 2026-10-16 end-to-end: web: `FactoryHome` lists loads awaiting escrow and funds them after showing the amount. Tests: `api/tests/test_e2e_flow.py` and the web panel tests.

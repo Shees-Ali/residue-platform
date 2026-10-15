@@ -22,6 +22,7 @@ from tests.helpers import (
     confirm,
     fund,
     ledger_of,
+    leg,
     move_to_delivered,
     photo,
     scalar,
@@ -189,17 +190,17 @@ async def test_only_the_assigned_transporter_can_record_pickup_and_delivery(api,
     await fund(api, world)
     url = f"/api/jobs/{world.job_id}/pickup"
     path = f"jobs/{world.job_id}/pickup/x.jpg"
-    body = {"photo_path": path, "weight_kg": 2400}
+    body = leg(path, 2400)
     assert (await api.post(url, headers=T1, json=body)).status_code == 404  # not accepted yet
     refused = await api.post(f"/api/jobs/{world.job_id}/photos/upload-url", headers=T1,
                              json={"kind": "pickup"})
     assert refused.status_code == 404  # no upload URL for a job that is not yours
     await accept_first_offer(api, world)
     path = await photo(api, world, "pickup", T1)
-    body = {"photo_path": path, "weight_kg": 2400}
+    body = leg(path, 2400)
     assert (await api.post(url, headers=T2, json=body)).status_code == 404  # someone else's job
     assert (await api.post(f"/api/jobs/{world.job_id}/deliver", headers=T1,
-                           json={"photo_path": path, "weight_kg": 2400})).status_code == 422
+                           json=leg(path, 2400))).status_code == 422
     assert (await api.post(url, headers=T1, json=body)).status_code == 200
     assert (await api.post(url, headers=T1, json=body)).status_code == 409  # only once
 
@@ -211,11 +212,11 @@ async def test_photo_paths_and_weights_are_checked(api, world):
     other_job = f"jobs/{uuid.uuid4()}/pickup/x.jpg"
     wrong_kind = f"jobs/{world.job_id}/delivery/x.jpg"
     for path in (other_job, wrong_kind, "anything.jpg"):
-        r = await api.post(url, headers=T1, json={"photo_path": path, "weight_kg": 100})
+        r = await api.post(url, headers=T1, json=leg(path, 100))
         assert r.status_code == 422, path
     good = await photo(api, world, "pickup", T1)
     for weight in (0, -5, 100_001):
-        r = await api.post(url, headers=T1, json={"photo_path": good, "weight_kg": weight})
+        r = await api.post(url, headers=T1, json=leg(good, weight))
         assert r.status_code == 422, weight
     # roles may only upload the photos that belong to them
     r = await api.post(f"/api/jobs/{world.job_id}/photos/upload-url", headers=T1,
@@ -244,10 +245,10 @@ async def test_a_lot_can_only_be_graded_once_delivered_and_with_an_uploaded_phot
     await accept_first_offer(api, world)
     p = await photo(api, world, "pickup", T1)
     await api.post(f"/api/jobs/{world.job_id}/pickup", headers=T1,
-                   json={"photo_path": p, "weight_kg": 2400})
+                   json=leg(p, 2400))
     d = await photo(api, world, "delivery", T1)
     await api.post(f"/api/jobs/{world.job_id}/deliver", headers=T1,
-                   json={"photo_path": d, "weight_kg": 2450})
+                   json=leg(d, 2450))
     api.storage.blobs.clear()  # the client never actually uploaded the bytes
     assert (await api.post(url, headers=FACTORY, json={})).status_code == 422
     wb = await photo(api, world, "weighbridge", FACTORY)

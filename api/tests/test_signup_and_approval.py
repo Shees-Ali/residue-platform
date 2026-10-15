@@ -178,7 +178,7 @@ async def test_farmer_links_to_the_record_for_their_verified_phone(api, world):
     assert (await api.get(f"/api/lots/{world.lot_id}", headers=h)).status_code == 200
 
 
-async def test_farmer_without_a_verified_phone_sees_nothing(api, world):
+async def test_farmer_without_a_verified_phone_sees_nothing(api, world, sms_required):
     h = who("farm-2")
     r = await api.post("/api/me/register", headers=h, json={"role": "farmer", "display_name": "Fa"})
     assert r.json()["farmer_linked"] is False
@@ -223,7 +223,6 @@ async def test_farmers_cannot_use_other_roles_routes(api, world):
     h = who("farm-7", phone=world.farmer_phone)
     await api.post("/api/me/register", headers=h, json={"role": "farmer", "display_name": "Fa"})
     for method, path in (
-        ("get", "/api/jobs"),
         ("get", "/api/offers"),
         ("get", "/api/products"),
         ("get", "/api/orders"),

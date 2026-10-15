@@ -30,3 +30,9 @@
 .form-field input[aria-invalid=true],.form-field select[aria-invalid=true]{border-color:var(--destructive)}
 .form-field input[aria-invalid=true]:focus{outline-color:var(--destructive)}
 .bare-fieldset{border:0;padding:0;margin:0;min-width:0}
+.demo-label.live>span{background:var(--primary)}
+.photo-preview{max-width:100%;max-height:200px;border-radius:6px;border:1px solid var(--border);grid-column:1/-1}
+.photo-strip{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.photo-strip a{display:block}.photo-strip img{width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--border)}.photo-strip small{display:block;font-size:9px;color:var(--muted-foreground);text-align:center}
+.map-box{height:340px;width:100%;border-radius:8px;overflow:hidden;border:1px solid var(--border)}.map-pin{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);color:#fff;font-size:12px;font-weight:700}.pin-farm{background:#b8860b}.pin-factory{background:#2f6b3a}.pin-truck{background:#1d4ed8}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 9px;font-size:10px;background:var(--accent);color:var(--primary)}.chip.warn{background:var(--gold-soft);color:var(--secondary-foreground)}
+.phone-input{display:flex;gap:8px}.phone-input select{flex:0 0 auto;max-width:44%;min-width:0;text-overflow:ellipsis}.phone-input input{flex:1;min-width:0}

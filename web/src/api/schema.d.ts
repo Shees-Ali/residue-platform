@@ -45,6 +45,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lots/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create My Lot
+         * @description A farmer reports their own residue on the web. Same checks and assignment as a phone call.
+         *
+         *     A double click or a retry with the same Idempotency-Key returns the same lot.
+         */
+        post: operations["create_my_lot_api_lots_mine_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lots/{lot_id}": {
         parameters: {
             query?: never;
@@ -105,6 +127,26 @@ export interface paths {
         };
         /** Get Jobs Root */
         get: operations["get_jobs_root_api_jobs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Job Offers
+         * @description Who was offered this job, in order, and what each did (admin).
+         */
+        get: operations["get_job_offers_api_jobs__job_id__offers_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -199,7 +241,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Post Jobs Job Id Pickup */
+        /**
+         * Post Jobs Job Id Pickup
+         * @description Pickup: the photo (already uploaded), the weight and where the transporter is.
+         */
         post: operations["post_jobs_job_id_pickup_api_jobs__job_id__pickup_post"];
         delete?: never;
         options?: never;
@@ -216,7 +261,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Post Jobs Job Id Deliver */
+        /**
+         * Post Jobs Job Id Deliver
+         * @description Delivery at the factory: the photo, the weight and where the transporter is.
+         */
         post: operations["post_jobs_job_id_deliver_api_jobs__job_id__deliver_post"];
         delete?: never;
         options?: never;
@@ -265,6 +313,88 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{job_id}/location": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Jobs Job Id Location
+         * @description The transporter's phone sends where it is while the job is in progress.
+         */
+        post: operations["post_jobs_job_id_location_api_jobs__job_id__location_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/track": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Jobs Job Id Track
+         * @description The map data for one job: farm, factory, the track and a rough arrival time.
+         */
+        get: operations["get_jobs_job_id_track_api_jobs__job_id__track_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Jobs Job Id Verify
+         * @description The farmer confirms the weight and payment (settles) or disputes it (freezes the money).
+         *
+         *     The phone call does the same through /api/agent/confirmations; both end in the same code.
+         */
+        post: operations["post_jobs_job_id_verify_api_jobs__job_id__verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Jobs Job Id Ledger
+         * @description The money movements for one job: escrow in, payouts, refunds (admin or owning factory).
+         */
+        get: operations["get_jobs_job_id_ledger_api_jobs__job_id__ledger_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jobs/{job_id}/verification-call": {
         parameters: {
             query?: never;
@@ -299,6 +429,26 @@ export interface paths {
         get: operations["get_offers_root_api_offers_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/offers/{offer_id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Offers Offer Id Decline
+         * @description Pass on an offer. The job goes straight to the next transporter.
+         */
+        post: operations["post_offers_offer_id_decline_api_offers__offer_id__decline_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -764,6 +914,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/link-phone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Link Phone
+         * @description A farmer who has no linked record verifies their phone (SMS) and calls this.
+         */
+        post: operations["link_phone_api_me_link_phone_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users": {
         parameters: {
             query?: never;
@@ -858,10 +1028,146 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/residue-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Residue Types */
+        get: operations["get_residue_types_api_residue_types_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/districts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Districts */
+        get: operations["get_districts_api_districts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/villages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Villages
+         * @description Known villages in a district, for suggestions. Any other village name is still accepted.
+         */
+        get: operations["get_villages_api_villages_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Stats
+         * @description The admin overview numbers in one call.
+         */
+        get: operations["get_stats_api_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tracking/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Active Tracks
+         * @description Every load on the move with its last position. A factory sees only its own.
+         */
+        get: operations["get_active_tracks_api_tracking_active_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dev-upload/{path}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Photo */
+        get: operations["get_photo_api_dev_upload__path__get"];
+        /** Put Photo */
+        put: operations["put_photo_api_dev_upload__path__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ActiveTrack */
+        ActiveTrack: {
+            /** Job Id */
+            job_id: string;
+            /** State */
+            state: string;
+            /** Residue Type */
+            residue_type: string;
+            /** Quantity Tonnes */
+            quantity_tonnes: number;
+            /** Village */
+            village: string | null;
+            /** Factory Name */
+            factory_name: string;
+            pickup: components["schemas"]["Place"];
+            factory: components["schemas"]["Place"];
+            last?: components["schemas"]["TrackPoint"] | null;
+            /** Heading To */
+            heading_to?: string | null;
+            /** Distance To Target Km */
+            distance_to_target_km?: number | null;
+            /** Eta Minutes */
+            eta_minutes?: number | null;
+        };
         /**
          * AdminLotIn
          * @description Manual lot entry by an admin on behalf of a farmer (same validation as the agent).
@@ -869,6 +1175,8 @@ export interface components {
         AdminLotIn: {
             /** Farmer Phone */
             farmer_phone: string;
+            /** Farmer Name */
+            farmer_name?: string | null;
             /** Residue Type */
             residue_type: string;
             /** Quantity Tonnes */
@@ -977,7 +1285,9 @@ export interface components {
             /** Id */
             id: string;
             /** Call Id */
-            call_id: string;
+            call_id?: string | null;
+            /** Job Id */
+            job_id?: string | null;
             /** Summary */
             summary: string;
             /** Transcript */
@@ -1076,6 +1386,31 @@ export interface components {
             /** Settled At */
             settled_at: string | null;
         };
+        /**
+         * JobOfferOut
+         * @description One step of the offer ladder, as the admin sees it.
+         */
+        JobOfferOut: {
+            /** Id */
+            id: string;
+            /** Sequence */
+            sequence: number;
+            /** Transporter Id */
+            transporter_id: string;
+            /** Transporter Name */
+            transporter_name?: string | null;
+            /** Transporter Phone */
+            transporter_phone?: string | null;
+            /** Status */
+            status: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Payout Amount */
+            payout_amount: number;
+        };
         /** JobOut */
         JobOut: {
             /** Id */
@@ -1088,6 +1423,8 @@ export interface components {
             factory_name?: string | null;
             /** Transporter Id */
             transporter_id?: string | null;
+            /** Transporter Name */
+            transporter_name?: string | null;
             /** State */
             state: string;
             /** Residue Type */
@@ -1096,6 +1433,20 @@ export interface components {
             quantity_tonnes?: number | null;
             /** Village */
             village?: string | null;
+            /** District */
+            district?: string | null;
+            /** Pickup Lat */
+            pickup_lat?: number | null;
+            /** Pickup Lon */
+            pickup_lon?: number | null;
+            /** Factory Lat */
+            factory_lat?: number | null;
+            /** Factory Lon */
+            factory_lon?: number | null;
+            /** Farmer Name */
+            farmer_name?: string | null;
+            /** Farmer Phone */
+            farmer_phone?: string | null;
             /** Quoted Price Per Tonne */
             quoted_price_per_tonne: number;
             /** Farmer Share Bps */
@@ -1104,8 +1455,28 @@ export interface components {
             est_weight_kg: number;
             /** Final Weight Kg */
             final_weight_kg?: number | null;
+            /**
+             * Escrow Amount
+             * @default 0
+             */
+            escrow_amount: number;
+            /**
+             * Est Farmer Payout
+             * @default 0
+             */
+            est_farmer_payout: number;
+            /**
+             * Est Transporter Payout
+             * @default 0
+             */
+            est_transporter_payout: number;
             /** Rejection Reason */
             rejection_reason?: string | null;
+            /**
+             * Photos
+             * @default []
+             */
+            photos: components["schemas"]["PhotoOut"][];
             /**
              * Offers Exhausted
              * @default false
@@ -1168,8 +1539,17 @@ export interface components {
              */
             created_at: string;
         };
-        /** LegIn */
+        /**
+         * LegIn
+         * @description Record a pickup or delivery: the photo, the weight and where the transporter is.
+         */
         LegIn: {
+            /** Lat */
+            lat: number;
+            /** Lon */
+            lon: number;
+            /** Accuracy M */
+            accuracy_m?: number | null;
             /** Photo Path */
             photo_path: string;
             /** Weight Kg */
@@ -1181,16 +1561,36 @@ export interface components {
             id: string;
             /** Farmer Id */
             farmer_id: string;
+            /** Farmer Name */
+            farmer_name?: string | null;
+            /** Farmer Phone */
+            farmer_phone?: string | null;
             /** Residue Type */
             residue_type: string;
+            /** Residue Label */
+            residue_label?: string | null;
             /** Quantity Tonnes */
             quantity_tonnes: number;
+            /** Village */
+            village?: string | null;
+            /** District */
+            district?: string | null;
+            /** Place Match */
+            place_match?: string | null;
             /** Lat */
             lat: number;
             /** Lon */
             lon: number;
             /** Status */
             status: string;
+            /** Factory Name */
+            factory_name?: string | null;
+            /** Quoted Price Per Tonne */
+            quoted_price_per_tonne?: number | null;
+            /** Farmer Share Bps */
+            farmer_share_bps?: number | null;
+            /** Est Farmer Payout */
+            est_farmer_payout?: number | null;
             /** Pickup From */
             pickup_from: string | null;
             /** Pickup To */
@@ -1258,6 +1658,24 @@ export interface components {
             farmer_linked?: boolean | null;
         };
         /**
+         * MineLotIn
+         * @description A farmer reporting their own residue on the web. Who they are comes from the login.
+         */
+        MineLotIn: {
+            /** Residue Type */
+            residue_type: string;
+            /** Quantity Tonnes */
+            quantity_tonnes: number;
+            /** Pickup Date */
+            pickup_date: string;
+            /** Pickup Part */
+            pickup_part: string;
+            /** Village */
+            village: string;
+            /** District */
+            district: string;
+        };
+        /**
          * OfferOut
          * @description What a transporter sees: where, how much, how long they have.
          */
@@ -1305,12 +1723,16 @@ export interface components {
             id: string;
             /** Product Id */
             product_id: string;
+            /** Product Name */
+            product_name?: string | null;
             /** Quantity */
             quantity: number;
             /** Total */
             total: number;
             /** Status */
             status: string;
+            /** Created At */
+            created_at?: string | null;
             /** Splits */
             splits: components["schemas"]["SplitLine"][];
             /** Shares Total Bps */
@@ -1336,6 +1758,48 @@ export interface components {
             /** Amount */
             amount: number;
         };
+        /** PhotoOut */
+        PhotoOut: {
+            /** Id */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Weight Kg */
+            weight_kg?: number | null;
+            /** Url */
+            url: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * PingIn
+         * @description A position sent while the job is in progress.
+         */
+        PingIn: {
+            /** Lat */
+            lat: number;
+            /** Lon */
+            lon: number;
+            /** Accuracy M */
+            accuracy_m?: number | null;
+        };
+        /** PingOut */
+        PingOut: {
+            /** Recorded */
+            recorded: boolean;
+        };
+        /** Place */
+        Place: {
+            /** Lat */
+            lat: number;
+            /** Lon */
+            lon: number;
+            /** Name */
+            name?: string | null;
+        };
         /** ProductIn */
         ProductIn: {
             /** Name */
@@ -1344,6 +1808,18 @@ export interface components {
             unit_price: number;
             /** Stock */
             stock: number;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "Clean Energy" | "Farming & Garden" | "Building Materials" | "Home & Living";
+            /** Unit */
+            unit: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
         };
         /** ProductOut */
         ProductOut: {
@@ -1359,6 +1835,12 @@ export interface components {
             unit_price: number;
             /** Stock */
             stock: number;
+            /** Category */
+            category: string;
+            /** Unit */
+            unit: string;
+            /** Description */
+            description: string;
             /** Active */
             active: boolean;
         };
@@ -1370,6 +1852,12 @@ export interface components {
             unit_price?: number | null;
             /** Stock */
             stock?: number | null;
+            /** Category */
+            category?: ("Clean Energy" | "Farming & Garden" | "Building Materials" | "Home & Living") | null;
+            /** Unit */
+            unit?: string | null;
+            /** Description */
+            description?: string | null;
             /** Active */
             active?: boolean | null;
         };
@@ -1457,6 +1945,13 @@ export interface components {
             district?: string | null;
             factory?: components["schemas"]["FactoryProfileIn"] | null;
         };
+        /** ResidueTypeOut */
+        ResidueTypeOut: {
+            /** Code */
+            code: string;
+            /** Label */
+            label: string;
+        };
         /** SplitLine */
         SplitLine: {
             /** Party */
@@ -1465,6 +1960,29 @@ export interface components {
             share_bps: number;
             /** Amount */
             amount: number;
+        };
+        /** StatsOut */
+        StatsOut: {
+            /** Farmers */
+            farmers: number;
+            /** Factories */
+            factories: number;
+            /** Transporters */
+            transporters: number;
+            /** Transporters Waiting Approval */
+            transporters_waiting_approval: number;
+            /** Live Jobs */
+            live_jobs: number;
+            /** Jobs Settled */
+            jobs_settled: number;
+            /** Orders */
+            orders: number;
+            /** Tonnes Diverted */
+            tonnes_diverted: number;
+            /** Escrow Held */
+            escrow_held: number;
+            /** Open Escalations */
+            open_escalations: number;
         };
         /** TickIn */
         TickIn: {
@@ -1488,10 +2006,57 @@ export interface components {
              */
             dispatched: number;
         };
+        /**
+         * TrackOut
+         * @description Everything the map needs for one job.
+         */
+        TrackOut: {
+            /** Job Id */
+            job_id: string;
+            /** State */
+            state: string;
+            pickup: components["schemas"]["Place"];
+            factory: components["schemas"]["Place"];
+            /** Points */
+            points: components["schemas"]["TrackPoint"][];
+            last?: components["schemas"]["TrackPoint"] | null;
+            /** Heading To */
+            heading_to?: string | null;
+            /** Distance To Target Km */
+            distance_to_target_km?: number | null;
+            /** Eta Minutes */
+            eta_minutes?: number | null;
+            /** Pickup Off Site M */
+            pickup_off_site_m?: number | null;
+            /** Delivery Off Site M */
+            delivery_off_site_m?: number | null;
+        };
+        /** TrackPoint */
+        TrackPoint: {
+            /** Kind */
+            kind: string;
+            /** Lat */
+            lat: number;
+            /** Lon */
+            lon: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Accuracy M */
+            accuracy_m?: number | null;
+            /** Distance From Target M */
+            distance_from_target_m?: number | null;
+        };
         /** TransporterOut */
         TransporterOut: {
             /** Id */
             id: string;
+            /** User Uid */
+            user_uid?: string | null;
+            /** Display Name */
+            display_name?: string | null;
             /** Phone */
             phone: string;
             /** Tier */
@@ -1517,8 +2082,9 @@ export interface components {
             /**
              * Content Type
              * @default image/jpeg
+             * @enum {string}
              */
-            content_type: string;
+            content_type: "image/jpeg" | "image/png" | "image/webp";
         };
         /** UploadUrlOut */
         UploadUrlOut: {
@@ -1581,7 +2147,36 @@ export interface components {
             /** Farmer Id */
             farmer_id: string;
             /** Farmer Phone */
-            farmer_phone: string;
+            farmer_phone?: string | null;
+        };
+        /**
+         * VerifyIn
+         * @description The farmer's answer on the web: yes, pay out, or no, I dispute the weight or payment.
+         */
+        VerifyIn: {
+            /** Confirmed */
+            confirmed: boolean;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+        };
+        /** VerifyOut */
+        VerifyOut: {
+            /** Job Id */
+            job_id: string;
+            /** State */
+            state: string;
+            /** Farmer Amount */
+            farmer_amount?: number | null;
+        };
+        /** VillageOut */
+        VillageOut: {
+            /** Name */
+            name: string;
+            /** District */
+            district: string;
         };
         /** ApproveIn */
         app__models__me__ApproveIn: {
@@ -1630,7 +2225,7 @@ export interface operations {
     list_lots_api_lots_get: {
         parameters: {
             query?: {
-                status?: string | null;
+                status?: ("open" | "assigned" | "rejected") | null;
                 farmer_id?: string | null;
                 limit?: number;
                 offset?: number;
@@ -1638,6 +2233,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -1670,6 +2266,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -1700,12 +2297,51 @@ export interface operations {
             };
         };
     };
+    create_my_lot_api_lots_mine_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+                "idempotency-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MineLotIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_lot_api_lots__lot_id__get: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 lot_id: string;
@@ -1740,6 +2376,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 lot_id: string;
@@ -1774,6 +2411,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 lot_id: string;
@@ -1816,6 +2454,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -1842,12 +2481,48 @@ export interface operations {
             };
         };
     };
+    get_job_offers_api_jobs__job_id__offers_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOfferOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_jobs_job_id_api_jobs__job_id__get: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 job_id: string;
@@ -1882,6 +2557,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 job_id: string;
@@ -1916,6 +2592,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 job_id: string;
@@ -1950,6 +2627,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 job_id: string;
@@ -1988,6 +2666,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 job_id: string;
@@ -2026,6 +2705,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 job_id: string;
@@ -2064,6 +2744,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 job_id: string;
@@ -2102,6 +2783,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 job_id: string;
@@ -2134,12 +2816,161 @@ export interface operations {
             };
         };
     };
+    post_jobs_job_id_location_api_jobs__job_id__location_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PingIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PingOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_jobs_job_id_track_api_jobs__job_id__track_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrackOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_jobs_job_id_verify_api_jobs__job_id__verify_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerifyOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_jobs_job_id_ledger_api_jobs__job_id__ledger_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerEntryOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     post_jobs_job_id_verification_call_api_jobs__job_id__verification_call_post: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 job_id: string;
@@ -2174,6 +3005,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -2200,12 +3032,46 @@ export interface operations {
             };
         };
     };
+    post_offers_offer_id_decline_api_offers__offer_id__decline_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     post_offers_offer_id_accept_api_offers__offer_id__accept_post: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 offer_id: string;
@@ -2245,6 +3111,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -2277,6 +3144,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -2309,6 +3177,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -2341,6 +3210,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -2373,6 +3243,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -2409,6 +3280,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 product_id: string;
@@ -2447,6 +3319,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -2479,6 +3352,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -2515,6 +3389,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 order_id: string;
@@ -2804,6 +3679,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -2836,6 +3712,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 escalation_id: string;
@@ -2870,6 +3747,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -2904,6 +3782,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -2936,6 +3815,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 transporter_id: string;
@@ -2974,6 +3854,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 transporter_id: string;
@@ -3074,6 +3955,40 @@ export interface operations {
             };
         };
     };
+    link_phone_api_me_link_phone_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+                "x-dev-phone"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_users_api_users_get: {
         parameters: {
             query?: {
@@ -3085,6 +4000,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -3117,6 +4033,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 uid: string;
@@ -3155,6 +4072,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 uid: string;
@@ -3189,6 +4107,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 uid: string;
@@ -3223,6 +4142,7 @@ export interface operations {
             header?: {
                 authorization?: string | null;
                 "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
             };
             path: {
                 uid: string;
@@ -3239,6 +4159,237 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["UserOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_residue_types_api_residue_types_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResidueTypeOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_districts_api_districts_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_villages_api_villages_get: {
+        parameters: {
+            query: {
+                district: string;
+            };
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VillageOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_stats_api_stats_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_active_tracks_api_tracking_active_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActiveTrack"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_photo_api_dev_upload__path__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                path: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_photo_api_dev_upload__path__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path: {
+                path: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

@@ -21,6 +21,9 @@ def _out(product: Product, factory_name: str) -> ProductOut:
         name=product.name,
         unit_price=product.unit_price,
         stock=product.stock,
+        category=product.category,
+        unit=product.unit,
+        description=product.description,
         active=product.active,
     )
 
@@ -41,7 +44,13 @@ async def get_products_root(db: DbSession, user: AuthUser = as_shopper):
 async def post_products_root(db: DbSession, body: ProductIn, user: AuthUser = as_factory):
     factory = await factory_of(db, user)
     product = Product(
-        factory_id=factory.id, name=body.name, unit_price=body.unit_price, stock=body.stock
+        factory_id=factory.id,
+        name=body.name,
+        unit_price=body.unit_price,
+        stock=body.stock,
+        category=body.category,
+        unit=body.unit,
+        description=body.description,
     )
     db.add(product)
     await db.flush()

@@ -34,6 +34,13 @@ def get_engine() -> AsyncEngine:
     return _engine
 
 
+def new_session() -> AsyncSession:
+    """A session outside a request (the dispatch loop). Use as `async with new_session()`."""
+    get_engine()
+    assert _sessionmaker is not None
+    return _sessionmaker()
+
+
 async def get_session() -> AsyncIterator[AsyncSession]:
     """FastAPI dependency: one session per request; routes commit explicitly."""
     try:

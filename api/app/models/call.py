@@ -18,8 +18,8 @@ class CallStartOut(BaseModel):
 
 class CallEndIn(BaseModel):
     status: Literal["completed", "abandoned", "failed"] = "completed"
-    transcript: str = ""
-    summary: str = ""
+    transcript: str = Field(default="", max_length=50000)
+    summary: str = Field(default="", max_length=2000)
 
 
 class CallEndOut(BaseModel):

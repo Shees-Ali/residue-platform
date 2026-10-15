@@ -2,10 +2,10 @@
 import uuid
 
 from fastapi import HTTPException
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db_models.tables import Call, Escalation, Farmer
+from app.db_models.tables import Call, Escalation, Farmer, Job, Lot
 from app.models.escalation import EscalationOut
 
 
@@ -21,10 +21,13 @@ async def create_escalation(
 async def list_escalations(
     db: AsyncSession, status: str | None, limit: int, offset: int
 ) -> list[EscalationOut]:
+    # The farmer comes from the call (a phone escalation) or from the job (a web dispute).
     query = (
         select(Escalation, Farmer.phone)
-        .join(Call, Call.id == Escalation.call_id)
-        .outerjoin(Farmer, Farmer.id == Call.farmer_id)
+        .outerjoin(Call, Call.id == Escalation.call_id)
+        .outerjoin(Job, Job.id == Escalation.job_id)
+        .outerjoin(Lot, Lot.id == Job.lot_id)
+        .outerjoin(Farmer, Farmer.id == func.coalesce(Call.farmer_id, Lot.farmer_id))
     )
     if status:
         query = query.where(Escalation.status == status)
@@ -33,7 +36,8 @@ async def list_escalations(
     ).all()
     return [
         EscalationOut(
-            id=str(e.id), call_id=str(e.call_id), summary=e.summary, transcript=e.transcript,
+            id=str(e.id), call_id=str(e.call_id) if e.call_id else None,
+            job_id=str(e.job_id) if e.job_id else None, summary=e.summary, transcript=e.transcript,
             status=e.status, farmer_phone=phone, created_at=e.created_at,
         )
         for e, phone in rows

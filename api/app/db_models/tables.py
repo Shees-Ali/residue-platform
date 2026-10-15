@@ -15,6 +15,7 @@ from sqlalchemy import (
     Numeric,
     Text,
     UniqueConstraint,
+    func,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -25,10 +26,12 @@ from app.db_models.base import (
     ESCALATION_STATUSES,
     JOB_STATES,
     LEDGER_KINDS,
+    LOCATION_KINDS,
     LOT_STATUSES,
     OFFER_STATUSES,
     ORDER_STATUSES,
     PHOTO_KINDS,
+    PRODUCT_CATEGORIES,
     ROLES,
     SPLIT_PARTIES,
     USER_STATUSES,
@@ -87,7 +90,7 @@ class Farmer(Base):
     __tablename__ = "farmers"
     id: Mapped[uuid.UUID] = uuid_pk()
     user_uid: Mapped[str | None] = uid_fk(nullable=True, unique=True)  # dashboard login, if any
-    phone: Mapped[str] = mapped_column(Text, unique=True)
+    phone: Mapped[str | None] = mapped_column(Text, unique=True)  # optional until SMS is required
     name: Mapped[str] = mapped_column(Text, server_default=text("''"))
     village_id: Mapped[uuid.UUID | None] = fk("villages.id", nullable=True)
     preferred_language: Mapped[str] = mapped_column(Text, server_default=text("'ur'"))
@@ -160,6 +163,9 @@ class Lot(Base):
     pickup_from: Mapped[datetime | None] = mapped_column(TS)
     pickup_to: Mapped[datetime | None] = mapped_column(TS)
     village_id: Mapped[uuid.UUID | None] = fk("villages.id", nullable=True)
+    village_name: Mapped[str | None] = mapped_column(Text)  # as reported (or the matched village)
+    district: Mapped[str | None] = mapped_column(Text)
+    place_match: Mapped[str | None] = mapped_column(Text)  # exact | fuzzy | district
     lat: Mapped[float] = mapped_column(Float)
     lon: Mapped[float] = mapped_column(Float)
     status: Mapped[str] = mapped_column(Text, server_default=text("'open'"))
@@ -187,7 +193,8 @@ class Escalation(Base):
     __tablename__ = "escalations"
     __table_args__ = (one_of("status", ESCALATION_STATUSES, "status"),)
     id: Mapped[uuid.UUID] = uuid_pk()
-    call_id: Mapped[uuid.UUID] = fk("calls.id")
+    call_id: Mapped[uuid.UUID | None] = fk("calls.id", nullable=True)  # none for a web dispute
+    job_id: Mapped[uuid.UUID | None] = fk("jobs.id", nullable=True)
     summary: Mapped[str] = mapped_column(Text)
     transcript: Mapped[str] = mapped_column(Text, server_default=text("''"))
     status: Mapped[str] = mapped_column(Text, server_default=text("'open'"))
@@ -261,6 +268,26 @@ class Photo(Base):
     created_at: Mapped[datetime] = created_at()
 
 
+class JobLocation(Base):
+    """Where the transporter was: at pickup, at delivery, and pings while on the way."""
+
+    __tablename__ = "job_locations"
+    __table_args__ = (
+        one_of("kind", LOCATION_KINDS, "kind"),
+        Index("ix_job_locations_job_id_recorded_at", "job_id", "recorded_at"),
+    )
+    id: Mapped[uuid.UUID] = uuid_pk()
+    job_id: Mapped[uuid.UUID] = fk("jobs.id")
+    transporter_id: Mapped[uuid.UUID] = fk("transporters.id")
+    kind: Mapped[str] = mapped_column(Text)
+    lat: Mapped[float] = mapped_column(Float)
+    lon: Mapped[float] = mapped_column(Float)
+    accuracy_m: Mapped[float | None] = mapped_column(Float)
+    # pickup: metres from the farm; delivery: metres from the factory. Stored, never blocking.
+    distance_from_target_m: Mapped[int | None] = mapped_column(Integer)
+    recorded_at: Mapped[datetime] = mapped_column(TS, server_default=func.now())
+
+
 class Grade(Base):
     """AI visual estimate only; the weighbridge confirmation is authoritative."""
 
@@ -294,12 +321,16 @@ class Product(Base):
     __table_args__ = (
         CheckConstraint("stock >= 0", name="stock_nonneg"),
         CheckConstraint("unit_price >= 0", name="price_nonneg"),
+        one_of("category", PRODUCT_CATEGORIES, "category"),
     )
     id: Mapped[uuid.UUID] = uuid_pk()
     factory_id: Mapped[uuid.UUID] = fk("factories.id")
     name: Mapped[str] = mapped_column(Text)
     unit_price: Mapped[int] = mapped_column(BigInteger)
     stock: Mapped[int] = mapped_column(Integer, server_default=text("0"))
+    category: Mapped[str] = mapped_column(Text, server_default=text("'Clean Energy'"))
+    unit: Mapped[str] = mapped_column(Text, server_default=text("'per 25 kg bag'"))
+    description: Mapped[str] = mapped_column(Text, server_default=text("''"))
     active: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))
     created_at: Mapped[datetime] = created_at()
 

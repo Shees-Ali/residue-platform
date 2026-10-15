@@ -9,8 +9,8 @@ from app.db_models.tables import Factory, Job, Lot, Offer, Village
 from app.deps import DbSession, Events
 from app.models.job import JobOut
 from app.models.offer_out import OfferOut
-from app.services.dispatch_store import accept_offer
-from app.services.job_views import job_out
+from app.services.dispatch_store import accept_offer, decline_offer
+from app.services.job_views import Viewer, job_out
 
 router = APIRouter(prefix="/api/offers", tags=["offers"])
 
@@ -50,6 +50,25 @@ async def get_offers_root(db: DbSession, user: AuthUser = as_transporter):
     ]
 
 
+@router.post("/{offer_id}/decline", status_code=204)
+async def post_offers_offer_id_decline(
+    db: DbSession,
+    events: Events,
+    offer_id: str,
+    user: AuthUser = as_transporter,
+):
+    """Pass on an offer. The job goes straight to the next transporter."""
+    transporter = await transporter_of(db, user)
+    try:
+        key = uuid.UUID(offer_id)
+    except ValueError:
+        raise HTTPException(404, "Unknown offer") from None
+    job_id = await decline_offer(db, key, transporter)
+    await db.commit()
+    await events.publish("offer.updated", str(job_id))
+    await events.publish("job.updated", str(job_id))
+
+
 @router.post("/{offer_id}/accept", response_model=JobOut)
 async def post_offers_offer_id_accept(
     db: DbSession,
@@ -64,7 +83,7 @@ async def post_offers_offer_id_accept(
     except ValueError:
         raise HTTPException(404, "Unknown offer") from None
     job_id = await accept_offer(db, key, transporter)
-    out = await job_out(db, job_id)
+    out = await job_out(db, job_id, Viewer("transporter", transporter.id))
     await db.commit()
     await events.publish("offer.updated", str(job_id))
     await events.publish("job.updated", str(job_id))

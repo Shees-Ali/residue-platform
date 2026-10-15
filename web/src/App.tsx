@@ -1,13 +1,11 @@
 import { Outlet, Route, Routes } from "react-router-dom";
 import { HomeRedirect, RequireAuth, RequireRole } from "./auth/guards";
+import { AdminHome } from "./components/live/AdminHome";
+import { FactoryHome } from "./components/live/FactoryHome";
+import { FarmerHome } from "./components/live/FarmerHome";
+import { TransporterHome } from "./components/live/TransporterHome";
 import { ResidueShell } from "./components/fasalloop/shell";
-import {
-  AdminDashboard,
-  FarmerPortal,
-  FactoryDashboard,
-  TransporterDashboard,
-} from "./components/fasalloop/portals";
-import { Marketplace } from "./components/fasalloop/marketplace";
+import { Marketplace } from "./components/live/Marketplace";
 import Call from "./pages/Call";
 import Health from "./pages/Health";
 import Login from "./pages/auth/Login";
@@ -36,11 +34,11 @@ export default function App() {
       <Route element={<RequireAuth />}>
         <Route element={<Shell />}>
           <Route path="/" element={<HomeRedirect />} />
-          <Route path="/farmer" element={guarded("/farmer", <FarmerPortal />)} />
-          <Route path="/transporter" element={guarded("/transporter", <TransporterDashboard />)} />
-          <Route path="/factory" element={guarded("/factory", <FactoryDashboard />)} />
+          <Route path="/farmer" element={guarded("/farmer", <FarmerHome />)} />
+          <Route path="/transporter" element={guarded("/transporter", <TransporterHome />)} />
+          <Route path="/factory" element={guarded("/factory", <FactoryHome />)} />
           <Route path="/market" element={guarded("/market", <Marketplace />)} />
-          <Route path="/admin" element={guarded("/admin", <AdminDashboard />)} />
+          <Route path="/admin" element={guarded("/admin", <AdminHome />)} />
           <Route path="/call" element={guarded("/call", <Call />)} />
         </Route>
       </Route>

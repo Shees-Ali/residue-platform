@@ -3,7 +3,7 @@ import { renderAt, signedIn } from "@/test/renderApp";
 import type { Role } from "@/lib/auth";
 
 const pages: [string, string][] = [
-  ["/farmer", "Assalam-o-Alaikum, Aslam!"],
+  ["/farmer", "Assalam-o-Alaikum, Test!"],
   ["/transporter", "Move harvests forward."],
   ["/factory", "From residue to resources."],
   ["/market", "Good for you. Better for the planet."],
@@ -18,7 +18,7 @@ test.each(pages)("admin can open %s", async (path, heading) => {
 });
 
 const homes: [Role, string][] = [
-  ["farmer", "Assalam-o-Alaikum, Aslam!"],
+  ["farmer", "Assalam-o-Alaikum, Test!"],
   ["transporter", "Move harvests forward."],
   ["factory", "From residue to resources."],
   ["buyer", "Good for you. Better for the planet."],

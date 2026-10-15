@@ -59,6 +59,7 @@ async def place_order(
 
 async def order_out(db: AsyncSession, order_id: uuid.UUID) -> OrderOut:
     order = await db.get(Order, order_id)
+    product = await db.get(Product, order.product_id)
     rows = (
         await db.execute(select(SaleSplit).where(SaleSplit.order_id == order_id))
     ).scalars().all()
@@ -67,9 +68,11 @@ async def order_out(db: AsyncSession, order_id: uuid.UUID) -> OrderOut:
     return OrderOut(
         id=str(order.id),
         product_id=str(order.product_id),
+        product_name=product.name if product else None,
         quantity=order.quantity,
         total=order.total,
         status=order.status,
+        created_at=order.created_at,
         splits=[SplitLine(party=r.party, share_bps=r.share_bps, amount=r.amount) for r in rows],
         shares_total_bps=sum(r.share_bps for r in rows),
         amounts_total=sum(r.amount for r in rows),

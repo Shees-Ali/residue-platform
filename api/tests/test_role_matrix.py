@@ -24,16 +24,28 @@ ALL_BUT_FARMER_BUYER = {"admin", "factory", "transporter"}
 ROUTES: dict[tuple[str, str], tuple[set[str], dict | None]] = {
     ("GET", "/api/lots"): ({"admin", "farmer"}, None),
     ("POST", "/api/lots"): (ADMIN, None),
+    ("POST", "/api/lots/mine"): ({"farmer"}, None),
+    ("GET", "/api/residue-types"): (set(ROLES), None),
+    ("GET", "/api/districts"): (set(ROLES), None),
+    ("GET", "/api/villages"): (set(ROLES), None),
     ("GET", "/api/lots/{lot_id}"): ({"admin", "farmer"}, None),
     ("GET", "/api/lots/{lot_id}/ranking"): (ADMIN, None),
     ("POST", "/api/lots/{lot_id}/override"): (ADMIN, None),
-    ("GET", "/api/jobs"): (ALL_BUT_FARMER_BUYER, None),
-    ("GET", "/api/jobs/{job_id}"): (ALL_BUT_FARMER_BUYER, None),
+    ("GET", "/api/jobs"): (ALL_BUT_FARMER_BUYER | {"farmer"}, None),
+    ("GET", "/api/jobs/{job_id}"): (ALL_BUT_FARMER_BUYER | {"farmer"}, None),
+    ("GET", "/api/jobs/{job_id}/offers"): (ADMIN, None),
+    ("GET", "/api/stats"): (ADMIN, None),
+    ("POST", "/api/offers/{offer_id}/decline"): ({"transporter"}, None),
     ("POST", "/api/jobs/{job_id}/fund"): ({"factory"}, None),
     ("POST", "/api/jobs/{job_id}/redispatch"): (ADMIN, None),
     ("POST", "/api/jobs/{job_id}/photos/upload-url"): ({"transporter"}, {"kind": "pickup"}),
     ("POST", "/api/jobs/{job_id}/pickup"): ({"transporter"}, None),
     ("POST", "/api/jobs/{job_id}/deliver"): ({"transporter"}, None),
+    ("POST", "/api/jobs/{job_id}/location"): ({"transporter"}, None),
+    ("POST", "/api/jobs/{job_id}/verify"): ({"farmer"}, None),
+    ("GET", "/api/jobs/{job_id}/ledger"): ({"admin", "factory"}, None),
+    ("GET", "/api/jobs/{job_id}/track"): ({"admin", "factory"}, None),
+    ("GET", "/api/tracking/active"): ({"admin", "factory"}, None),
     ("POST", "/api/jobs/{job_id}/grade"): ({"factory"}, None),
     ("POST", "/api/jobs/{job_id}/confirm"): ({"factory"}, None),
     ("POST", "/api/jobs/{job_id}/verification-call"): (ADMIN, None),
@@ -63,6 +75,11 @@ ROUTES: dict[tuple[str, str], tuple[set[str], dict | None]] = {
 }
 # Any signed-in person, including one who has not picked a role yet.
 SELF_ROUTES = {("GET", "/api/me"), ("POST", "/api/me/register")}
+# Needs a signed-in farmer (their own token phone), so it is covered in test_lot_forms.
+FARMER_ONLY_ROUTES = {("POST", "/api/me/link-phone")}
+# The local photo store: writing needs any signed-in person, reading is open (an img tag cannot
+# send a token). Covered in test_m2_delivery_tracking.
+DEV_ROUTES = {("PUT", "/api/dev-upload/{path}"), ("GET", "/api/dev-upload/{path}")}
 # Service-to-service: Google ID token of the voice service account, never a Firebase user token.
 SERVICE_PREFIXES = ("/api/agent/", "/api/internal/")
 
@@ -87,7 +104,8 @@ def test_every_dashboard_route_is_in_the_matrix():
         for method in methods
         if method.upper() in ("GET", "POST", "PATCH", "PUT", "DELETE")
     }
-    assert actual - SELF_ROUTES == set(ROUTES), "add new routes to ROUTES with their roles"
+    known = actual - SELF_ROUTES - FARMER_ONLY_ROUTES - DEV_ROUTES
+    assert known == set(ROUTES), "add new routes to ROUTES with their roles"
 
 
 @pytest.fixture

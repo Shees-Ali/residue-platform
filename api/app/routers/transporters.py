@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 
 from app.auth.firebase import AuthUser, as_admin
-from app.db_models.tables import Transporter
+from app.db_models.tables import Transporter, User
 from app.deps import DbSession, Events
 from app.models.transporter import ApproveIn, TransporterOut
 from app.services.dispatch import TIER_MAX_TONNES
@@ -13,9 +13,11 @@ from app.services.dispatch import TIER_MAX_TONNES
 router = APIRouter(prefix="/api/transporters", tags=["transporters"])
 
 
-def _out(t: Transporter) -> TransporterOut:
+def _out(t: Transporter, name: str | None = None) -> TransporterOut:
     return TransporterOut(
         id=str(t.id),
+        user_uid=t.user_uid,
+        display_name=name or None,
         phone=t.phone,
         tier=t.tier,
         max_tonnes=float(t.max_tonnes),
@@ -24,6 +26,11 @@ def _out(t: Transporter) -> TransporterOut:
         lat=t.lat,
         lon=t.lon,
     )
+
+
+async def _name(db, t: Transporter) -> str | None:
+    user = await db.get(User, t.user_uid) if t.user_uid else None
+    return user.display_name if user else None
 
 
 async def _load(db, transporter_id: str) -> Transporter:
@@ -39,12 +46,16 @@ async def _load(db, transporter_id: str) -> Transporter:
 
 @router.get("", response_model=list[TransporterOut])
 async def get_transporters(db: DbSession, approved: bool | None = None, user: AuthUser = as_admin):
-    query = select(Transporter).order_by(Transporter.created_at)
+    query = (
+        select(Transporter, User.display_name)
+        .outerjoin(User, User.uid == Transporter.user_uid)
+        .order_by(Transporter.created_at)
+    )
     if approved is True:
         query = query.where(Transporter.approved_at.is_not(None))
     elif approved is False:
         query = query.where(Transporter.approved_at.is_(None))
-    return [_out(t) for t in (await db.execute(query)).scalars().all()]
+    return [_out(t, name) for t, name in (await db.execute(query)).all()]
 
 
 @router.post("/{transporter_id}/approve", response_model=TransporterOut)
@@ -57,7 +68,7 @@ async def approve_transporter(
     transporter.max_tonnes = TIER_MAX_TONNES[body.tier]
     transporter.approved_at = transporter.approved_at or datetime.now(UTC)
     await db.flush()
-    out = _out(transporter)
+    out = _out(transporter, await _name(db, transporter))
     await db.commit()
     await events.publish("job.updated")  # dispatch eligibility changed
     return out
@@ -71,6 +82,6 @@ async def revoke_transporter(
     transporter = await _load(db, transporter_id)
     transporter.approved_at = None
     await db.flush()
-    out = _out(transporter)
+    out = _out(transporter, await _name(db, transporter))
     await db.commit()
     return out

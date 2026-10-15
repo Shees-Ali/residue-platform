@@ -4,7 +4,7 @@ from sqlalchemy import text
 
 from tests.helpers import scalar
 
-BOSS = "sheessyed101@gmail.com"
+BOSS = "boss-test@example.pk"
 
 
 @pytest.fixture(autouse=True)

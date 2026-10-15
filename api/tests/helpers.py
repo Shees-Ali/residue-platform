@@ -20,6 +20,11 @@ T2 = {"X-Dev-Uid": "t-trans2"}
 BUYER = {"X-Dev-Uid": "dev-buyer-0"}
 
 
+def leg(path, weight_kg, **over):
+    """A pickup or delivery body: the uploaded photo, the weight and where the truck is."""
+    return {"photo_path": path, "weight_kg": weight_kg, "lat": 31.4, "lon": 74.38, **over}
+
+
 def tomorrow() -> str:
     return (datetime.now(PKT).date() + timedelta(days=1)).isoformat()
 
@@ -83,14 +88,14 @@ async def move_to_delivered(api, world, pickup_kg=2400, delivery_kg=2450):
     r = await api.post(
         f"/api/jobs/{world.job_id}/pickup",
         headers=T1,
-        json={"photo_path": p, "weight_kg": pickup_kg},
+        json=leg(p, pickup_kg),
     )
     assert r.status_code == 200, r.text
     d = await photo(api, world, "delivery", T1)
     r = await api.post(
         f"/api/jobs/{world.job_id}/deliver",
         headers=T1,
-        json={"photo_path": d, "weight_kg": delivery_kg},
+        json=leg(d, delivery_kg),
     )
     assert r.status_code == 200, r.text
     return r.json()

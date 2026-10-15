@@ -92,15 +92,31 @@ export function AuthProvider({ children, initial }: { children: ReactNode; initi
     });
   }, [initial, refresh]);
 
+  /** Run a Firebase sign-in. Firebase only announces a change of person, so signing in again as the
+   * person already signed in (a signup left half done, a lookup that failed) announces nothing and
+   * the screen would stay where it was. In that case look the account up now: an unregistered
+   * account then resumes at step 2, a registered one goes home. */
+  const signedInBy = useCallback(
+    async (call: () => Promise<unknown>) => {
+      const before = auth.currentUser?.uid ?? null;
+      await call();
+      if (!initial && auth.currentUser && auth.currentUser.uid === before) {
+        setState({ status: "loading" });
+        await refresh();
+      }
+    },
+    [initial, refresh],
+  );
+
   const value = useMemo<AuthContextValue>(
     () => ({
       state,
       user: state.status === "ready" ? state.user : null,
-      signInWithGoogle: async () => void (await signInWithPopup(auth, googleProvider)),
-      signInWithEmail: async (email, password) =>
-        void (await signInWithEmailAndPassword(auth, email, password)),
-      signUpWithEmail: async (email, password) =>
-        void (await createUserWithEmailAndPassword(auth, email, password)),
+      signInWithGoogle: () => signedInBy(() => signInWithPopup(auth, googleProvider)),
+      signInWithEmail: (email, password) =>
+        signedInBy(() => signInWithEmailAndPassword(auth, email, password)),
+      signUpWithEmail: (email, password) =>
+        signedInBy(() => createUserWithEmailAndPassword(auth, email, password)),
       register: async (body) => {
         const { data, error, response } = await api.POST("/api/me/register", { body });
         if (!data) throw apiErrorFrom(error, response.status);
@@ -112,7 +128,7 @@ export function AuthProvider({ children, initial }: { children: ReactNode; initi
         await auth.signOut();
       },
     }),
-    [state, refresh, initial],
+    [state, refresh, initial, signedInBy],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
@@ -141,6 +157,17 @@ export function firebaseMessage(e: unknown): string {
     "auth/invalid-phone-number": "Enter the phone number like +923001234567.",
     "auth/invalid-verification-code": "That code is not right.",
     "auth/credential-already-in-use": "That phone number is already used by another account.",
+    "auth/operation-not-allowed":
+      "This sign-in method is not turned on for the project. In the Firebase console open Authentication, Sign-in method, and enable it (Phone for SMS codes). If Phone is on, check Authentication, Settings, SMS region policy allows Pakistan.",
+    "auth/billing-not-enabled":
+      "Real SMS messages need billing on the Firebase project. Add a test phone number in the console, or turn billing on.",
+    "auth/quota-exceeded": "Too many SMS messages were sent today. Try a test phone number or wait.",
+    "auth/captcha-check-failed": "The reCAPTCHA check failed. Reload the page and try again.",
+    "auth/missing-phone-number": "Enter your phone number first.",
+    "auth/unauthorized-domain":
+      "This address is not allowed to sign in. In the Firebase console add it under Authentication, Settings, Authorized domains.",
+    "auth/invalid-app-credential": "The reCAPTCHA check was rejected. Reload the page and try again.",
+    "auth/code-expired": "That code has expired. Ask for a new one.",
   };
   return code in known ? known[code] : (e instanceof Error ? e.message : "Something went wrong. Try again.");
 }
