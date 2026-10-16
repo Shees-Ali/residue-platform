@@ -18,6 +18,7 @@ from tests.helpers import (
     T1,
     T2,
     TRANSPORTER_ESTIMATE,
+    event_types,
     fund,
     offers_of,
     scalar,
@@ -105,8 +106,7 @@ async def test_funding_writes_escrow_and_offers_the_job_to_the_nearest_transport
         ("pending", TRANSPORTER_ESTIMATE, "Test Factory")
     ]
     assert (await api.get("/api/offers", headers=T2)).json() == []
-    kinds = [e["type"] for e in api.events.sent]
-    assert {"ledger.updated", "job.updated", "offer.created"} <= set(kinds)
+    assert {"job.funded", "offer.created"} <= set(await event_types(api, world.job_id))
 
 
 async def test_only_the_owning_factory_can_fund_and_only_once(api, world):
@@ -237,6 +237,8 @@ async def test_two_simultaneous_accepts_produce_exactly_one_winner():
             assert (await s.get(t.Job, ids[2])).state == "accepted"
     finally:
         async with Session() as s:
+            await s.execute(delete(t.Notification).where(t.Notification.job_id == ids[2]))
+            await s.execute(delete(t.Event).where(t.Event.job_id == ids[2]))
             for model, key in ((t.Offer, ids[0]), (t.Job, ids[2]), (t.Lot, ids[3]),
                                (t.Transporter, ids[1]), (t.Farmer, ids[4]), (t.Factory, ids[5])):
                 await s.execute(delete(model).where(model.id == key))

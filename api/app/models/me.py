@@ -45,6 +45,7 @@ class MeOut(BaseModel):
     display_name: str
     phone: str | None
     farmer_linked: bool | None = None  # farmers: is a phone-verified farmer record attached?
+    live_updates: bool = False  # does the API mirror notifications to Firestore (the web listens)?
 
 
 class ApproveIn(BaseModel):

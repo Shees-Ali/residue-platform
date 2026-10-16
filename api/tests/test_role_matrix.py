@@ -34,6 +34,11 @@ ROUTES: dict[tuple[str, str], tuple[set[str], dict | None]] = {
     ("GET", "/api/jobs"): (ALL_BUT_FARMER_BUYER | {"farmer"}, None),
     ("GET", "/api/jobs/{job_id}"): (ALL_BUT_FARMER_BUYER | {"farmer"}, None),
     ("GET", "/api/jobs/{job_id}/offers"): (ADMIN, None),
+    ("GET", "/api/jobs/{job_id}/events"): (ALL_BUT_FARMER_BUYER | {"farmer"}, None),
+    ("GET", "/api/notifications"): (set(ROLES), None),  # always the caller's own
+    ("GET", "/api/notifications/unread-count"): (set(ROLES), None),
+    ("POST", "/api/notifications/read-all"): (set(ROLES), None),
+    ("POST", "/api/notifications/{notification_id}/read"): (set(ROLES), None),
     ("GET", "/api/stats"): (ADMIN, None),
     ("POST", "/api/offers/{offer_id}/decline"): ({"transporter"}, None),
     ("POST", "/api/jobs/{job_id}/fund"): ({"factory"}, None),

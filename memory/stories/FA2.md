@@ -30,3 +30,5 @@ As a factory, I weigh the lot at the gate and accept or reject it, with an AI gr
 - `GeminiGrader` is not exercised against the live API (needs a key and real photos). Factory UI.
 
 - 2026-10-16 end-to-end: web: weighbridge cards with the transporter photos, optional AI grade estimate, confirm weight and reject with a reason. Tests: `api/tests/test_e2e_flow.py` and the web panel tests.
+
+- 2026-10-16 (EV stories): events: `job.confirmed` and `job.rejected` (farmer, transporter, admin). See `EV2.md`.

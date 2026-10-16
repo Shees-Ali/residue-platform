@@ -15,6 +15,7 @@ export function me(role: Role, extra: Partial<Me> = {}): Me {
     status: "active",
     display_name: "Test User",
     phone: null,
+    live_updates: false,
     ...(role === "farmer" ? { farmer_linked: true } : {}),
     ...extra,
   };

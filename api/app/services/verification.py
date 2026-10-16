@@ -1,5 +1,6 @@
 """F4: the farmer's yes or no on weight and payment, after the factory has confirmed."""
 import uuid
+from types import SimpleNamespace
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -56,9 +57,9 @@ async def record_web_answer(
 
     db.add(Verification(job_id=job.id, call_id=None, confirmed=confirmed, note=note.strip()))
     if confirmed:
-        parts = await settle_verified(db, job)
+        parts = await settle_verified(db, job, actor=SimpleNamespace(uid=farmer_uid, role="farmer"))
         return {"job_id": str(job.id), "state": "settled", "farmer_amount": parts["farmer"]}
-    await dispute(db, job)
+    await dispute(db, job, actor=SimpleNamespace(uid=farmer_uid, role="farmer"))
     db.add(
         Escalation(
             job_id=job.id,

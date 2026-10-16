@@ -11,7 +11,8 @@ from collections.abc import Callable
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.dispatch_store import expire_and_advance
-from app.services.events import EventSink
+from app.services.inbox import Inbox, commit_and_deliver, sweep
+from app.services.notify import alert_unbalanced_ledger
 
 log = logging.getLogger(__name__)
 
@@ -26,23 +27,23 @@ def loop_seconds() -> float:
         return 0
 
 
-async def run_once(session: AsyncSession, events: EventSink):
-    """One tick: expire lapsed offers, offer the next transporter, publish what changed."""
+async def run_once(session: AsyncSession, inbox: Inbox):
+    """One tick: expire lapsed offers, offer the next transporter, deliver what changed, and retry
+    any notification whose Firestore mirror failed earlier."""
     result = await expire_and_advance(session)
-    await session.commit()
-    for job_id in result.job_ids:
-        await events.publish("offer.updated", job_id)
-        await events.publish("job.updated", job_id)
+    await alert_unbalanced_ledger(session)
+    await commit_and_deliver(session, inbox)
+    await sweep(session, inbox)
     return result
 
 
 async def run_forever(
-    new_session: Callable[[], AsyncSession], events: EventSink, seconds: float
+    new_session: Callable[[], AsyncSession], inbox: Inbox, seconds: float
 ) -> None:
     while True:
         try:
             async with new_session() as session:
-                await run_once(session, events)
+                await run_once(session, inbox)
         except asyncio.CancelledError:
             raise
         except Exception:  # noqa: BLE001 - the loop must survive a bad tick

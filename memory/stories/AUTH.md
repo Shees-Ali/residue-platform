@@ -32,3 +32,5 @@ See `decisions.md` entries of 2026-10-15 (auth and roles, farmer phone, real Fir
 - Email verification, password reset and a way for a farmer to add a phone later are not built.
 - Dashboards still run on the in-browser demo engine; only the approvals table uses the API. Wiring each dashboard to its endpoints is the next task.
 - The web has a fixed list of districts and residue codes (`src/lib/places.ts`) until the API exposes them.
+
+- 2026-10-16 (EV stories): events: `account.pending` (admins), `account.approved`, `account.rejected`, `account.suspended`, `account.reactivated` (the person; their screen re-reads who they are). See `EV2.md`.

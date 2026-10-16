@@ -6,9 +6,11 @@ from sqlalchemy import select
 
 from app.auth.firebase import AuthUser, as_admin
 from app.db_models.tables import Transporter, User
-from app.deps import DbSession, Events
+from app.deps import DbSession, Delivery
 from app.models.transporter import ApproveIn, TransporterOut
 from app.services.dispatch import TIER_MAX_TONNES
+from app.services.inbox import commit_and_deliver
+from app.services.notify import emit
 
 router = APIRouter(prefix="/api/transporters", tags=["transporters"])
 
@@ -60,28 +62,35 @@ async def get_transporters(db: DbSession, approved: bool | None = None, user: Au
 
 @router.post("/{transporter_id}/approve", response_model=TransporterOut)
 async def approve_transporter(
-    db: DbSession, events: Events, transporter_id: str, body: ApproveIn, user: AuthUser = as_admin
+    db: DbSession, inbox: Delivery, transporter_id: str, body: ApproveIn, user: AuthUser = as_admin
 ):
     """Approve (or re-tier) a transporter. The tier sets the largest job they are offered."""
     transporter = await _load(db, transporter_id)
+    newly = transporter.approved_at is None
     transporter.tier = body.tier
     transporter.max_tonnes = TIER_MAX_TONNES[body.tier]
     transporter.approved_at = transporter.approved_at or datetime.now(UTC)
     await db.flush()
     out = _out(transporter, await _name(db, transporter))
-    await db.commit()
-    await events.publish("job.updated")  # dispatch eligibility changed
+    if transporter.user_uid:
+        await emit(
+            db, "account.approved" if newly else "account.tier_changed", actor=user,
+            uid=transporter.user_uid, tier=body.tier, max_tonnes=float(transporter.max_tonnes),
+        )
+    await commit_and_deliver(db, inbox)
     return out
 
 
 @router.post("/{transporter_id}/revoke", response_model=TransporterOut)
 async def revoke_transporter(
-    db: DbSession, transporter_id: str, user: AuthUser = as_admin
+    db: DbSession, inbox: Delivery, transporter_id: str, user: AuthUser = as_admin
 ):
     """Stop offering jobs to this transporter. Jobs they already accepted are unaffected."""
     transporter = await _load(db, transporter_id)
     transporter.approved_at = None
     await db.flush()
     out = _out(transporter, await _name(db, transporter))
-    await db.commit()
+    if transporter.user_uid:
+        await emit(db, "account.suspended", actor=user, uid=transporter.user_uid)
+    await commit_and_deliver(db, inbox)
     return out

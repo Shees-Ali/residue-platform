@@ -38,7 +38,7 @@ async def _place(db: AsyncSession, village: str | None, district: str | None) ->
     return match_place(village, canon, villages)
 
 
-async def me_out(db: AsyncSession, user: User) -> MeOut:
+async def me_out(db: AsyncSession, user: User, live: bool = False) -> MeOut:
     linked = None
     if user.role == "farmer":
         linked = (
@@ -53,6 +53,7 @@ async def me_out(db: AsyncSession, user: User) -> MeOut:
         display_name=user.display_name,
         phone=user.phone,
         farmer_linked=linked,
+        live_updates=live,
     )
 
 

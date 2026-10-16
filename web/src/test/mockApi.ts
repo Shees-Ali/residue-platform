@@ -4,10 +4,11 @@ import { quiet } from "./defaults";
 export type Rows = Record<string, unknown>;
 
 /** Answer GET requests by path; anything not listed is an empty list. A value shaped
- * `{error, response}` is returned as a failed call. */
+ * `{error, response}` is returned as a failed call; a function is called with the request. */
 export function mockGet(rows: Rows) {
-  vi.mocked(api.GET).mockImplementation((async (path: string) => {
-    const hit = rows[path];
+  vi.mocked(api.GET).mockImplementation((async (path: string, init?: unknown) => {
+    let hit = rows[path];
+    if (typeof hit === "function") hit = await (hit as (init?: unknown) => unknown)(init);
     if (hit instanceof Error) throw hit;
     return hit && typeof hit === "object" && "error" in (hit as object)
       ? hit

@@ -4,7 +4,6 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import text
 
 from app.services.dispatch_loop import loop_seconds, run_once
-from app.services.events import FakeEvents
 from tests.helpers import (
     ADMIN,
     FACTORY,
@@ -13,6 +12,7 @@ from tests.helpers import (
     T1,
     T2,
     TRANSPORTER_ESTIMATE,
+    event_types,
     offers_of,
 )
 
@@ -137,11 +137,10 @@ async def test_one_loop_tick_advances_an_offer_that_has_lapsed(api, world):
         text("UPDATE offers SET expires_at = :t WHERE job_id = :j"),
         {"t": datetime.now(UTC) - timedelta(seconds=5), "j": __import__("uuid").UUID(world.job_id)},
     )
-    events = FakeEvents()
-    result = await run_once(api.session, events)
+    result = await run_once(api.session, api.inbox)
     assert (result.expired, result.reoffered) == (1, 1)
     assert [r[2] for r in await offers_of(api, world.job_id)] == ["expired", "pending"]
-    assert any(e["type"] == "offer.updated" for e in events.sent)
+    assert {"offer.expired", "offer.created"} <= set(await event_types(api, world.job_id))
 
 
 def test_the_loop_is_off_by_default_and_never_on_cloud_run(monkeypatch):

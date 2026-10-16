@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 
@@ -11,8 +13,8 @@ from app.auth.firebase import (
     current_user,
 )
 from app.auth.owners import factory_of, transporter_of
-from app.db_models.tables import Farmer, Grade, Job, LedgerEntry, Lot, Photo
-from app.deps import DbSession, Events
+from app.db_models.tables import Event, Farmer, Grade, Job, LedgerEntry, Lot, Photo
+from app.deps import DbSession, Delivery
 from app.models.delivery import (
     ConfirmIn,
     GradeIn,
@@ -27,6 +29,7 @@ from app.models.delivery import (
     VerifyOut,
 )
 from app.models.job import JobOfferOut, JobOut
+from app.models.notifications import JobEventOut
 from app.models.reports import LedgerEntryOut
 from app.models.tracking import TrackOut
 from app.services.delivery import (
@@ -38,6 +41,7 @@ from app.services.delivery import (
 from app.services.dispatch_store import start_dispatch
 from app.services.funding import fund_job
 from app.services.grading import Grader, get_grader
+from app.services.inbox import commit_and_deliver
 from app.services.job_flow import load_job
 from app.services.job_views import Viewer, job_ladder, job_out, list_jobs
 from app.services.settlement import confirm_delivery, reject_delivery
@@ -116,6 +120,31 @@ async def get_jobs_root(
     return await list_jobs(db, state=state, limit=limit, offset=offset, viewer=viewer, **scope)
 
 
+@router.get("/{job_id}/events", response_model=list[JobEventOut])
+async def get_job_events(
+    db: DbSession,
+    job_id: str,
+    limit: int = 100,
+    user: AuthUser = Depends(current_user),
+):
+    """What happened to this job and who did it: what this reader may see, oldest first."""
+    if not 1 <= limit <= 200:
+        raise FieldErrors([("limit", "Limit must be between 1 and 200")], code="invalid_limit")
+    job = await visible_job(db, user, job_id)  # 404 unless the job is theirs
+    # the lot's own events (reported, matched) happened before the job existed
+    query = select(Event).where(Event.lot_id == uuid.UUID(job.lot_id)).order_by(Event.created_at)
+    if user.role != "admin":
+        query = query.where(Event.visible_to.contains([user.role]))
+    rows = (await db.execute(query.limit(limit))).scalars().all()
+    return [
+        JobEventOut(
+            id=str(e.id), type=e.type, summary=e.summary, actor_role=e.actor_role,
+            created_at=e.created_at,
+        )
+        for e in rows
+    ]
+
+
 @router.get("/{job_id}/offers", response_model=list[JobOfferOut])
 async def get_job_offers(db: DbSession, job_id: str, user: AuthUser = as_admin):
     """Who was offered this job, in order, and what each did (admin)."""
@@ -133,23 +162,19 @@ async def get_jobs_job_id(db: DbSession, job_id: str, user: AuthUser = Depends(c
 
 @router.post("/{job_id}/fund", response_model=JobOut)
 async def post_jobs_job_id_fund(
-    db: DbSession, events: Events, job_id: str, user: AuthUser = as_factory
+    db: DbSession, inbox: Delivery, job_id: str, user: AuthUser = as_factory
 ):
     """Fund escrow (simulated). Starts dispatch: the nearest eligible transporter gets an offer."""
     job, factory = await own_job_as_factory(db, user, job_id)
-    offer = await fund_job(db, job, factory)
+    await fund_job(db, job, factory, actor=user)
     out = await job_out(db, job.id, Viewer("factory"))
-    await db.commit()
-    await events.publish("ledger.updated", str(job.id))
-    await events.publish("job.updated", str(job.id))
-    if offer is not None:
-        await events.publish("offer.created", str(job.id))
+    await commit_and_deliver(db, inbox)
     return out
 
 
 @router.post("/{job_id}/redispatch", response_model=JobOut)
 async def post_jobs_job_id_redispatch(
-    db: DbSession, events: Events, job_id: str, user: AuthUser = as_admin
+    db: DbSession, inbox: Delivery, job_id: str, user: AuthUser = as_admin
 ):
     """Offer a funded job again, e.g. after approving a transporter when every one passed."""
     job = await load_job(db, job_id, lock=True)
@@ -158,9 +183,7 @@ async def post_jobs_job_id_redispatch(
     if await start_dispatch(db, job) is None:
         raise HTTPException(409, "Every eligible transporter has already been asked")
     out = await job_out(db, job.id, Viewer("admin"))
-    await db.commit()
-    await events.publish("offer.created", str(job.id))
-    await events.publish("job.updated", str(job.id))
+    await commit_and_deliver(db, inbox)
     return out
 
 
@@ -189,7 +212,7 @@ async def post_jobs_job_id_photo_url(
 @router.post("/{job_id}/pickup", response_model=JobOut)
 async def post_jobs_job_id_pickup(
     db: DbSession,
-    events: Events,
+    inbox: Delivery,
     job_id: str,
     body: LegIn,
     user: AuthUser = as_transporter,
@@ -199,15 +222,14 @@ async def post_jobs_job_id_pickup(
     job = await own_job_as_transporter(db, user, job_id)
     await record_leg(db, job, "pickup", user.uid, body, storage)
     out = await job_out(db, job.id, Viewer("transporter", job.transporter_id))
-    await db.commit()
-    await events.publish("job.updated", str(job.id))
+    await commit_and_deliver(db, inbox)
     return out
 
 
 @router.post("/{job_id}/deliver", response_model=JobOut)
 async def post_jobs_job_id_deliver(
     db: DbSession,
-    events: Events,
+    inbox: Delivery,
     job_id: str,
     body: LegIn,
     user: AuthUser = as_transporter,
@@ -217,8 +239,7 @@ async def post_jobs_job_id_deliver(
     job = await own_job_as_transporter(db, user, job_id)
     await record_leg(db, job, "delivery", user.uid, body, storage)
     out = await job_out(db, job.id, Viewer("transporter", job.transporter_id))
-    await db.commit()
-    await events.publish("job.updated", str(job.id))
+    await commit_and_deliver(db, inbox)
     return out
 
 
@@ -283,7 +304,7 @@ async def post_jobs_job_id_grade(
 
 @router.post("/{job_id}/confirm", response_model=JobOut)
 async def post_jobs_job_id_confirm(
-    db: DbSession, events: Events, job_id: str, body: ConfirmIn, user: AuthUser = as_factory
+    db: DbSession, inbox: Delivery, job_id: str, body: ConfirmIn, user: AuthUser = as_factory
 ):
     """Weigh and decide. Accept sets the final weight and pays the transporter; reject records the
     reason and applies the cost rule (transporter paid their share, the rest refunded)."""
@@ -292,7 +313,7 @@ async def post_jobs_job_id_confirm(
         if body.final_weight_kg is None:
             raise HTTPException(422, "final_weight_kg (the weighbridge weight) is required")
         check_weight(body.final_weight_kg, "final_weight_kg")
-        await confirm_delivery(db, job, factory, body.final_weight_kg)
+        await confirm_delivery(db, job, factory, body.final_weight_kg, actor=user)
     else:
         reason = body.reason.strip()
         if len(reason) < 3 or len(reason) > 500:
@@ -300,11 +321,9 @@ async def post_jobs_job_id_confirm(
                 [("reason", "Give a reason of at least 3 characters (at most 500)")],
                 code="invalid_reason",
             )
-        await reject_delivery(db, job, factory, body.reason.strip())
+        await reject_delivery(db, job, factory, body.reason.strip(), actor=user)
     out = await job_out(db, job.id, Viewer("factory"))
-    await db.commit()
-    await events.publish("ledger.updated", str(job.id))
-    await events.publish("job.updated", str(job.id))
+    await commit_and_deliver(db, inbox)
     return out
 
 
@@ -340,18 +359,14 @@ async def get_jobs_job_id_track(
 
 @router.post("/{job_id}/verify", response_model=VerifyOut)
 async def post_jobs_job_id_verify(
-    db: DbSession, events: Events, job_id: str, body: VerifyIn, user: AuthUser = as_farmer
+    db: DbSession, inbox: Delivery, job_id: str, body: VerifyIn, user: AuthUser = as_farmer
 ):
     """The farmer confirms the weight and payment (settles) or disputes it (freezes the money).
 
     The phone call does the same through /api/agent/confirmations; both end in the same code.
     """
     result = await record_web_answer(db, user.uid, job_id, body.confirmed, body.note)
-    await db.commit()
-    await events.publish("job.updated", result["job_id"])
-    await events.publish("ledger.updated", result["job_id"])
-    if result["state"] == "disputed":
-        await events.publish("escalation.created", result["job_id"])
+    await commit_and_deliver(db, inbox)
     return VerifyOut(**result)
 
 
@@ -380,7 +395,7 @@ async def get_jobs_job_id_ledger(db: DbSession, job_id: str, user: AuthUser = as
 
 @router.post("/{job_id}/verification-call", response_model=VerificationCallOut)
 async def post_jobs_job_id_verification_call(
-    db: DbSession, events: Events, job_id: str, user: AuthUser = as_admin
+    db: DbSession, inbox: Delivery, job_id: str, user: AuthUser = as_admin
 ):
     """Open a verification call for the job's farmer. TODO(F4): the voice service dials it."""
     job = await load_job(db, job_id, lock=True)
@@ -391,6 +406,5 @@ async def post_jobs_job_id_verification_call(
         call_id=str(call.id), job_id=str(job.id), farmer_id=str(farmer.id),
         farmer_phone=farmer.phone,
     )
-    await db.commit()
-    await events.publish("job.updated", str(job.id))
+    await commit_and_deliver(db, inbox)
     return out

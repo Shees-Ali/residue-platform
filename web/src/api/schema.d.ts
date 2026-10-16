@@ -139,6 +139,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{job_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Job Events
+         * @description What happened to this job and who did it: what this reader may see, oldest first.
+         */
+        get: operations["get_job_events_api_jobs__job_id__events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jobs/{job_id}/offers": {
         parameters: {
             query?: never;
@@ -1192,6 +1212,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Notifications
+         * @description My notifications, newest first. Pass `next` back as `before` for older ones.
+         */
+        get: operations["get_notifications_api_notifications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Unread Count */
+        get: operations["get_unread_count_api_notifications_unread_count_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Read All */
+        post: operations["post_read_all_api_notifications_read_all_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/{notification_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Read */
+        post: operations["post_read_api_notifications__notification_id__read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1455,6 +1546,22 @@ export interface components {
             weight_kg: number;
             /** Settled At */
             settled_at: string | null;
+        };
+        /** JobEventOut */
+        JobEventOut: {
+            /** Id */
+            id: string;
+            /** Type */
+            type: string;
+            /** Summary */
+            summary: string;
+            /** Actor Role */
+            actor_role?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /**
          * JobOfferOut
@@ -1797,6 +1904,11 @@ export interface components {
             phone: string | null;
             /** Farmer Linked */
             farmer_linked?: boolean | null;
+            /**
+             * Live Updates
+             * @default false
+             */
+            live_updates: boolean;
         };
         /**
          * MineLotIn
@@ -1815,6 +1927,42 @@ export interface components {
             village: string;
             /** District */
             district: string;
+        };
+        /** NotificationOut */
+        NotificationOut: {
+            /** Id */
+            id: string;
+            /** Type */
+            type: string;
+            /** Level */
+            level: string;
+            /** Title */
+            title: string;
+            /** Body */
+            body: string;
+            /** Job Id */
+            job_id?: string | null;
+            /**
+             * Refresh
+             * @default []
+             */
+            refresh: string[];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Read */
+            read: boolean;
+        };
+        /** NotificationPage */
+        NotificationPage: {
+            /** Items */
+            items: components["schemas"]["NotificationOut"][];
+            /** Next */
+            next?: string | null;
+            /** Unread */
+            unread: number;
         };
         /**
          * OfferOut
@@ -2083,6 +2231,11 @@ export interface components {
             /** Override Reason */
             override_reason?: string | null;
         };
+        /** ReadAllOut */
+        ReadAllOut: {
+            /** Marked */
+            marked: number;
+        };
         /** RecordConfirmationIn */
         RecordConfirmationIn: {
             /** Call Id */
@@ -2158,6 +2311,11 @@ export interface components {
             escrow_held: number;
             /** Open Escalations */
             open_escalations: number;
+            /**
+             * Notifications Undelivered
+             * @default 0
+             */
+            notifications_undelivered: number;
         };
         /** TickIn */
         TickIn: {
@@ -2265,6 +2423,11 @@ export interface components {
             max_tonnes: number;
             /** Approved */
             approved: boolean;
+        };
+        /** UnreadOut */
+        UnreadOut: {
+            /** Unread */
+            unread: number;
         };
         /** UploadUrlIn */
         UploadUrlIn: {
@@ -2701,6 +2864,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_job_events_api_jobs__job_id__events_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobEventOut"][];
                 };
             };
             /** @description Validation Error */
@@ -4759,6 +4959,142 @@ export interface operations {
             };
             path: {
                 path: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_notifications_api_notifications_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                before?: string | null;
+                unread_only?: boolean;
+            };
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_unread_count_api_notifications_unread_count_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnreadOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_read_all_api_notifications_read_all_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadAllOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_read_api_notifications__notification_id__read_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-dev-uid"?: string | null;
+                "x-dev-email"?: string | null;
+            };
+            path: {
+                notification_id: string;
             };
             cookie?: never;
         };

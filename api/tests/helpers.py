@@ -33,6 +33,17 @@ async def scalar(api, sql, **params):
     return (await api.session.execute(text(sql), params)).scalar()
 
 
+async def event_types(api, job_id=None) -> list[str]:
+    """The event types recorded in this test, oldest first (all of them, or one job's)."""
+    sql = "SELECT type FROM events WHERE created_at >= now()"
+    params = {}
+    if job_id is not None:
+        sql += " AND job_id = :j"
+        params["j"] = uuid.UUID(str(job_id))
+    rows = await api.session.execute(text(sql + " ORDER BY created_at, id"), params)
+    return [r[0] for r in rows]
+
+
 async def offers_of(api, job_id):
     rows = await api.session.execute(
         text(

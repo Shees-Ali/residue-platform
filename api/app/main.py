@@ -19,6 +19,7 @@ from app.routers import (
     ledger,
     lots,
     me,
+    notifications,
     offers,
     orders,
     products,
@@ -29,7 +30,7 @@ from app.routers import (
     users,
 )
 from app.services.dispatch_loop import loop_seconds, run_forever
-from app.services.events import get_events
+from app.services.inbox import get_inbox
 from app.services.job_states import InvalidTransition
 from app.services.lots import LotError
 from app.validation import FieldErrors, field_errors_handler, request_validation_handler
@@ -41,7 +42,7 @@ async def lifespan(_: FastAPI):
     task = None
     seconds = loop_seconds()
     if seconds:
-        task = asyncio.create_task(run_forever(new_session, get_events(), seconds))
+        task = asyncio.create_task(run_forever(new_session, get_inbox(), seconds))
     yield
     if task:
         task.cancel()
@@ -86,6 +87,6 @@ async def health() -> dict:
 
 for r in (
     lots, jobs, offers, ledger, products, orders, dispatch, agent, internal, escalations, impact,
-    transporters, me, users, refdata, stats, tracking, devupload,
+    transporters, me, users, refdata, stats, tracking, devupload, notifications,
 ):
     app.include_router(r.router)

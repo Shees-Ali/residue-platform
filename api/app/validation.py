@@ -20,6 +20,9 @@ LABELS = {
     "display_name": "Name",
     "phone": "Phone",
     "farmer_phone": "Farmer phone",
+    "unread_only": "Unread only",
+    "limit": "Limit",
+    "before": "Before",
     "village": "Village or area",
     "district": "District",
     "role": "Role",
@@ -165,6 +168,8 @@ def _message(field: str, err: dict) -> str:
         return f"{name} must be one of {ctx.get('expected', '').replace(chr(39), '')}"
     if kind == "string_pattern_mismatch":
         return f"{name} has an invalid format"
+    if kind == "bool_parsing":
+        return f"{name} must be true or false"
     if kind.endswith("_parsing") or kind.endswith("_type"):
         return f"{name} has the wrong type or format"
     if kind == "json_invalid":

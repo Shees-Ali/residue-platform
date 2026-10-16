@@ -22,3 +22,10 @@ Job states: created, funded, offered, accepted, picked up, delivered, confirmed,
 | [B1](stories/B1.md) | Browse and order products | built (API and web) | an order reduces stock and creates the sale record that feeds the split. |
 | [AUTH](stories/AUTH.md) | Sign in with the right role | built (needs a live Firebase check) | a new transporter waits for approval, a buyer cannot open admin pages, and every API route rejects the wrong role. |
 | [PROFILE](stories/PROFILE.md) | Edit my details; admin edits | built (API and web) | a factory's new price and residues rank the next lot, and the admin can edit anyone, tiers and unfunded lots. |
+| [EV1](stories/EV1.md) | Record every business fact | built (API, Firestore rules, web, browser tests) | a job's timeline lists every step with time and actor, with no phone or email. |
+| [EV2](stories/EV2.md) | Be told when it is my turn | built (API, Firestore rules, web, browser tests) | each role's inbox holds exactly the catalog messages after each step. |
+| [EV3](stories/EV3.md) | See changes live | built (API, Firestore rules, web, browser tests) | a funded job appears on the transporter's board with no reload and no polling tick. |
+| [EV4](stories/EV4.md) | A notification center | built (API, Firestore rules, web, browser tests) | bell, unread count, read and read-all agree across tabs and survive a reload. |
+| [EV5](stories/EV5.md) | Safe and honest delivery | built (API, Firestore rules, web, browser tests) | rules deny cross-user reads and client writes; an outage loses nothing and delivers once. |
+| [EV6](stories/EV6.md) | Know when live updates are down | built (API, Firestore rules, web, browser tests) | a paused chip shows and screens still refresh; admin sees the undelivered count. |
+| [EV7](stories/EV7.md) | End-to-end proof | built (API, Firestore rules, web, browser tests) | `npm run e2e` and the event-sequence test are green. |

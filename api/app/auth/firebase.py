@@ -1,6 +1,9 @@
 """Dashboard auth: a Firebase ID token proves who you are; the `users` table says what you are."""
+import base64
+import json
 import logging
 import os
+import time
 from dataclasses import dataclass
 
 from fastapi import Depends, Header, HTTPException, Security
@@ -48,8 +51,32 @@ class Claims:
     name: str | None = None
 
 
+def emulator_auth_active() -> bool:
+    """Test-only: tokens from the Firebase Auth emulator are unsigned, so they can only be read, not
+    verified. Honoured only when FIREBASE_AUTH_EMULATOR_HOST is set, and never on Cloud Run."""
+    return bool(os.getenv("FIREBASE_AUTH_EMULATOR_HOST")) and not os.getenv("K_SERVICE")
+
+
+def _decode_emulator_token(token: str, project_id: str) -> dict:
+    """Read an Auth-emulator ID token (alg none). Checks the audience, issuer and expiry."""
+    try:
+        payload = token.split(".")[1]
+        claims = json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
+    except (IndexError, ValueError):
+        raise ValueError("Malformed emulator token") from None
+    if claims.get("aud") != project_id:
+        raise ValueError("Emulator token has the wrong audience")
+    if claims.get("iss") != f"https://securetoken.google.com/{project_id}":
+        raise ValueError("Emulator token has the wrong issuer")
+    if claims.get("exp", 0) < time.time():
+        raise ValueError("Emulator token has expired")
+    return claims
+
+
 def _verify(token: str, project_id: str) -> dict:
     """Blocking: fetches Google's signing certs (cached). Run it in a thread."""
+    if emulator_auth_active():
+        return _decode_emulator_token(token, project_id)
     return id_token.verify_firebase_token(
         token, google_requests.Request(), audience=project_id,
         clock_skew_in_seconds=clock_skew_seconds(),

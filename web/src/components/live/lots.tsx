@@ -12,6 +12,7 @@ import { Field } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
 import { useFormErrors } from "@/lib/useFormErrors";
+import { JobActivityButton } from "./JobActivity";
 import { LotEditDialog, canEditLot } from "./LotEditDialog";
 import type { JobState } from "@/lib/domain/types";
 
@@ -163,6 +164,12 @@ export function AdminLots() {
                         <Button size="sm" variant="ghost" onClick={() => setRanked(lot)} disabled={!lot.job_id}>
                           Ranking
                         </Button>
+                        {lot.job_id && (
+                          <JobActivityButton
+                            jobId={lot.job_id}
+                            title={`${lot.quantity_tonnes} t ${lot.residue_label ?? lot.residue_type} from ${lot.village}`}
+                          />
+                        )}
                         <Button
                           size="sm"
                           variant="ghost"

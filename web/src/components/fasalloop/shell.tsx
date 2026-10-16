@@ -18,6 +18,7 @@ import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAuth } from "@/auth/AuthProvider";
+import { LiveChip, NotificationBell } from "@/components/live/NotificationBell";
 import { canAccess, homeFor, type Role as AccountRole } from "@/lib/auth";
 
 interface Role {
@@ -120,6 +121,8 @@ export function ResidueShell({ children }: { children: ReactNode }) {
               Growing a greener Pakistan
             </span>
             <div className="role-switch">
+              <LiveChip />
+              <NotificationBell />
               <div className="user-chip">
                 <span className="avatar" aria-hidden="true">
                   {initials(user?.display_name || user?.email || "?")}

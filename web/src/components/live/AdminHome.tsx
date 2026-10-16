@@ -31,6 +31,12 @@ function StatsStrip() {
       <Stat live label="Residue kept from burning" value={`${s.tonnes_diverted.toFixed(1)} t`} icon={Leaf} note={`${s.jobs_settled} jobs settled`} tone="gold" />
       <Stat live label="Held in escrow" value={pkr(s.escrow_held)} icon={Wallet} note={`${s.open_escalations} need a person`} />
       <Stat live label="Marketplace orders" value={s.orders} icon={ShoppingBag} note="Four-way split recorded" />
+      {s.notifications_undelivered > 0 && (
+        <p className="auth-note col-span-full" role="status">
+          {s.notifications_undelivered} notification{s.notifications_undelivered === 1 ? "" : "s"} waiting to
+          reach Firestore. They are retried automatically.
+        </p>
+      )}
     </div>
   );
 }

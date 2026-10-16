@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Query
 
 from app.auth.firebase import AuthUser, as_admin
-from app.deps import DbSession, Events
+from app.deps import DbSession, Delivery
 from app.models.escalation import EscalationOut
 from app.services.escalations import list_escalations, resolve_escalation
+from app.services.inbox import commit_and_deliver
 
 router = APIRouter(prefix="/api/escalations", tags=["escalations"])
 
@@ -22,8 +23,7 @@ async def get_escalations(
 
 @router.post("/{escalation_id}/resolve", status_code=204)
 async def post_escalation_resolve(
-    db: DbSession, events: Events, escalation_id: str, user: AuthUser = as_admin
+    db: DbSession, inbox: Delivery, escalation_id: str, user: AuthUser = as_admin
 ):
     await resolve_escalation(db, escalation_id, user.uid)
-    await db.commit()
-    await events.publish("escalation.created", escalation_id)  # the queue changed: refetch
+    await commit_and_deliver(db, inbox)

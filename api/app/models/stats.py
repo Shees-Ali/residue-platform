@@ -12,3 +12,4 @@ class StatsOut(BaseModel):
     tonnes_diverted: float
     escrow_held: int  # paisa funded for jobs that are not finished
     open_escalations: int
+    notifications_undelivered: int = 0  # waiting to reach Firestore (0 when it is not in use)

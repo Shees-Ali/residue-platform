@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db_models.tables import Call, Escalation, Farmer, Job, Lot
 from app.models.escalation import EscalationOut
+from app.services.notify import emit
 
 
 async def create_escalation(
@@ -54,8 +55,10 @@ async def resolve_escalation(db: AsyncSession, escalation_id: str, admin_uid: st
             update(Escalation)
             .where(Escalation.id == key, Escalation.status == "open")
             .values(status="resolved", resolved_by_uid=admin_uid)
-            .returning(Escalation.id)
+            .returning(Escalation.id, Escalation.job_id)
         )
     ).first()
     if done is None:
         raise HTTPException(409, "Unknown or already resolved escalation")
+    if done[1] is not None:  # a web dispute: tell the farmer it was looked at
+        await emit(db, "escalation.resolved", job_id=done[1])

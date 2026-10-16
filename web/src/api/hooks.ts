@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useLiveStatus } from "@/live/status";
 import { api } from "./client";
 import { unwrap } from "./query";
 import { DISTRICTS, RESIDUES } from "@/lib/places";
@@ -18,14 +19,23 @@ export const ORDERS_KEY = ["orders"] as const;
 export const PROFILE_KEY = ["profile"] as const;
 export const ESCALATIONS_KEY = ["escalations"] as const;
 
-const POLL = 8_000; // events are a no-op locally, so live screens poll
+const POLL = 8_000; // how often a screen refreshes when nothing tells it something changed
+
+/** How often to refetch. While the live listener is healthy a slow safety net is enough; when it
+ * is paused the page refreshes every 30 s; otherwise the screen's own pace. */
+export function usePoll(base: number): number {
+  const status = useLiveStatus();
+  if (status === "live") return Math.max(base, 60_000);
+  if (status === "paused") return Math.max(base, 30_000);
+  return base;
+}
 
 /** The signed-in person's lots: a farmer sees their own, an admin sees all. Refreshes itself. */
 export function useLots() {
   return useQuery({
     queryKey: LOTS_KEY,
     queryFn: () => unwrap(api.GET("/api/lots")),
-    refetchInterval: 10_000,
+    refetchInterval: usePoll(10_000),
   });
 }
 
@@ -35,7 +45,7 @@ export function useJobs(state?: string) {
   return useQuery({
     queryKey: [...JOBS_KEY, state ?? "all"],
     queryFn: () => unwrap(api.GET("/api/jobs", { params: { query: { state, limit: 200 } } })),
-    refetchInterval: POLL,
+    refetchInterval: usePoll(POLL),
   });
 }
 
@@ -44,7 +54,7 @@ export function useOffers() {
   return useQuery({
     queryKey: OFFERS_KEY,
     queryFn: () => unwrap(api.GET("/api/offers")),
-    refetchInterval: 4_000,
+    refetchInterval: usePoll(4_000),
   });
 }
 
@@ -53,7 +63,7 @@ export function useMyPayouts() {
   return useQuery({
     queryKey: PAYOUTS_KEY,
     queryFn: () => unwrap(api.GET("/api/ledger/mine")),
-    refetchInterval: POLL,
+    refetchInterval: usePoll(POLL),
   });
 }
 
@@ -61,7 +71,7 @@ export function useStats() {
   return useQuery({
     queryKey: STATS_KEY,
     queryFn: () => unwrap(api.GET("/api/stats")),
-    refetchInterval: POLL,
+    refetchInterval: usePoll(POLL),
   });
 }
 
@@ -70,7 +80,7 @@ export function useActiveTracks() {
   return useQuery({
     queryKey: ACTIVE_TRACKS_KEY,
     queryFn: () => unwrap(api.GET("/api/tracking/active")),
-    refetchInterval: 10_000,
+    refetchInterval: usePoll(10_000),
   });
 }
 
@@ -80,7 +90,7 @@ export function useTrack(jobId: string | undefined) {
     queryKey: [...TRACK_KEY, jobId],
     queryFn: () => unwrap(api.GET("/api/jobs/{job_id}/track", { params: { path: { job_id: jobId! } } })),
     enabled: Boolean(jobId),
-    refetchInterval: 10_000,
+    refetchInterval: usePoll(10_000),
   });
 }
 
@@ -89,7 +99,7 @@ export function useLedger(offset: number, limit = 15) {
   return useQuery({
     queryKey: [...LEDGER_KEY, offset, limit],
     queryFn: () => unwrap(api.GET("/api/ledger", { params: { query: { offset, limit } } })),
-    refetchInterval: POLL,
+    refetchInterval: usePoll(POLL),
     placeholderData: (previous) => previous,
   });
 }
@@ -99,7 +109,7 @@ export function useLedgerCheck() {
   return useQuery({
     queryKey: [...LEDGER_KEY, "check"],
     queryFn: () => unwrap(api.GET("/api/ledger/check")),
-    refetchInterval: POLL,
+    refetchInterval: usePoll(POLL),
   });
 }
 
@@ -107,7 +117,7 @@ export function useImpact() {
   return useQuery({
     queryKey: IMPACT_KEY,
     queryFn: () => unwrap(api.GET("/api/impact", { params: { query: { limit: 10 } } })),
-    refetchInterval: 15_000,
+    refetchInterval: usePoll(15_000),
   });
 }
 
@@ -115,7 +125,7 @@ export function useEscalations() {
   return useQuery({
     queryKey: ESCALATIONS_KEY,
     queryFn: () => unwrap(api.GET("/api/escalations")),
-    refetchInterval: POLL,
+    refetchInterval: usePoll(POLL),
   });
 }
 
@@ -132,7 +142,7 @@ export function useProducts() {
   return useQuery({
     queryKey: PRODUCTS_KEY,
     queryFn: () => unwrap(api.GET("/api/products")),
-    refetchInterval: 15_000,
+    refetchInterval: usePoll(15_000),
   });
 }
 
@@ -141,7 +151,7 @@ export function useOrders() {
   return useQuery({
     queryKey: ORDERS_KEY,
     queryFn: () => unwrap(api.GET("/api/orders")),
-    refetchInterval: POLL,
+    refetchInterval: usePoll(POLL),
   });
 }
 
@@ -149,7 +159,7 @@ export function useTransporters() {
   return useQuery({
     queryKey: TRANSPORTERS_KEY,
     queryFn: () => unwrap(api.GET("/api/transporters")),
-    refetchInterval: POLL,
+    refetchInterval: usePoll(POLL),
   });
 }
 
@@ -214,5 +224,38 @@ export function useUserProfile(uid: string) {
   return useQuery({
     queryKey: [...PROFILE_KEY, "user", uid],
     queryFn: () => unwrap(api.GET("/api/users/{uid}/profile", { params: { path: { uid } } })),
+  });
+}
+
+export const NOTIFICATIONS_KEY = ["notifications"] as const;
+
+/** The bell's number. Quiet on failure: a broken badge must not stack error toasts. */
+export function useUnreadCount() {
+  return useQuery({
+    queryKey: [...NOTIFICATIONS_KEY, "unread"],
+    queryFn: () => unwrap(api.GET("/api/notifications/unread-count")),
+    refetchInterval: usePoll(30_000),
+    meta: { silent: true },
+  });
+}
+
+/** The bell's list, newest first, a page at a time. Only loads while the bell is open. */
+export function useNotificationPages(open: boolean) {
+  return useInfiniteQuery({
+    queryKey: [...NOTIFICATIONS_KEY, "list"],
+    enabled: open,
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) =>
+      unwrap(api.GET("/api/notifications", { params: { query: { limit: 20, before: pageParam } } })),
+    getNextPageParam: (last) => last.next ?? undefined,
+  });
+}
+
+/** What happened to one job and who did it (admin, owning factory, assigned transporter, farmer). */
+export function useJobEvents(jobId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ["job-events", jobId],
+    enabled,
+    queryFn: () => unwrap(api.GET("/api/jobs/{job_id}/events", { params: { path: { job_id: jobId } } })),
   });
 }

@@ -5,7 +5,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
-from app.services.events import EventSink, get_events
+from app.services.inbox import Inbox, get_inbox
 
 DbSession = Annotated[AsyncSession, Depends(get_session)]
-Events = Annotated[EventSink, Depends(get_events)]
+Delivery = Annotated[Inbox, Depends(get_inbox)]

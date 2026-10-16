@@ -1,6 +1,6 @@
 # Data model (PostgreSQL)
 
-Decisions: see `decisions.md` 2026-10-14 entries. Stack: SQLAlchemy 2 async + asyncpg + Alembic, in `api/`. Local DB: Docker Postgres 16 on :5432. Firestore holds only `events`.
+Decisions: see `decisions.md` 2026-10-14 entries. Stack: SQLAlchemy 2 async + asyncpg + Alembic, in `api/`. Local DB: Docker Postgres 16 on :5432. Firestore holds only each person's notification inbox (`users/{uid}/inbox`).
 
 Conventions: UUID pks (`gen_random_uuid()`), `timestamptz`, money `BIGINT` minor units `>= 0`, shares `INTEGER` bps, statuses `TEXT` + `CHECK`. All tables have `created_at`; mutable ones also `updated_at`.
 
@@ -41,8 +41,13 @@ Conventions: UUID pks (`gen_random_uuid()`), `timestamptz`, money `BIGINT` minor
 ## Views
 - `ledger_balance` per job: escrow_in vs release_farmer + release_transporter + platform_fee + refund; A3 check reads it, `services/ledger.py` stays the tested pure function.
 
-## Firestore `events` (only Firestore use)
-`events/{auto}`: `{type: "job.updated"|"offer.created"|"escalation.created"|..., job_id?, at}`. No money, no PII. API writes after commit; failures logged, never raised.
+## Events and notifications (EV1 to EV7)
+Postgres (migration 0012):
+- `events(id, type, job_id?, lot_id?, order_id?, actor_uid?, actor_role?, summary, data jsonb, visible_to text[], created_at)`: an immutable fact, written in the same transaction as the change. The job timeline reads it (`GET /api/jobs/{id}/events`).
+- `notifications(id, event_id, recipient_uid?, recipient_farmer_id?, type, level, title, body, refresh text[], job_id?, created_at, read_at?, delivered_at?)`: one person's copy with ready-to-show text. Unique per (event, person). A farmer who only phones has `recipient_farmer_id` and no uid (waits for a future SMS or voice channel, never counted as undelivered).
+
+Firestore (mirror only, written by the API after commit):
+`users/{uid}/inbox/{notification id}` = `{type, level, title, body, job_id, refresh[], created_at, expires_at}`. The doc id is the notification id (re-delivery overwrites). Only that uid may read it (`deploy/firestore.rules`); nobody writes from a client; `expires_at` is 30 days out and has a TTL policy. The web listens to its own inbox, toasts new docs and refetches the Query keys in `refresh`. The old global `events` collection is gone.
 
 ## Assumptions for the open questions (change if wrong)
 1. Product-to-farmer traceability: flat configured farmer share, no `product_lots` join yet. `TODO(FA3)`.

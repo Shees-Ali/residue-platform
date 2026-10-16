@@ -1,0 +1,15 @@
+rules_version = '2';
+
+// The only thing the browser may read from Firestore is its own notification inbox.
+// The API (a service account) writes it; nobody writes from a client; everything else is closed.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid}/inbox/{notification} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

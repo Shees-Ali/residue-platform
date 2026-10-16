@@ -12,6 +12,7 @@ import { useAuth } from "@/auth/AuthProvider";
 import { JobStages, PhotoStrip, QueryBoundary, SectionHead, STATE_LABEL, type Job } from "./common";
 import { JobMoneyDialog } from "./AdminLedger";
 import { FactoryOrders, FactoryProducts } from "./FactoryProducts";
+import { JobActivityButton } from "./JobActivity";
 import { MyDetailsLink } from "./MyDetailsLink";
 import { TrackDialog } from "./TrackViews";
 import { Weighbridge } from "./Weighbridge";
@@ -93,6 +94,7 @@ export function FactoryHome() {
                       <Wallet />
                       Money
                     </Button>
+                    <JobActivityButton jobId={job.id} title={`${job.quantity_tonnes} t ${job.residue_type} from ${job.village}`} />
                     {job.offers_exhausted && (
                       <p className="auth-note">Every transporter passed. An admin can send it out again.</p>
                     )}
@@ -111,6 +113,7 @@ export function FactoryHome() {
                       <Wallet />
                       Money
                     </Button>
+                    <JobActivityButton jobId={job.id} title={`${job.quantity_tonnes} t ${job.residue_type} from ${job.village}`} />
                   </JobCard>
                 ))}
                 {!finished.length && <div className="empty-state">Settled loads appear here.</div>}

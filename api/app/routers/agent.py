@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends
 
 from app.auth.google_oidc import voice_service_caller
 from app.auth.idempotency import require_idempotency_key
-from app.deps import DbSession, Events
+from app.deps import DbSession, Delivery
 from app.models.agent import CreateLotIn, EscalateIn, GetQuoteIn, RecordConfirmationIn
 from app.models.lot import LotReadback
 from app.models.quote import QuoteOut
@@ -16,7 +16,10 @@ from app.services.assignment_store import assign_lot
 from app.services.calls import farmer_id_for_call
 from app.services.escalations import create_escalation
 from app.services.idempotency import request_hash, run_idempotent
+from app.services.inbox import commit_and_deliver
+from app.services.lot_events import announce_new_lot
 from app.services.lot_store import create_lot_record
+from app.services.notify import emit
 from app.services.quotes import quote_for
 from app.services.verification import record_answer
 
@@ -28,13 +31,12 @@ router = APIRouter(
 @router.post("/lots", response_model=LotReadback, status_code=201)
 async def create_lot(
     db: DbSession,
-    events: Events,
+    inbox: Delivery,
     body: CreateLotIn,
     key: str = Depends(require_idempotency_key),
 ):
     """Save the caller's lot. The farmer comes from the call record; replays return the original."""
     farmer_id = await farmer_id_for_call(db, body.call_id)
-    assigned_job: list[str] = []
 
     async def work() -> tuple[int, dict]:
         readback = await create_lot_record(
@@ -49,18 +51,13 @@ async def create_lot(
             district=body.district,
         )
         job = await assign_lot(db, uuid.UUID(readback.lot_id))  # A1: ranked in the same transaction
-        if job is not None:
-            assigned_job.append(str(job.id))
+        await announce_new_lot(db, readback.lot_id, job)
         return 201, readback.model_dump(mode="json")
 
     _, payload, replayed = await run_idempotent(
         db, key, "POST /api/agent/lots", request_hash(body.model_dump()), work
     )
-    await db.commit()
-    if not replayed:
-        await events.publish("lot.created")
-        for job_id in assigned_job:
-            await events.publish("job.updated", job_id)
+    await commit_and_deliver(db, inbox)
     return payload
 
 
@@ -74,7 +71,7 @@ async def get_quote(db: DbSession, body: GetQuoteIn):
 @router.post("/escalations", status_code=201)
 async def escalate(
     db: DbSession,
-    events: Events,
+    inbox: Delivery,
     body: EscalateIn,
     key: str = Depends(require_idempotency_key),
 ):
@@ -83,21 +80,20 @@ async def escalate(
 
     async def work() -> tuple[int, dict]:
         row = await create_escalation(db, body.call_id, body.summary, body.transcript)
+        await emit(db, "escalation.created")
         return 201, {"escalation_id": str(row.id), "status": "open"}
 
     _, payload, replayed = await run_idempotent(
         db, key, "POST /api/agent/escalations", request_hash(body.model_dump()), work
     )
-    await db.commit()
-    if not replayed:
-        await events.publish("escalation.created")
+    await commit_and_deliver(db, inbox)
     return payload
 
 
 @router.post("/confirmations")
 async def record_confirmation(
     db: DbSession,
-    events: Events,
+    inbox: Delivery,
     body: RecordConfirmationIn,
     key: str = Depends(require_idempotency_key),
 ):
@@ -109,11 +105,5 @@ async def record_confirmation(
     status, payload, replayed = await run_idempotent(
         db, key, "POST /api/agent/confirmations", request_hash(body.model_dump()), work
     )
-    await db.commit()
-    if not replayed:
-        await events.publish("job.updated", body.job_id)
-        if payload["state"] == "settled":
-            await events.publish("ledger.updated", body.job_id)
-        else:
-            await events.publish("escalation.created", body.job_id)
+    await commit_and_deliver(db, inbox)
     return payload

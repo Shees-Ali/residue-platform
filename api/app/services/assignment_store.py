@@ -10,6 +10,7 @@ from app.db_models.tables import FactoryCandidate, FactoryResidue, Job, Lot, Use
 from app.models.factory import Factory, LotRequest
 from app.services.assignment import haversine_km, rank_factories, score_factory
 from app.services.economics import get_shares
+from app.services.notify import emit
 
 
 async def load_factories(db: AsyncSession) -> list[Factory]:
@@ -153,7 +154,10 @@ async def override_factory(
         c.chosen = c is chosen
     chosen.overridden_by_uid = admin_uid
     chosen.override_reason = reason.strip()
+    old_factory_id = job.factory_id
     job.factory_id = factory_id
     job.quoted_price_per_tonne = chosen.price_per_tonne
     await db.flush()
+    if old_factory_id != factory_id:
+        await emit(db, "lot.reassigned", job_id=job.id, old_factory_id=old_factory_id)
     return job

@@ -8,6 +8,7 @@ from sqlalchemy import func, select, text
 
 from app.db_models.tables import Call, Job, Lot
 from app.services.lots import PKT
+from tests.helpers import event_types
 
 pytestmark = pytest.mark.skipif(not os.getenv("DATABASE_URL"), reason="DATABASE_URL not set")
 
@@ -111,10 +112,7 @@ async def test_create_lot_saves_a_complete_lot_and_returns_the_readback(api):
         await api.session.execute(select(Call.farmer_id).where(Call.id == uuid.UUID(call_id)))
     ).scalar_one()
     assert lot.farmer_id == farmer_of_call  # identity came from the call record
-    assert api.events.sent == [
-        {"type": "lot.created", "job_id": None},
-        {"type": "job.updated", "job_id": str(job.id)},
-    ]
+    assert await event_types(api) == ["lot.created", "lot.matched"]
 
 
 async def test_replay_with_same_key_returns_the_same_lot_and_inserts_once(api):
@@ -126,7 +124,7 @@ async def test_replay_with_same_key_returns_the_same_lot_and_inserts_once(api):
     assert first.json() == second.json()
     count = (await api.session.execute(select(func.count()).select_from(Lot))).scalar()
     assert count == before + 1  # other lots may already exist in the local database
-    assert len(api.events.sent) == 2  # lot.created + job.updated once; a replay adds none
+    assert await event_types(api) == ["lot.created", "lot.matched"]  # a replay adds none
 
 
 async def test_same_key_with_a_different_payload_is_409(api):

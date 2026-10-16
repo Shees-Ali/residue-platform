@@ -7,8 +7,8 @@ from sqlalchemy.dialects.postgresql import insert
 
 from app.auth.firebase import AuthUser, as_admin, as_farmer, require_role
 from app.auth.idempotency import require_idempotency_key
-from app.db_models.tables import Factory, FactoryCandidate, Farmer, Lot, User
-from app.deps import DbSession, Events
+from app.db_models.tables import Factory, FactoryCandidate, Farmer, Job, Lot, User
+from app.deps import DbSession, Delivery
 from app.models.job import JobOut
 from app.models.lot import (
     AdminLotIn,
@@ -22,11 +22,14 @@ from app.models.lot import (
 )
 from app.services.assignment_store import assign_lot, override_factory, reassign_lot
 from app.services.idempotency import request_hash, run_idempotent
+from app.services.inbox import commit_and_deliver
 from app.services.job_views import Viewer, job_out
 from app.services.lot_errors import as_field_errors
+from app.services.lot_events import announce_new_lot
 from app.services.lot_store import create_lot_record, edit_lot_record
 from app.services.lot_views import get_lot_out, lot_out, lot_query
 from app.services.lots import LotError
+from app.services.notify import emit
 from app.services.registration import ensure_farmer
 from app.validation import FieldErrors
 
@@ -68,7 +71,7 @@ async def list_lots(
 @router.post("", response_model=LotReadback, status_code=201)
 async def create_lot_for_farmer(
     db: DbSession,
-    events: Events,
+    inbox: Delivery,
     body: AdminLotIn,
     user: AuthUser = admin_only,
 ):
@@ -98,17 +101,15 @@ async def create_lot_for_farmer(
     except LotError as e:
         raise as_field_errors(e) from None
     job = await assign_lot(db, uuid.UUID(readback.lot_id))
-    await db.commit()
-    await events.publish("lot.created")
-    if job:
-        await events.publish("job.updated", str(job.id))
+    await announce_new_lot(db, readback.lot_id, job, actor=user)
+    await commit_and_deliver(db, inbox)
     return readback
 
 
 @router.post("/mine", response_model=LotOut, status_code=201)
 async def create_my_lot(
     db: DbSession,
-    events: Events,
+    inbox: Delivery,
     body: MineLotIn,
     user: AuthUser = as_farmer,
     key: str = Depends(require_idempotency_key),
@@ -127,7 +128,6 @@ async def create_my_lot(
                 "message": "Verify your phone number to report residue",
             },
         )
-    assigned_job: list[str] = []
 
     async def work() -> tuple[int, dict]:
         readback = await create_lot_record(
@@ -142,8 +142,7 @@ async def create_my_lot(
             district=body.district,
         )
         job = await assign_lot(db, uuid.UUID(readback.lot_id))
-        if job is not None:
-            assigned_job.append(str(job.id))
+        await announce_new_lot(db, readback.lot_id, job, actor=user)
         out = await get_lot_out(db, uuid.UUID(readback.lot_id))
         return 201, out.model_dump(mode="json")  # type: ignore[union-attr]
 
@@ -159,18 +158,26 @@ async def create_my_lot(
             )
     except LotError as e:
         raise as_field_errors(e) from None
-    await db.commit()
-    if not replayed:
-        await events.publish("lot.created")
-        for job_id in assigned_job:
-            await events.publish("job.updated", job_id)
+    await commit_and_deliver(db, inbox)
     return payload
+
+
+async def _announce_edit(db, lot_id, before, job, actor) -> None:
+    """Tell the farmer and the factories what an admin's edit did to the lot."""
+    if job is None:
+        await emit(db, "lot.unmatched", lot_id=lot_id, actor=actor)
+    elif before is None:
+        await emit(db, "lot.matched", job_id=job.id, actor=actor)
+    elif before != job.factory_id:
+        await emit(db, "lot.reassigned", job_id=job.id, actor=actor, old_factory_id=before)
+    else:
+        await emit(db, "lot.updated", job_id=job.id, actor=actor)
 
 
 @router.patch("/{lot_id}", response_model=LotEditOut)
 async def edit_lot(
     db: DbSession,
-    events: Events,
+    inbox: Delivery,
     lot_id: uuid.UUID,
     body: LotEditIn,
     user: AuthUser = admin_only,
@@ -181,17 +188,18 @@ async def edit_lot(
     lot = await db.get(Lot, lot_id)
     if lot is None:
         raise HTTPException(404, "Unknown lot")
+    before = (
+        await db.execute(select(Job.factory_id).where(Job.lot_id == lot_id))
+    ).scalar_one_or_none()
     try:
         async with db.begin_nested():  # a refused edit leaves nothing changed
             await edit_lot_record(db, lot, body)
             job, dropped = await reassign_lot(db, lot_id)
+            await _announce_edit(db, lot_id, before, job, user)
     except LotError as e:
         raise as_field_errors(e) from None
     out = await get_lot_out(db, lot_id)
-    await db.commit()
-    await events.publish("lot.updated")
-    if job:
-        await events.publish("job.updated", str(job.id))
+    await commit_and_deliver(db, inbox)
     return LotEditOut(**out.model_dump(), override_dropped=dropped)
 
 
@@ -234,7 +242,7 @@ async def get_ranking(db: DbSession, lot_id: str):
 @router.post("/{lot_id}/override", response_model=JobOut)
 async def override(
     db: DbSession,
-    events: Events,
+    inbox: Delivery,
     lot_id: str,
     body: OverrideIn,
     user: AuthUser = admin_only,
@@ -243,7 +251,6 @@ async def override(
         db, _uuid(lot_id, "lot"), _uuid(body.factory_id, "factory"), user.uid, body.reason
     )
     out = await job_out(db, job.id, Viewer("admin"))
-    await db.commit()
-    await events.publish("job.updated", str(job.id))
+    await commit_and_deliver(db, inbox)
     return out
 

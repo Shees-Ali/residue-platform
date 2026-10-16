@@ -5,6 +5,7 @@ import { FactoryHome } from "./components/live/FactoryHome";
 import { FarmerHome } from "./components/live/FarmerHome";
 import { TransporterHome } from "./components/live/TransporterHome";
 import { ResidueShell } from "./components/fasalloop/shell";
+import { LiveProvider } from "./live/LiveProvider";
 import { Marketplace } from "./components/live/Marketplace";
 import Call from "./pages/Call";
 import Health from "./pages/Health";
@@ -15,9 +16,11 @@ import Signup from "./pages/auth/Signup";
 
 function Shell() {
   return (
-    <ResidueShell>
-      <Outlet />
-    </ResidueShell>
+    <LiveProvider>
+      <ResidueShell>
+        <Outlet />
+      </ResidueShell>
+    </LiveProvider>
   );
 }
 

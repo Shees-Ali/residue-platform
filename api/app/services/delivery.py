@@ -1,5 +1,6 @@
 """T2: the transporter proves pickup and delivery with a photo, a weight and a place."""
 from datetime import UTC, datetime
+from types import SimpleNamespace
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,10 +8,12 @@ from app.db_models.tables import Factory, Job, JobLocation, Lot, Photo
 from app.models.delivery import LegIn
 from app.services.assignment import haversine_km
 from app.services.job_flow import transition
+from app.services.notify import emit
 from app.services.storage import PHOTO_MAX_BYTES, Storage, photo_prefix
 from app.validation import FieldErrors
 
 MAX_WEIGHT_KG = 100_000
+FAR_METERS = 25_000  # a step recorded this far from where it belongs is flagged for the admin
 WEIGHT_HELP = "Weight must be a whole number of kilograms between 1 and 100,000"
 PHOTO_HELP = "Add a photo (JPEG, PNG or WebP, up to 5 MB)"
 
@@ -77,6 +80,7 @@ async def record_leg(
         )
     )
     target = await _target(db, job, kind)
+    meters = round(haversine_km(body.lat, body.lon, target[0], target[1]) * 1000)
     db.add(
         JobLocation(
             job_id=job.id,
@@ -85,13 +89,17 @@ async def record_leg(
             lat=body.lat,
             lon=body.lon,
             accuracy_m=body.accuracy_m,
-            distance_from_target_m=round(
-                haversine_km(body.lat, body.lon, target[0], target[1]) * 1000
-            ),
+            distance_from_target_m=meters,
             recorded_at=stamp,
         )
     )
     await db.flush()
+    actor = SimpleNamespace(uid=uid, role="transporter")
+    event = "job.picked_up" if kind == "pickup" else "job.delivered"
+    await emit(db, event, job_id=job.id, actor=actor, weight_kg=body.weight_kg)
+    if meters > FAR_METERS:
+        far = "job.pickup_far" if kind == "pickup" else "job.delivery_far"
+        await emit(db, far, job_id=job.id, actor=actor, km=round(meters / 1000))
 
 
 async def _target(db: AsyncSession, job: Job, kind: str) -> tuple[float, float]:

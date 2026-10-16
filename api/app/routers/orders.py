@@ -6,11 +6,14 @@ from sqlalchemy import select
 from app.auth.firebase import AuthUser, as_buyer, current_user
 from app.auth.owners import factory_of
 from app.db_models.tables import Order, Product
-from app.deps import DbSession, Events
+from app.deps import DbSession, Delivery
 from app.models.market import OrderIn, OrderOut
+from app.services.inbox import commit_and_deliver
 from app.services.market import order_out, place_order
+from app.services.notify import emit
 
 router = APIRouter(prefix="/api/orders", tags=["orders"])
+LOW_STOCK = 5  # a factory is told when a product's stock falls to this or below
 
 
 def _key(value: str, what: str) -> uuid.UUID:
@@ -22,13 +25,21 @@ def _key(value: str, what: str) -> uuid.UUID:
 
 @router.post("", response_model=OrderOut, status_code=201)
 async def post_orders_root(
-    db: DbSession, events: Events, body: OrderIn, user: AuthUser = as_buyer
+    db: DbSession, inbox: Delivery, body: OrderIn, user: AuthUser = as_buyer
 ):
     """Place an order (payment is simulated). Reduces stock and writes the four-way split."""
     order_id = await place_order(db, user.uid, _key(body.product_id, "product"), body.quantity)
     out = await order_out(db, order_id)
-    await db.commit()
-    await events.publish("ledger.updated")
+    # the buyer hears it too: their receipt
+    await emit(db, "order.placed", order_id=order_id, actor=user, include_actor=True)
+    stock = (
+        await db.execute(
+            select(Product.stock).where(Product.id == _key(body.product_id, "product"))
+        )
+    ).scalar_one()
+    if stock <= LOW_STOCK < stock + body.quantity:  # just crossed the line
+        await emit(db, "product.low_stock", order_id=order_id, actor=user, stock=stock)
+    await commit_and_deliver(db, inbox)
     return out
 
 

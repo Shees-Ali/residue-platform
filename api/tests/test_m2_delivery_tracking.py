@@ -163,7 +163,7 @@ async def test_a_refused_pickup_changes_nothing(api, world):
     await api.post(f"/api/jobs/{world.job_id}/pickup", headers=T1, json=leg(path, 0))
     job = uuid.UUID(world.job_id)
     assert await scalar(api, "SELECT count(*) FROM photos WHERE job_id = :j", j=job) == 0
-    assert await scalar(api, "SELECT count(*) FROM job_locations") == 0
+    assert await scalar(api, "SELECT count(*) FROM job_locations WHERE job_id = :j", j=job) == 0
 
 
 # --- where the transporter was ------------------------------------------------------------
@@ -229,7 +229,12 @@ async def test_a_ping_is_recorded_then_throttled_then_recorded_again(api, world)
         {"t": datetime.now(UTC) - timedelta(seconds=30), "j": uuid.UUID(world.job_id)},
     )
     assert (await ping(api, world)).json() == {"recorded": True}
-    assert await scalar(api, "SELECT count(*) FROM job_locations WHERE kind = 'ping'") == 2
+    pings = await scalar(
+        api,
+        "SELECT count(*) FROM job_locations WHERE kind = 'ping' AND job_id = :j",
+        j=uuid.UUID(world.job_id),
+    )
+    assert pings == 2
 
 
 async def test_pings_are_only_for_the_assigned_transporter_while_the_job_is_moving(api, world):

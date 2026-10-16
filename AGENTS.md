@@ -16,7 +16,7 @@ Crop-residue marketplace demo: farmers call (Urdu, Twilio + Gemini Live) to repo
 No Makefile; only Python and Node are required.
 - Setup: `pip install -e ".[dev]"` in `api/` and `voice/`; `npm install` in `web/`.
 - Run: `python start.py` in `api/` (:8000) and `voice/` (:8001); `npm run dev` in `web/` (:5173).
-- Test: `pytest -m "not tdd"` in `api/`, `pytest` in `voice/`, `npm test` in `web/`. Also `ruff check .` (api, voice), `npm run lint` (web), `python scripts/check_no_db_in_voice.py`.
+- Test: `pytest -m "not tdd"` in `api/` (add `-m emulator` inside `firebase emulators:exec` for the Firestore tests), `pytest` in `voice/`, `npm test` in `web/`. Also `ruff check .` (api, voice), `npm run lint` (web), `npm run test:rules` and `npm run e2e` in `web/` (Firestore rules and real-browser tests on the emulators; need Java), `python scripts/check_no_db_in_voice.py`.
 - Deploy: `bash deploy/deploy-api.sh|deploy-voice.sh|deploy-web.sh` (see `deploy/`). Needs gcloud and firebase CLIs logged in.
 
 ## Conventions

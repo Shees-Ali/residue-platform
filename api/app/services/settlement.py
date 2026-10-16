@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db_models.tables import Factory, Job, Lot, Transporter
 from app.services.economics import gross, job_shares, payouts
 from app.services.job_flow import add_ledger, ledger_totals, transition
+from app.services.notify import emit
 
 
 def _now(now: datetime | None) -> datetime:
@@ -25,7 +26,12 @@ async def _transporter_uid(db: AsyncSession, job: Job) -> str | None:
 
 
 async def confirm_delivery(
-    db: AsyncSession, job: Job, factory: Factory, final_weight_kg: int, now: datetime | None = None
+    db: AsyncSession,
+    job: Job,
+    factory: Factory,
+    final_weight_kg: int,
+    now: datetime | None = None,
+    actor=None,
 ) -> dict[str, int]:
     """Factory confirms the weighbridge weight. Returns the payouts for the final weight."""
     await transition(
@@ -42,11 +48,20 @@ async def confirm_delivery(
     await add_ledger(
         db, job.id, "release_transporter", parts["transporter"], await _transporter_uid(db, job)
     )
+    await emit(
+        db, "job.confirmed", job_id=job.id, actor=actor, weight_kg=final_weight_kg,
+        farmer_amount=parts["farmer"], transporter_amount=parts["transporter"],
+    )
     return parts
 
 
 async def reject_delivery(
-    db: AsyncSession, job: Job, factory: Factory, reason: str, now: datetime | None = None
+    db: AsyncSession,
+    job: Job,
+    factory: Factory,
+    reason: str,
+    now: datetime | None = None,
+    actor=None,
 ) -> None:
     """Pre-agreed cost rule: the transporter still gets their estimated share, the factory gets
     the rest of escrow back, the farmer gets nothing, and the lot is marked rejected."""
@@ -59,10 +74,11 @@ async def reject_delivery(
     lot = await db.get(Lot, job.lot_id)
     lot.status = "rejected"
     await db.flush()
+    await emit(db, "job.rejected", job_id=job.id, actor=actor, transporter_amount=haul)
 
 
 async def settle_verified(
-    db: AsyncSession, job: Job, now: datetime | None = None
+    db: AsyncSession, job: Job, now: datetime | None = None, actor=None
 ) -> dict[str, int]:
     """The farmer confirmed: release their share and take the platform fee."""
     stamp = _now(now)
@@ -71,9 +87,14 @@ async def settle_verified(
     parts = payouts(final_gross, job_shares(job.farmer_share_bps))
     await add_ledger(db, job.id, "release_farmer", parts["farmer"], None)
     await add_ledger(db, job.id, "platform_fee", parts["platform"], None)
+    await emit(
+        db, "job.settled", job_id=job.id, actor=actor, include_actor=True,
+        weight_kg=job.final_weight_kg, farmer_amount=parts["farmer"],
+    )
     return parts
 
 
-async def dispute(db: AsyncSession, job: Job) -> None:
+async def dispute(db: AsyncSession, job: Job, actor=None) -> None:
     """The farmer says no: freeze. The farmer share and fee stay in escrow for an admin."""
     await transition(db, job.id, "confirmed", "disputed")
+    await emit(db, "job.disputed", job_id=job.id, actor=actor, include_actor=True)

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FastForward, RefreshCw } from "lucide-react";
 import { api } from "@/api/client";
-import { JOBS_KEY, OFFERS_KEY, TRANSPORTERS_KEY, useJobs, useTransporters } from "@/api/hooks";
+import { JOBS_KEY, OFFERS_KEY, TRANSPORTERS_KEY, useJobs, usePoll, useTransporters } from "@/api/hooks";
 import { unwrap } from "@/api/query";
 import { pkr } from "@/components/fasalloop/common";
 import { Button } from "@/components/ui/button";
@@ -113,7 +113,7 @@ function LadderDialog({ job, onClose }: { job: Job; onClose: () => void }) {
   const ladder = useQuery({
     queryKey: ["ladder", job.id],
     queryFn: () => unwrap(api.GET("/api/jobs/{job_id}/offers", { params: { path: { job_id: job.id } } })),
-    refetchInterval: 4000,
+    refetchInterval: usePoll(4000),
   });
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>

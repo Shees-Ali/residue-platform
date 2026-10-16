@@ -1,7 +1,9 @@
 """A2/T1: the offer ladder. One offer at a time, each with an expiry; SQL decides the winner."""
+import math
 import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 
 from fastapi import HTTPException
 from sqlalchemy import exists, select, update
@@ -12,6 +14,7 @@ from app.models.offer import Offer as OfferModel
 from app.services.dispatch import TransporterCandidate, next_transporter, rank_transporters, tick
 from app.services.economics import gross, job_shares, offer_ttl_seconds, payouts
 from app.services.job_flow import transition
+from app.services.notify import emit
 
 
 @dataclass
@@ -64,6 +67,10 @@ async def make_next_offer(
     )
     db.add(offer)
     await db.flush()
+    await emit(
+        db, "offer.created", job_id=job.id, transporter_id=chosen,
+        minutes=math.ceil(offer_ttl_seconds() / 60), amount=offer.payout_amount,
+    )
     return offer
 
 
@@ -128,6 +135,7 @@ async def expire_and_advance(
             continue
         offer.status = "expired"
         result.expired += 1
+        await emit(db, "offer.expired", job_id=offer.job_id, transporter_id=offer.transporter_id)
         job = (
             await db.execute(select(Job).where(Job.id == offer.job_id).with_for_update())
         ).scalar_one()
@@ -140,6 +148,7 @@ async def expire_and_advance(
             result.reoffered += 1
         else:
             await transition(db, job.id, "offered", "funded")
+            await emit(db, "job.offers_exhausted", job_id=job.id)
             result.exhausted += 1
     for job_id in await dispatch_waiting(db, now):
         result.dispatched += 1
@@ -180,8 +189,13 @@ async def decline_offer(
     job = (
         await db.execute(select(Job).where(Job.id == passed[0]).with_for_update())
     ).scalar_one()
+    await emit(
+        db, "offer.declined", job_id=job.id,
+        actor=SimpleNamespace(uid=transporter.user_uid, role="transporter"),
+    )
     if job.state == "offered" and await make_next_offer(db, job, now) is None:
         await transition(db, job.id, "offered", "funded")  # everyone has been asked
+        await emit(db, "job.offers_exhausted", job_id=job.id)
     return job.id
 
 
@@ -220,5 +234,9 @@ async def accept_offer(
         update(Offer)
         .where(Offer.job_id == job_id, Offer.status == "pending")
         .values(status="withdrawn")
+    )
+    await emit(
+        db, "job.accepted", job_id=job_id,
+        actor=SimpleNamespace(uid=transporter.user_uid, role="transporter"),
     )
     return job_id

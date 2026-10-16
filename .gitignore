@@ -13,3 +13,11 @@ seed/out/
 web/src/api/schema.d.ts.tmp
 *.egg-info/
 api/.dev_uploads/
+
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+*-debug.log
+web/test-results/
+web/playwright-report/

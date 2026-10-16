@@ -122,7 +122,9 @@ async def test_a_refused_answer_changes_nothing(api, world):
     await verify(api, world, h, False, "")
     state = (await api.get(f"/api/jobs/{world.job_id}", headers=ADMIN)).json()["state"]
     assert state == "confirmed"
-    assert await scalar(api, "SELECT count(*) FROM verifications") == 0
+    assert await scalar(
+        api, "SELECT count(*) FROM verifications WHERE job_id = :j", j=uuid.UUID(world.job_id)
+    ) == 0
 
 
 # --- who and when ----------------------------------------------------------------------------

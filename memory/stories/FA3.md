@@ -31,3 +31,5 @@ As a factory, I list finished products for sale and see how each sale is split.
 - Farmer share of product sales is pooled (no per-farmer attribution) and the NGO is a label; both are assumptions to confirm.
 
 - 2026-10-16 end-to-end: web: factory `My products` (list, edit, unlist) and `Orders and revenue split`; products carry category, unit and description (migration 0009). Tests: `api/tests/test_e2e_flow.py` and the web panel tests.
+
+- 2026-10-16 (EV stories): events: `order.placed` (the factory and the buyer's receipt) and `product.low_stock` (factory and admin, once when stock falls to 5). See `EV2.md`.

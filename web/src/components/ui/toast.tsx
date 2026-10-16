@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 
-type Kind = "error" | "info";
+type Kind = "error" | "info" | "warning";
 interface ToastItem {
   id: number;
   kind: Kind;
@@ -10,6 +10,8 @@ interface ToastItem {
 interface ToastApi {
   error: (message: string) => void;
   info: (message: string) => void;
+  /** Needs attention but is not a failure: a dispute, an unbalanced ledger. */
+  warn: (message: string) => void;
 }
 
 const ToastContext = createContext<ToastApi | null>(null);
@@ -30,7 +32,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     [dismiss],
   );
   const api = useMemo<ToastApi>(
-    () => ({ error: (m) => push("error", m), info: (m) => push("info", m) }),
+    () => ({ error: (m) => push("error", m), info: (m) => push("info", m), warn: (m) => push("warning", m) }),
     [push],
   );
 
@@ -39,7 +41,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div className="toast-stack" aria-live="polite">
         {items.map((t) => (
-          <div key={t.id} className={`toast toast-${t.kind}`} role={t.kind === "error" ? "alert" : "status"}>
+          <div key={t.id} className={`toast toast-${t.kind}`} role={t.kind === "info" ? "status" : "alert"}>
             <span>{t.message}</span>
             <button type="button" aria-label="Dismiss" onClick={() => dismiss(t.id)}>
               <X size={14} />
@@ -51,7 +53,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
-const silent: ToastApi = { error: () => {}, info: () => {} };
+const silent: ToastApi = { error: () => {}, info: () => {}, warn: () => {} };
 
 /** Show a toast. Outside a ToastProvider it does nothing, so small components stay testable. */
 export function useToast(): ToastApi {

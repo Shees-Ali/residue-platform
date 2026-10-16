@@ -62,8 +62,8 @@ async def api(monkeypatch):
 
     Route code commits; the session uses savepoint mode so those commits release a savepoint and
     the outer transaction is rolled back at the end. Auth runs in local-bypass mode: pick who you
-    are with the X-Dev-Uid header (default: the dev admin). Events go to `api.events`, photos to
-    `api.storage` and AI grading is a canned estimate from `api.grader`.
+    are with the X-Dev-Uid header (default: the dev admin). Notifications are mirrored to
+    `api.inbox`, photos to `api.storage` and AI grading is a canned estimate from `api.grader`.
     """
     if not os.getenv("DATABASE_URL"):
         pytest.skip("DATABASE_URL not set")
@@ -72,8 +72,8 @@ async def api(monkeypatch):
 
     from app.config import get_settings
     from app.db import async_url, get_session
-    from app.services.events import FakeEvents, get_events
     from app.services.grading import Grade, get_grader
+    from app.services.inbox import FakeInbox, get_inbox
     from app.services.storage import FakeStorage, get_storage
 
     class CannedGrader:
@@ -97,18 +97,18 @@ async def api(monkeypatch):
     session = AsyncSession(
         bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False
     )
-    events, storage, grader = FakeEvents(), FakeStorage(), CannedGrader()
+    inbox, storage, grader = FakeInbox(), FakeStorage(), CannedGrader()
     await seed_synthetic_accounts(session)  # rolled back with the test: the database stays clean
 
     async def session_override():
         yield session
 
     app.dependency_overrides[get_session] = session_override
-    app.dependency_overrides[get_events] = lambda: events
+    app.dependency_overrides[get_inbox] = lambda: inbox
     app.dependency_overrides[get_storage] = lambda: storage
     app.dependency_overrides[get_grader] = lambda: grader
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
-        c.events, c.session, c.storage, c.grader = events, session, storage, grader
+        c.inbox, c.session, c.storage, c.grader = inbox, session, storage, grader
         yield c
     app.dependency_overrides.clear()
     await session.close()

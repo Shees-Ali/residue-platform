@@ -91,6 +91,22 @@ SMS verification is off while Firebase phone sign-in is not set up. `REQUIRE_VER
 | suspended account editing | refused (403) | "Your account is suspended. Contact an admin." |
 | users search `q` (admin) | up to 80 chars | "Search must be at most 80 characters" |
 
+## Events and notifications (confirmed 2026-10-16)
+Routes: `GET /api/notifications`, `GET /api/notifications/unread-count`, `POST /api/notifications/{id}/read`, `POST /api/notifications/read-all`, `GET /api/jobs/{id}/events`.
+
+| Field | Where | Rule | Message |
+|---|---|---|---|
+| limit | `GET /api/notifications` | whole number 1 to 50, default 20 | "Limit must be between 1 and 50" |
+| before | same | the cursor from the previous page, up to 64 characters | "That page marker is not valid" |
+| unread_only | same | true or false | "Unread only must be true or false" |
+| notification id | `POST /api/notifications/{id}/read` | a UUID that belongs to the caller; someone else's id is 404 | "Notification not found" |
+| limit | `GET /api/jobs/{id}/events` | 1 to 200, default 100 | "Limit must be between 1 and 200" |
+| who may read a job's events | same | admin, the owning factory, the assigned transporter, the lot's farmer; each sees only events marked visible to their role | "Job not found" (404) |
+| stored text | every notification | title up to 80 characters, body up to 240; never a phone, an email, a person's name or anything a person typed (a reason, a note); a factory's business name is allowed | tested for every catalog entry |
+| Firestore inbox doc | `users/{uid}/inbox/{id}` | readable only by that uid; no client writes; `expires_at` 30 days after creation | n/a |
+
+Web feedback: bell with unread badge, skeleton rows while loading, "Try again" on error, spinner on "Mark all read" for the real request, "No notifications yet" empty state, a toast per live arrival (warning style for disputes, escalations and an unbalanced ledger), a "Live updates paused" chip when the listener is down.
+
 ## Open
 - Pakistani mobile numbers only? Currently any E.164 number is accepted (so test numbers work); tighten to `+923xxxxxxxxx` if wanted.
 - Password rules follow the table above; Firebase itself only requires 6.

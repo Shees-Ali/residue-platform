@@ -38,3 +38,7 @@ Everything below runs on real data (Postgres, Firebase sign-in). Nothing is mock
 
 ## Not covered here
 The phone call (Twilio, Gemini Live): the same lot and the same confirmation can be made by voice later, through `/api/agent/*`, and land on these same screens.
+
+## Live updates (EV3) and the browser tests
+- Real project: deploy the rules (`firebase deploy --only firestore --config deploy/firebase.json --project <id>`), give the API's account `roles/datastore.user` (locally: `gcloud auth application-default login`), set `FIRESTORE_EVENTS=1` in `api/.env`, restart the API. Sign in as two roles in two windows: a factory fund shows up on the transporter's board without a refresh, and the bell counts up. Block `firestore.googleapis.com` in devtools to see "Live updates paused".
+- Emulators, no cloud: `cd web && npm run e2e` runs the whole story in five real browsers (needs Java and the cached Playwright Chromium). `npm run test:rules` checks the Firestore rules. They use their own `residue_e2e` database; your `residue` database is never touched.

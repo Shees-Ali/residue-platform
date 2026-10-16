@@ -18,7 +18,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db_models.base import (
@@ -404,3 +404,66 @@ class IdempotencyKey(Base):
     status_code: Mapped[int | None] = mapped_column(Integer)
     response: Mapped[dict | None] = mapped_column(JSONB)  # NULL while the first request runs
     created_at: Mapped[datetime] = created_at()
+
+
+# --- events and notifications (EV1 to EV7) ---------------------------------------------
+
+
+class Event(Base):
+    """An immutable business fact: what happened, to which job, and who did it."""
+
+    __tablename__ = "events"
+    __table_args__ = (Index("ix_events_job_id_created_at", "job_id", "created_at"),)
+    id: Mapped[uuid.UUID] = uuid_pk()
+    type: Mapped[str] = mapped_column(Text)
+    job_id: Mapped[uuid.UUID | None] = fk("jobs.id", nullable=True)
+    lot_id: Mapped[uuid.UUID | None] = fk("lots.id", nullable=True)
+    order_id: Mapped[uuid.UUID | None] = fk("orders.id", nullable=True)
+    actor_uid: Mapped[str | None] = uid_fk(nullable=True)
+    actor_role: Mapped[str | None] = mapped_column(Text)
+    summary: Mapped[str] = mapped_column(Text)  # neutral one line for the job timeline
+    data: Mapped[dict] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
+    visible_to: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
+    created_at: Mapped[datetime] = created_at()
+
+
+class Notification(Base):
+    """One person's copy of an event: ready-to-show text, read state, delivery state."""
+
+    __tablename__ = "notifications"
+    __table_args__ = (
+        Index(
+            "uq_notifications_event_recipient_uid",
+            "event_id",
+            "recipient_uid",
+            unique=True,
+            postgresql_where=text("recipient_uid IS NOT NULL"),
+        ),
+        Index(
+            "uq_notifications_event_recipient_farmer",
+            "event_id",
+            "recipient_farmer_id",
+            unique=True,
+            postgresql_where=text("recipient_farmer_id IS NOT NULL"),
+        ),
+        Index("ix_notifications_recipient_uid_created_at", "recipient_uid", "created_at"),
+        Index(
+            "ix_notifications_undelivered",
+            "created_at",
+            postgresql_where=text("delivered_at IS NULL AND recipient_uid IS NOT NULL"),
+        ),
+    )
+    id: Mapped[uuid.UUID] = uuid_pk()
+    event_id: Mapped[uuid.UUID] = fk("events.id")
+    recipient_uid: Mapped[str | None] = uid_fk(nullable=True)
+    # a farmer who only phones has no login: kept for a future SMS or voice channel
+    recipient_farmer_id: Mapped[uuid.UUID | None] = fk("farmers.id", nullable=True)
+    type: Mapped[str] = mapped_column(Text)
+    level: Mapped[str] = mapped_column(Text, server_default=text("'info'"))
+    title: Mapped[str] = mapped_column(Text)
+    body: Mapped[str] = mapped_column(Text)
+    refresh: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
+    job_id: Mapped[uuid.UUID | None] = fk("jobs.id", nullable=True)
+    created_at: Mapped[datetime] = created_at()
+    read_at: Mapped[datetime | None] = mapped_column(TS)
+    delivered_at: Mapped[datetime | None] = mapped_column(TS)

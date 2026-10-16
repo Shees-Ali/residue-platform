@@ -3,8 +3,9 @@ from sqlalchemy import func, select
 
 from app.auth.firebase import AuthUser, as_admin
 from app.db_models.tables import Escalation, Factory, Farmer, Job, Order, Transporter
-from app.deps import DbSession
+from app.deps import DbSession, Delivery
 from app.models.stats import StatsOut
+from app.services.inbox import undelivered_count
 from app.services.reports import ledger_check
 
 router = APIRouter(prefix="/api/stats", tags=["stats"])
@@ -12,7 +13,7 @@ FINISHED = ("settled", "rejected", "disputed")
 
 
 @router.get("", response_model=StatsOut)
-async def get_stats(db: DbSession, user: AuthUser = as_admin):
+async def get_stats(db: DbSession, inbox: Delivery, user: AuthUser = as_admin):
     """The admin overview numbers in one call."""
 
     async def count(query) -> int:
@@ -41,6 +42,7 @@ async def get_stats(db: DbSession, user: AuthUser = as_admin):
         orders=await count(select(func.count()).select_from(Order)),
         tonnes_diverted=kg / 1000,
         escrow_held=(await ledger_check(db)).held_in_escrow,
+        notifications_undelivered=await undelivered_count(db, inbox),
         open_escalations=await count(
             select(func.count()).select_from(Escalation).where(Escalation.status == "open")
         ),

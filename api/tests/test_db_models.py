@@ -8,7 +8,8 @@ from sqlalchemy.schema import CreateTable
 
 from app.db import async_url
 from app.db_models import Base
-from app.services.events import EVENT_TYPES, FakeEvents
+from app.services.inbox import FakeInbox
+from app.services.notify_catalog import EVENT_TYPES
 
 MONEY_COLUMNS = {
     "factories": ["price_per_tonne"],
@@ -51,11 +52,11 @@ def test_async_url_normalises_driver():
     assert async_url("postgresql+asyncpg://u:p@h/db").startswith("postgresql+asyncpg://")
 
 
-async def test_fake_events_records_publishes():
-    sink = FakeEvents()
-    await sink.publish("job.updated", job_id="j1")
-    assert sink.sent == [{"type": "job.updated", "job_id": "j1"}]
-    assert "job.updated" in EVENT_TYPES
+async def test_fake_inbox_records_what_it_is_given():
+    inbox = FakeInbox()
+    assert await inbox.write([]) == []
+    assert inbox.docs == []
+    assert "job.funded" in EVENT_TYPES
 
 
 @pytest.mark.skipif(not os.getenv("DATABASE_URL"), reason="DATABASE_URL not set")

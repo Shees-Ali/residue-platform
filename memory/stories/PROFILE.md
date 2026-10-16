@@ -21,3 +21,5 @@
 ## Open
 - Rows created before migration 0011 show the district and village as Not set until the person picks them once.
 - Vehicle details, pause switch, revenue split settings, reference data editing.
+
+- 2026-10-16 (EV stories): events: `account.tier_changed` and `account.edited` (the person), `lot.updated` / `lot.reassigned` for an admin's lot edit. See `EV2.md`.
