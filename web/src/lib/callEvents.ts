@@ -43,11 +43,23 @@ export interface Quote {
   payment_timing?: string;
 }
 
+/** One of the caller's earlier requests, as the agent looked it up (F5). */
+export interface RequestStatus {
+  lot_id: string;
+  residue_label?: string;
+  quantity_tonnes?: number;
+  reported_on?: string;
+  stage?: string;
+  status_text?: string;
+  details_withheld?: boolean; // a /phone call: number only typed (F5)
+}
+
 export interface CallView {
   turns: Turn[]; // in order of id
   lot?: Lot;
   quote?: Quote;
   escalated: boolean;
+  requests?: RequestStatus[]; // looked up by the agent during the call
   confirmation?: { state?: string; farmer_amount_rupees?: number };
 }
 
@@ -59,6 +71,7 @@ export type CallEvent =
   | ({ type: "lot" } & Lot)
   | ({ type: "quote" } & Quote)
   | { type: "escalated" }
+  | { type: "status"; requests: RequestStatus[] }
   | { type: "confirmation"; state?: string; farmer_amount_rupees?: number };
 
 /** Apply one event; unknown or malformed events leave the view unchanged. */
@@ -97,6 +110,9 @@ export function applyEvent(view: CallView, event: CallEvent, secondsIn: number):
     }
     case "escalated":
       return { ...view, escalated: true };
+    case "status":
+      if (!Array.isArray(event.requests)) return view;
+      return { ...view, requests: event.requests.filter((r) => r && typeof r.lot_id === "string") };
     case "confirmation":
       return { ...view, confirmation: { state: event.state, farmer_amount_rupees: event.farmer_amount_rupees } };
     default:

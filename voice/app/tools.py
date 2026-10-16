@@ -1,4 +1,4 @@
-"""The four tools the intake agent may use. Plain functions; each calls the API.
+"""The five tools the intake agent may use. Plain functions; each calls the API.
 
 No farmer id parameter anywhere: the API derives identity from the call record.
 The call id comes from app.call_context (set by the transport), not from the model.
@@ -137,4 +137,25 @@ async def record_confirmation(job_id: str, confirmed: bool, note: str = "") -> d
     return await _shown("confirmation", result, ("job_id", "state", "farmer_amount_rupees"))
 
 
-TOOLS = [create_lot, get_quote, escalate_to_human, record_confirmation]
+async def check_status() -> dict:
+    """Look up the caller's own requests: where each one stands, newest first (at most 5).
+
+    Use when the caller asks about residue they already reported: when it will be picked up,
+    where it is, or when they will be paid.
+
+    Returns {"requests": [...]}; each has residue_label, quantity_tonnes, village, reported_on,
+    pickup_text, stage, status_text (say it in the caller's language), and when known
+    factory_name, est_farmer_amount_rupees, final_weight_kg, farmer_amount_rupees and
+    rejection_reason. If details_withheld is true, only the stage, residue and date are given:
+    say just those. An empty list means they have no requests yet. Never guess a status.
+    """
+    call_id = current_call_id.get(None)
+    if call_id is None:
+        return {"error": "no_active_call", "message": "No call is in progress."}
+    result = await post(
+        "/api/agent/status", call_id, "check_status", {"call_id": call_id}, write=False
+    )
+    return await _shown("status", result, ("requests",))
+
+
+TOOLS = [create_lot, get_quote, escalate_to_human, record_confirmation, check_status]

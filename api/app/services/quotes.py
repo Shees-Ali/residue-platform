@@ -19,15 +19,19 @@ def rupees(paisa: int) -> float:
     return round(paisa / 100, 2)
 
 
-async def quote_for(db: AsyncSession, farmer_id: uuid.UUID, lot_id: str) -> QuoteOut:
-    """Quote for one of this farmer's lots. A lot that isn't theirs looks like an unknown lot."""
+async def quote_for(
+    db: AsyncSession, farmer_id: uuid.UUID, lot_id: str, *, only_call: uuid.UUID | None = None
+) -> QuoteOut:
+    """Quote for one of this farmer's lots. A lot that isn't theirs looks like an unknown lot.
+    `only_call` (an unverified /phone call, F5) also hides lots made on any other call."""
     try:
         lot_key = uuid.UUID(lot_id)
     except ValueError:
         raise LotError("unknown_lot", "No such lot") from None
-    lot = (
-        await db.execute(select(Lot).where(Lot.id == lot_key, Lot.farmer_id == farmer_id))
-    ).scalar_one_or_none()
+    query = select(Lot).where(Lot.id == lot_key, Lot.farmer_id == farmer_id)
+    if only_call is not None:
+        query = query.where(Lot.call_id == only_call)
+    lot = (await db.execute(query)).scalar_one_or_none()
     if lot is None:
         raise LotError("unknown_lot", "No such lot")
     job = (await db.execute(select(Job).where(Job.lot_id == lot.id))).scalar_one_or_none()

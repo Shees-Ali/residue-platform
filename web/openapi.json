@@ -3842,6 +3842,66 @@
         }
       }
     },
+    "/api/agent/status": {
+      "post": {
+        "tags": [
+          "agent"
+        ],
+        "summary": "Check Status",
+        "description": "F5: the caller's own most recent requests and where each one stands (read-only).\n\nFull details only when the carrier vouches for the caller's number; /phone page calls hear\nthe stage, residue and date only.",
+        "operationId": "check_status_api_agent_status_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckStatusIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckStatusOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/agent/escalations": {
       "post": {
         "tags": [
@@ -7287,6 +7347,37 @@
         ],
         "title": "CallStartOut"
       },
+      "CheckStatusIn": {
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Call Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "call_id"
+        ],
+        "title": "CheckStatusIn"
+      },
+      "CheckStatusOut": {
+        "properties": {
+          "requests": {
+            "items": {
+              "$ref": "#/components/schemas/RequestStatusOut"
+            },
+            "type": "array",
+            "title": "Requests"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requests"
+        ],
+        "title": "CheckStatusOut"
+      },
       "ConfirmIn": {
         "properties": {
           "accept": {
@@ -10061,6 +10152,156 @@
         ],
         "title": "RegisterIn",
         "description": "Self-signup. `admin` is not a choice: it is granted only by BOOTSTRAP_ADMIN_EMAILS.\n\nWhich of the optional fields a role needs is checked in `services.registration`, so every\nmissing field is reported at once. Rules: memory/validation-rules.md."
+      },
+      "RequestStatusOut": {
+        "properties": {
+          "lot_id": {
+            "type": "string",
+            "title": "Lot Id"
+          },
+          "residue_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Residue Label"
+          },
+          "reported_on": {
+            "type": "string",
+            "title": "Reported On"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "status_text": {
+            "type": "string",
+            "title": "Status Text"
+          },
+          "details_withheld": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details Withheld"
+          },
+          "quantity_tonnes": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity Tonnes"
+          },
+          "village": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Village"
+          },
+          "district": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District"
+          },
+          "pickup_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup Text"
+          },
+          "factory_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Factory Name"
+          },
+          "est_farmer_amount_rupees": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Est Farmer Amount Rupees"
+          },
+          "final_weight_kg": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Weight Kg"
+          },
+          "farmer_amount_rupees": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Farmer Amount Rupees"
+          },
+          "rejection_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejection Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lot_id",
+          "reported_on",
+          "stage",
+          "status_text"
+        ],
+        "title": "RequestStatusOut",
+        "description": "One of the caller's requests (F5). Unverified callers get only the first six fields."
       },
       "ResidueTypeOut": {
         "properties": {

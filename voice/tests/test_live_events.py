@@ -369,6 +369,28 @@ async def test_quote_and_escalation_are_shown(api, screen):
     ]
 
 
+async def test_check_status_sends_only_the_call_id_and_shows_the_requests(api, screen):
+    import json
+
+    from app.tools import check_status
+
+    sent = []
+    original = api_client._transport
+
+    def handler(request):
+        sent.append(json.loads(request.content))
+        return httpx.Response(200, json={"requests": [{"lot_id": "L1", "stage": "on_the_way"}]})
+
+    api_client._transport = httpx.MockTransport(handler)
+    try:
+        result = await check_status()
+    finally:
+        api_client._transport = original
+    assert sent == [{"call_id": "call-1"}]  # identity comes from the call, never the model
+    assert result["requests"][0]["stage"] == "on_the_way"
+    assert screen == [{"type": "status", "requests": [{"lot_id": "L1", "stage": "on_the_way"}]}]
+
+
 async def test_a_broken_screen_never_breaks_a_tool(api):
     from app.tools import get_quote
 

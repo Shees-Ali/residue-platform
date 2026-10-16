@@ -1,4 +1,4 @@
-"""The ONLY routes the voice service may call: exactly four tools.
+"""The ONLY routes the voice service may call: exactly five tools.
 
 Do not add more without a decision-log entry in memory/decisions.md.
 """
@@ -9,11 +9,18 @@ from fastapi import APIRouter, Depends
 from app.auth.google_oidc import voice_service_caller
 from app.auth.idempotency import require_idempotency_key
 from app.deps import DbSession, Delivery
-from app.models.agent import CreateLotIn, EscalateIn, GetQuoteIn, RecordConfirmationIn
+from app.models.agent import (
+    CheckStatusIn,
+    CheckStatusOut,
+    CreateLotIn,
+    EscalateIn,
+    GetQuoteIn,
+    RecordConfirmationIn,
+)
 from app.models.lot import LotReadback
 from app.models.quote import QuoteOut
 from app.services.assignment_store import assign_lot
-from app.services.calls import farmer_id_for_call
+from app.services.calls import caller_number_verified, farmer_id_for_call
 from app.services.escalations import create_escalation
 from app.services.idempotency import request_hash, run_idempotent
 from app.services.inbox import commit_and_deliver
@@ -21,6 +28,7 @@ from app.services.lot_events import announce_new_lot
 from app.services.lot_store import create_lot_record
 from app.services.notify import emit
 from app.services.quotes import quote_for
+from app.services.request_status import requests_for
 from app.services.verification import record_answer
 
 router = APIRouter(
@@ -63,9 +71,24 @@ async def create_lot(
 
 @router.post("/quote", response_model=QuoteOut)
 async def get_quote(db: DbSession, body: GetQuoteIn):
-    """Price per tonne, the farmer's share and when they are paid, for one of their own lots."""
+    """Price per tonne, the farmer's share and when they are paid, for one of their own lots.
+    A /phone call (number only typed) gets quotes only for lots made on that call (F5)."""
     farmer_id = await farmer_id_for_call(db, body.call_id)
-    return await quote_for(db, farmer_id, body.lot_id)
+    verified = await caller_number_verified(db, body.call_id)
+    only_call = None if verified else uuid.UUID(body.call_id)
+    return await quote_for(db, farmer_id, body.lot_id, only_call=only_call)
+
+
+@router.post("/status", response_model=CheckStatusOut, response_model_exclude_none=True)
+async def check_status(db: DbSession, body: CheckStatusIn):
+    """F5: the caller's own most recent requests and where each one stands (read-only).
+
+    Full details only when the carrier vouches for the caller's number; /phone page calls hear
+    the stage, residue and date only.
+    """
+    farmer_id = await farmer_id_for_call(db, body.call_id)
+    full = await caller_number_verified(db, body.call_id)
+    return {"requests": await requests_for(db, farmer_id, full=full)}
 
 
 @router.post("/escalations", status_code=201)

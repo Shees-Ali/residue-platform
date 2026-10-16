@@ -11,6 +11,7 @@ Job states: created, funded, offered, accepted, picked up, delivered, confirmed,
 | [F2](stories/F2.md) | Hear the price and terms | built (API, voice tool, web; tried live on `/phone` 2026-10-16) | the quote on the call matches the ledger entries created later. |
 | [F3](stories/F3.md) | Reach a person when stuck | built (API, voice tool, web admin queue; tried live on `/phone` 2026-10-16) | an unclear or upset call appears in the queue within seconds. |
 | [F4](stories/F4.md) | Confirm delivery and payment | built for the web (farmer confirms on the site); the phone verification call is not demoed (needs a paid Telnyx line) | a yes completes verification and releases the payout, and a dispute freezes it and alerts the admin. |
+| [F5](stories/F5.md) | Check on my requests by phone | built (API route, voice tool, call-screen card); tests pass; a live /phone call pending | a caller asking about an earlier request hears its current stage, matching their web page. |
 | [T1](stories/T1.md) | Find and accept a job | built (API and web) | two simultaneous accepts produce one winner and the other sees the offer withdrawn. |
 | [T2](stories/T2.md) | Prove delivery and get paid | built (API and web) | the payout shows as pending until the factory confirms, then as released. |
 | [FA1](stories/FA1.md) | Fund escrow for assigned lots | built (API and web) | a job cannot be offered to transporters until it is funded. |

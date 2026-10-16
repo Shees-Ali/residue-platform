@@ -48,6 +48,10 @@ def env(monkeypatch):
     monkeypatch.setattr(telnyx, "RETRY_DELAY", 0)
     monkeypatch.setattr(session, "TRANSPORT_GRACE", 0.05)
     telnyx_routes._seen_streams.clear()
+    # Never the real Telnyx API: tests that care about commands use the `rest` fixture instead.
+    monkeypatch.setattr(
+        telnyx, "_transport", httpx.MockTransport(lambda request: httpx.Response(599))
+    )
 
 
 @pytest.fixture
@@ -215,7 +219,8 @@ def test_unsigned_tampered_expired_or_unkeyed_streams_are_refused(fake_call, mon
     _refused(client, query=f"s={s}")  # no MAC
     forged = telnyx.stream_url({**INTAKE, "phone": "+923331111111"}).partition("?")[2]
     _refused(client, query=f"{forged.split('&')[0]}&t={t}")  # someone else's state, our MAC
-    _refused(client, query=f"s={s}&t={t[:-2]}AA")  # bad MAC
+    flipped = t[:-1] + ("A" if t[-1] != "A" else "B")  # always a different MAC
+    _refused(client, query=f"s={s}&t={flipped}")  # bad MAC
     expired = telnyx.stream_url(INTAKE, ttl=-1).partition("?")[2]
     _refused(client, query=expired)
     monkeypatch.setenv("STREAM_SECRET", "")
