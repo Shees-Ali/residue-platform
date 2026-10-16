@@ -8,6 +8,7 @@ import { ResidueShell } from "./components/fasalloop/shell";
 import { LiveProvider } from "./live/LiveProvider";
 import { Marketplace } from "./components/live/Marketplace";
 import Call from "./pages/Call";
+import Phone from "./pages/Phone";
 import Health from "./pages/Health";
 import Login from "./pages/auth/Login";
 import Pending from "./pages/auth/Pending";
@@ -35,6 +36,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/pending" element={<Pending />} />
+      <Route path="/phone" element={<Phone />} />
       <Route element={<RequireAuth />}>
         <Route element={<Shell />}>
           <Route path="/" element={<HomeRedirect />} />

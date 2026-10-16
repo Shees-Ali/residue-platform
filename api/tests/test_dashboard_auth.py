@@ -20,6 +20,7 @@ def db_returning(role, status="active"):
 @pytest.fixture(autouse=True)
 def _env(monkeypatch):
     monkeypatch.delenv("AUTH_DISABLED", raising=False)
+    monkeypatch.delenv("VOICE_AUTH_DISABLED", raising=False)
     monkeypatch.delenv("K_SERVICE", raising=False)
     monkeypatch.setattr(firebase, "get_settings", lambda: SimpleNamespace(firebase_project_id="p"))
 

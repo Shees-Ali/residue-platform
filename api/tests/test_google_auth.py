@@ -13,6 +13,7 @@ VOICE_SA = "residue-voice@proj.iam.gserviceaccount.com"
 @pytest.fixture(autouse=True)
 def _clean_env(monkeypatch):
     monkeypatch.delenv("AUTH_DISABLED", raising=False)
+    monkeypatch.delenv("VOICE_AUTH_DISABLED", raising=False)
     monkeypatch.delenv("K_SERVICE", raising=False)
     monkeypatch.setattr(
         google_oidc,

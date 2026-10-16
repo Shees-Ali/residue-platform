@@ -165,6 +165,7 @@ async def test_a_pending_account_is_blocked_everywhere_except_me(api, monkeypatc
 
 async def test_a_firebase_user_token_does_not_open_the_service_routes(api, monkeypatch):
     monkeypatch.delenv("AUTH_DISABLED")
+    monkeypatch.delenv("VOICE_AUTH_DISABLED", raising=False)
     monkeypatch.setattr(firebase, "_verify", lambda t, p: {"sub": "dev-admin"})
 
     def not_google(token, audience):

@@ -34,3 +34,5 @@ See `decisions.md` entries of 2026-10-15 (auth and roles, farmer phone, real Fir
 - The web has a fixed list of districts and residue codes (`src/lib/places.ts`) until the API exposes them.
 
 - 2026-10-16 (EV stories): events: `account.pending` (admins), `account.approved`, `account.rejected`, `account.suspended`, `account.reactivated` (the person; their screen re-reads who they are). See `EV2.md`.
+
+- 2026-10-16 public page: `/phone` (the demo phone line in a browser) is deliberately outside sign-in, like a real phone call; `/call` stays admin-only (`canAccess("/call", ...)` unchanged, tested in `web/src/pages/Phone.test.tsx`). The voice and API auth did not change. See decisions 2026-10-16.

@@ -150,3 +150,6 @@ Same error shape as above. Web mirrors the wording in `src/lib/validation.ts`.
 | off-site distance | pickup (vs the farm), delivery (vs the factory) | stored and badged for the admin above 25 km, never blocks | "Recorded N km from the farm" |
 | ping rate | location pings | server keeps at most one per 5 s; the web sends one per 15 s | n/a |
 | fund / decline / skip | buttons | no input; fund shows the escrow amount first | n/a |
+
+## Public phone page `/phone` (2026-10-16; field rule reused, please confirm)
+One typed field: the caller's mobile number. Same rule as everywhere: `PhoneInput` with the country picker, valid mobile for the chosen country (default Pakistan), sent as E.164 `^\+\d{8,15}$` (the voice service and `CallStartIn` enforce the same pattern). Inline message from `phoneProblem`; "Save number" stays off until the number is valid; stored in `localStorage` only (never sent to the API by the page, only in the first WebSocket frame). Server side: the voice service replies `{"type":"error","message":"Enter the phone number as +92..."}` and closes for a bad number, "The line is busy..." when all slots are taken, and "Too many calls from this device..." past the per-IP limit; the page shows these under the call button.

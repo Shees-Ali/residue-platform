@@ -1,4 +1,4 @@
-import { applyEvent, clock, emptyView, rupees, scriptLang, turnLines, type CallEvent } from "./callEvents";
+import { outcome, applyEvent, clock, emptyView, rupees, scriptLang, turnLines, type CallEvent } from "./callEvents";
 
 const run = (events: CallEvent[]) => events.reduce((v, e, i) => applyEvent(v, e, i * 5), emptyView);
 
@@ -102,4 +102,27 @@ test("formatting helpers", () => {
   expect(clock(154.7)).toBe("02:34");
   expect(rupees(7000)).toBe("Rs 7,000");
   expect(rupees(undefined)).toBeUndefined();
+});
+
+describe("outcome (the phone page summary)", () => {
+  const base = { turns: [], escalated: false };
+
+  test("nothing yet means no summary", () => {
+    expect(outcome(base)).toBeUndefined();
+  });
+
+  test("a saved lot and quote read back in one line", () => {
+    const view = {
+      ...base,
+      lot: { lot_id: "1", quantity_tonnes: 5, residue_label: "rice straw", village: "Kot", district: "Sheikhupura", pickup_text: "tomorrow morning" },
+      quote: { est_farmer_amount_rupees: 42000 },
+    };
+    expect(outcome(view)).toBe(
+      "Request saved: 5 t rice straw from Kot, Sheikhupura, pickup tomorrow morning. You get about Rs 42,000.",
+    );
+  });
+
+  test("an escalation says a person will call back", () => {
+    expect(outcome({ ...base, escalated: true })).toMatch(/call you back/);
+  });
 });

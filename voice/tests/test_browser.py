@@ -11,6 +11,13 @@ ORIGIN = "http://localhost:5173"
 PHONE = "+923001234567"
 
 
+@pytest.fixture(autouse=True)
+def no_rate_limit(monkeypatch):
+    """Most tests place several calls from one address: the limit has its own tests."""
+    monkeypatch.setenv("BROWSER_CALLS_PER_IP", "0")
+    browser_routes._recent.clear()
+
+
 @pytest.fixture
 def enabled(monkeypatch):
     monkeypatch.setenv("BROWSER_CALLS_ENABLED", "true")
@@ -188,3 +195,25 @@ def test_slow_teardown_after_cancel_does_not_hold_the_socket_or_slot(enabled, mo
         assert ws.receive_json()["message"] == "Call time limit reached."
     assert not slots.locked()
     assert not cleanup_done.is_set()  # released before the slow teardown finished
+
+
+def test_one_address_gets_only_its_allowance_of_calls(enabled, fake_call, monkeypatch):
+    monkeypatch.setenv("BROWSER_CALLS_PER_IP", "1")
+    client = TestClient(app)
+    with _connect(client) as ws:
+        ws.send_json({"phone": PHONE})
+        ws.send_bytes(b"")
+        assert ws.receive_json() == {"type": "interrupt"}
+        ws.receive_bytes()
+    with _connect(client) as ws:
+        ws.send_json({"phone": PHONE})
+        message = ws.receive_json()
+    assert message["type"] == "error"
+    assert "Too many calls" in message["message"]
+
+
+def test_the_limit_counts_each_address_separately(enabled, fake_call, monkeypatch):
+    monkeypatch.setenv("BROWSER_CALLS_PER_IP", "1")
+    assert not browser_routes._rate_limited("1.1.1.1")
+    assert browser_routes._rate_limited("1.1.1.1")
+    assert not browser_routes._rate_limited("2.2.2.2")

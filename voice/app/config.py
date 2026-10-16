@@ -26,6 +26,10 @@ class Settings:
     browser_calls_enabled: bool = field(
         default_factory=lambda: _env("BROWSER_CALLS_ENABLED", "false").lower() == "true"
     )
+    # Calls one client IP may place per 10 minutes on /browser (0 = no limit).
+    browser_calls_per_ip: int = field(
+        default_factory=lambda: int(_env("BROWSER_CALLS_PER_IP", "3"))
+    )
     browser_allowed_origins: frozenset[str] = field(
         default_factory=lambda: frozenset(
             o.strip() for o in _env("BROWSER_ALLOWED_ORIGINS").split(",") if o.strip()

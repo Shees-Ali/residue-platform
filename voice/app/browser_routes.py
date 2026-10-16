@@ -9,16 +9,19 @@ Protocol (web/src/pages/Call.tsx is the client):
             {"type": "roman", "id", "roman", "lang", "script"},
             {"type": "lot", ...}, {"type": "quote", ...},
             {"type": "escalated"}, {"type": "confirmation", ...}.
-There is no user auth yet (dashboard auth lands with A1/A2), so the route is off unless
+The route is public on purpose (the /phone page stands in for the phone line, which has no
+sign-in either): the caller's number is its only identity, like caller ID. So it is off unless
 BROWSER_CALLS_ENABLED=true, only accepts origins listed in BROWSER_ALLOWED_ORIGINS, and caps
-concurrent calls and call length per instance.
+concurrent calls, call length and calls per client IP (BROWSER_CALLS_PER_IP per 10 minutes).
 """
 import asyncio
 import contextlib
 import json
 import logging
 import re
+import time
 import uuid
+from collections import defaultdict, deque
 
 from fastapi import APIRouter, WebSocket
 from google.adk.agents.live_request_queue import LiveRequestQueue
@@ -34,7 +37,37 @@ PHONE = re.compile(r"^\+\d{8,15}$")  # same rule as the API's CallStartIn
 MIC_MIME = "audio/pcm;rate=16000"
 MAX_CALLS = 2  # per instance: bounds Gemini spend while the route has no auth
 MAX_CALL_SECONDS = 600
+RATE_WINDOW_S = 600
 _slots = asyncio.Semaphore(MAX_CALLS)
+_recent: defaultdict[str, deque[float]] = defaultdict(deque)  # client IP -> recent call times
+
+
+def _client_ip(ws: WebSocket) -> str:
+    """The caller's address. Behind Cloud Run or a tunnel the last X-Forwarded-For entry is the
+    one the platform's proxy added; the first can be forged by the client."""
+    forwarded = ws.headers.get("x-forwarded-for", "")
+    if forwarded:
+        return forwarded.split(",")[-1].strip()
+    return ws.client.host if ws.client else "unknown"
+
+
+def _rate_limited(ip: str) -> bool:
+    """True when this address already placed its allowance of calls in the window; otherwise
+    counts this call. BROWSER_CALLS_PER_IP=0 turns the limit off."""
+    limit = get_settings().browser_calls_per_ip
+    if limit <= 0:
+        return False
+    now = time.monotonic()
+    calls = _recent[ip]
+    while calls and now - calls[0] > RATE_WINDOW_S:
+        calls.popleft()
+    if len(calls) >= limit:
+        return True
+    calls.append(now)
+    if len(_recent) > 10_000:  # bound memory: drop addresses with nothing in the window
+        for key in [k for k, v in _recent.items() if not v or now - v[-1] > RATE_WINDOW_S]:
+            del _recent[key]
+    return False
 
 
 async def _hello_phone(ws: WebSocket) -> str | None:
@@ -65,6 +98,9 @@ async def browser(ws: WebSocket):
     if _slots.locked():  # no await between this check and taking the slot
         await _fail(ws, "The line is busy. Try again in a minute.")
         return
+    if _rate_limited(_client_ip(ws)):
+        await _fail(ws, "Too many calls from this device. Try again in a few minutes.")
+        return
     async with _slots:
         await _call(ws, phone)
 
@@ -92,7 +128,7 @@ async def _call(ws: WebSocket, phone: str) -> None:
             if message.get("bytes"):
                 queue.send_realtime(types.Blob(data=message["bytes"], mime_type=MIC_MIME))
 
-    # TODO(F1): Firebase-authenticated browser calls (A1/A2) instead of a typed phone number.
+    # The typed number is trusted as caller ID (demo line); real phone calls get it from Telnyx.
     agent = asyncio.create_task(
         run_call(
             f"web-{uuid.uuid4().hex}",

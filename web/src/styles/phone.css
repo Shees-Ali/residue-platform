@@ -1,0 +1,37 @@
+/* Public phone page (web/src/pages/Phone.tsx): one full-height phone-shaped screen. */
+.phone-page{min-height:100dvh;background:var(--background);color:var(--foreground);display:flex;justify-content:center;font-family:var(--font-sans)}
+.phone-screen{width:100%;max-width:430px;min-height:100dvh;display:flex;flex-direction:column;align-items:center;gap:12px;padding:max(24px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom));text-align:center}
+.phone-screen.setup{justify-content:center}
+.phone-screen h1{font:750 24px var(--font-display);margin:0}
+.phone-top{width:100%;display:flex;justify-content:center;min-height:32px}
+.phone-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--muted);color:var(--muted-foreground)}
+.phone-badge .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.phone-badge.live{background:var(--accent);color:var(--primary)}
+.phone-badge.live .dot{animation:phone-pulse 1.6s infinite}
+.phone-avatar,.phone-emblem{display:grid;place-items:center;width:112px;height:112px;border-radius:50%;background:var(--primary);color:var(--primary-foreground);box-shadow:0 0 0 10px #f0f5ee;margin:18px 0 12px}
+.phone-avatar svg,.phone-emblem svg{width:48px;height:48px;stroke:currentColor;fill:none;stroke-width:1.4}
+.phone-avatar.live{animation:phone-ring 2.2s infinite}
+.phone-sub{margin:0;font-size:13px;color:var(--muted-foreground)}
+.phone-timer{font:600 34px var(--font-display);font-variant-numeric:tabular-nums;letter-spacing:1px;margin-top:6px}
+.phone-caption{margin:8px 0 0;min-height:3.2em;max-width:100%;font-size:17px;line-height:1.6;overflow-wrap:anywhere}
+.phone-result{margin:0;padding:12px 14px;border-radius:12px;background:var(--accent);color:var(--primary);font-size:14px;font-weight:600;line-height:1.5}
+.phone-error{margin:0;color:var(--destructive);font-size:14px}
+.phone-controls{margin-top:auto;width:100%;display:flex;align-items:center;justify-content:space-around;padding-top:16px}
+.phone-btn,.phone-round{border:0;cursor:pointer;display:grid;place-items:center;-webkit-tap-highlight-color:transparent}
+.phone-btn{width:76px;height:76px;border-radius:50%;color:#fff}
+.phone-btn.call{background:var(--primary)}
+.phone-btn.end{background:var(--destructive)}
+.phone-btn svg,.phone-round svg{width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.phone-screen.setup .phone-btn{width:100%;height:52px;border-radius:12px;font:650 16px var(--font-sans)}
+.phone-btn:disabled{opacity:.45;cursor:not-allowed}
+.phone-round{width:56px;height:56px;border-radius:50%;background:var(--muted);color:var(--foreground)}
+.phone-round[aria-pressed="true"]{background:var(--foreground);color:var(--background)}
+.phone-round:disabled{opacity:.4}
+.phone-round.spacer{background:transparent;pointer-events:none}
+.phone-note{margin:0;font-size:12px;color:var(--muted-foreground)}
+.phone-link{background:none;border:0;padding:4px;color:var(--primary);font:inherit;text-decoration:underline;cursor:pointer}
+.phone-screen.setup > *{width:100%}
+.phone-screen.setup .phone-emblem{width:112px}
+@keyframes phone-pulse{50%{opacity:.35}}
+@keyframes phone-ring{0%,100%{box-shadow:0 0 0 10px #f0f5ee}50%{box-shadow:0 0 0 20px #e3efe0}}
+@media(prefers-reduced-motion:reduce){.phone-page *{animation:none!important}}

@@ -3,7 +3,7 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from starlette.concurrency import run_in_threadpool
 
-from app.config import auth_bypass_active, get_settings
+from app.config import get_settings, voice_auth_bypass_active
 
 
 def _verify(token: str, audience: str) -> dict:
@@ -13,7 +13,7 @@ def _verify(token: str, audience: str) -> dict:
 
 async def voice_service_caller(authorization: str | None = Header(default=None)) -> str:
     """Verify a Google ID token from the voice service; return its service account email."""
-    if auth_bypass_active():
+    if voice_auth_bypass_active():
         return "local-dev"
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(

@@ -33,6 +33,16 @@ def auth_bypass_active() -> bool:
     return os.getenv("AUTH_DISABLED", "").lower() == "true" and not os.getenv("K_SERVICE")
 
 
+def voice_auth_bypass_active() -> bool:
+    """Local-dev only: VOICE_AUTH_DISABLED=true skips the voice service's Google token check on
+    /api/agent and /api/internal, and nothing else. Unlike AUTH_DISABLED it does not turn every
+    caller into the dev admin, so it is safe next to a public tunnel. Never honoured on Cloud Run.
+    """
+    if os.getenv("K_SERVICE"):
+        return False
+    return os.getenv("VOICE_AUTH_DISABLED", "").lower() == "true" or auth_bypass_active()
+
+
 def phone_verification_required() -> bool:
     """REQUIRE_VERIFIED_PHONE=true: a farmer must confirm their phone by SMS before reporting.
 

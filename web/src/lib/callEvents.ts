@@ -137,3 +137,21 @@ export function clock(seconds: number): string {
 export function rupees(amount?: number): string | undefined {
   return amount === undefined ? undefined : `Rs ${amount.toLocaleString("en-PK", { maximumFractionDigits: 0 })}`;
 }
+
+/** One line telling the farmer what was captured, from the events the agent's tools emit. */
+export function outcome(view: CallView): string | undefined {
+  if (view.escalated) return "A person from our team will call you back.";
+  const { lot, quote } = view;
+  if (!lot?.lot_id) return undefined;
+  const place = [lot.village, lot.district].filter(Boolean).join(", ");
+  const what = [lot.quantity_tonnes !== undefined && `${lot.quantity_tonnes} t`, lot.residue_label]
+    .filter(Boolean)
+    .join(" ");
+  const pay = rupees(quote?.est_farmer_amount_rupees);
+  return [
+    `Request saved: ${what}${place ? ` from ${place}` : ""}${lot.pickup_text ? `, pickup ${lot.pickup_text}` : ""}.`,
+    pay && `You get about ${pay}.`,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}

@@ -98,6 +98,7 @@ async def api(monkeypatch):
             )
 
     monkeypatch.setenv("AUTH_DISABLED", "true")
+    monkeypatch.delenv("VOICE_AUTH_DISABLED", raising=False)  # a local .env may set it
     monkeypatch.delenv("K_SERVICE", raising=False)
     engine = create_async_engine(async_url(get_settings().database_url), poolclass=NullPool)
     conn = await engine.connect()
