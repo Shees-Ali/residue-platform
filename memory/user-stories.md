@@ -7,10 +7,10 @@ Job states: created, funded, offered, accepted, picked up, delivered, confirmed,
 
 | ID | Title | Status | Done when |
 |---|---|---|---|
-| [F1](stories/F1.md) | Report residue by call | in progress (API, tools, web form and Telnyx line code complete; live call test left) | a spoken call produces a complete lot in the database and the agent reads the details back. |
-| [F2](stories/F2.md) | Hear the price and terms | backend, voice tool and web (expected payout) done | the quote on the call matches the ledger entries created later. |
-| [F3](stories/F3.md) | Reach a person when stuck | backend, voice tool and web (admin queue) done | an unclear or upset call appears in the queue within seconds. |
-| [F4](stories/F4.md) | Confirm delivery and payment | code complete (web confirmation and Telnyx dial-out); live call test left | a yes completes verification and releases the payout, and a dispute freezes it and alerts the admin. |
+| [F1](stories/F1.md) | Report residue by call | built (API, tools, web form, `/phone` browser line; tried live on `/phone` 2026-10-16; Telnyx works but is not the demo line) | a spoken call produces a complete lot in the database and the agent reads the details back. |
+| [F2](stories/F2.md) | Hear the price and terms | built (API, voice tool, web; tried live on `/phone` 2026-10-16) | the quote on the call matches the ledger entries created later. |
+| [F3](stories/F3.md) | Reach a person when stuck | built (API, voice tool, web admin queue; tried live on `/phone` 2026-10-16) | an unclear or upset call appears in the queue within seconds. |
+| [F4](stories/F4.md) | Confirm delivery and payment | built for the web (farmer confirms on the site); the phone verification call is not demoed (needs a paid Telnyx line) | a yes completes verification and releases the payout, and a dispute freezes it and alerts the admin. |
 | [T1](stories/T1.md) | Find and accept a job | built (API and web) | two simultaneous accepts produce one winner and the other sees the offer withdrawn. |
 | [T2](stories/T2.md) | Prove delivery and get paid | built (API and web) | the payout shows as pending until the factory confirms, then as released. |
 | [FA1](stories/FA1.md) | Fund escrow for assigned lots | built (API and web) | a job cannot be offered to transporters until it is funded. |
