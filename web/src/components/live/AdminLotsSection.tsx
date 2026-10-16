@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { LotForm } from "./LotForm";
-import { AdminLots, LiveLabel } from "./lots";
+import { AdminLots } from "./lots";
 
 /** Admin: every reported lot, the factory ranking, and a form to add a lot for a farmer. */
 export function AdminLotsSection() {
@@ -13,7 +13,6 @@ export function AdminLotsSection() {
       <div className="section-title">
         <h2>Reported lots</h2>
         <div className="flex items-center gap-3">
-          <LiveLabel />
           <Button size="sm" onClick={() => setOpen(true)}>
             <Plus />
             Add a lot for a farmer

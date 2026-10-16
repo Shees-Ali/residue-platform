@@ -10,11 +10,11 @@ export const SIGNUP_ROLES: { role: Exclude<Role, "admin">; label: string; blurb:
 ];
 
 // Who may open each page. The API enforces the same rules; this only decides what the UI shows.
+// /market is not listed: the shelf is public (browse for anyone, only buyers may order).
 export const routeRoles: Record<string, Role[]> = {
   "/farmer": ["farmer", "admin"],
   "/transporter": ["transporter", "admin"],
   "/factory": ["factory", "admin"],
-  "/market": ["buyer", "factory", "admin"],
   "/admin": ["admin"],
   "/call": ["admin"],
 };

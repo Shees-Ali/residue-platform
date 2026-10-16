@@ -15,9 +15,11 @@ describe("canAccess", () => {
     expect(canAccess("/factory", "factory")).toBe(true);
     expect(canAccess("/market", "buyer")).toBe(true);
   });
-  test("farmers and transporters cannot shop", () => {
-    expect(canAccess("/market", "farmer")).toBe(false);
-    expect(canAccess("/market", "transporter")).toBe(false);
+  test("the marketplace is public; buying is not a page rule", () => {
+    expect(canAccess("/market", "buyer")).toBe(true);
+    expect(canAccess("/market", "farmer")).toBe(true);
+    expect(canAccess("/market", "transporter")).toBe(true);
+    expect(canAccess("/market", undefined)).toBe(true); // a signed-out visitor may browse
   });
   test("the call widget is admin only for now", () => {
     expect(canAccess("/call", "buyer")).toBe(false);

@@ -18,13 +18,6 @@ import type { JobState } from "@/lib/domain/types";
 
 export type Lot = components["schemas"]["LotOut"];
 
-export const LiveLabel = () => (
-  <span className="demo-label live">
-    <span />
-    Live data
-  </span>
-);
-
 /** Where a lot is in its life, in words a farmer or an admin understands. */
 export function stageOf(lot: Lot): string {
   if (!lot.job_id) return lot.status === "rejected" ? "Rejected" : "Waiting for a factory";

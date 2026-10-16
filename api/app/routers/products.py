@@ -3,14 +3,13 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 
-from app.auth.firebase import AuthUser, as_factory, require_role
+from app.auth.firebase import AuthUser, as_factory, optional_user
 from app.auth.owners import factory_of
 from app.db_models.tables import Factory, Product
 from app.deps import DbSession
 from app.models.market import ProductIn, ProductOut, ProductPatch
 
 router = APIRouter(prefix="/api/products", tags=["products"])
-as_shopper = Depends(require_role("buyer", "factory", "admin"))
 
 
 def _out(product: Product, factory_name: str) -> ProductOut:
@@ -29,10 +28,11 @@ def _out(product: Product, factory_name: str) -> ProductOut:
 
 
 @router.get("", response_model=list[ProductOut])
-async def get_products_root(db: DbSession, user: AuthUser = as_shopper):
-    """The marketplace: buyers and admins see what is for sale, a factory sees all of its own."""
+async def get_products_root(db: DbSession, user: AuthUser | None = Depends(optional_user)):
+    """The marketplace shelf, open to any visitor. A factory sees all of its own products;
+    everyone else (signed in or not) sees what is for sale."""
     query = select(Product, Factory.name).join(Factory, Factory.id == Product.factory_id)
-    if user.role == "factory":
+    if user is not None and user.role == "factory":
         query = query.where(Product.factory_id == (await factory_of(db, user)).id)
     else:
         query = query.where(Product.active, Product.stock > 0)

@@ -162,6 +162,24 @@ async def current_user(
     return AuthUser(claims.uid, role)
 
 
+async def optional_user(
+    db: DbSession,
+    authorization: str | None = Header(default=None),
+    x_dev_uid: str | None = Header(default=None),
+    _scheme=_declare_bearer,
+    x_dev_email: str | None = Header(default=None),
+) -> AuthUser | None:
+    """Like `current_user`, for a page anyone may browse: no credentials at all means a
+    visitor (None), not an error. A token or dev identity that *is* sent is verified exactly
+    like `current_user`'s, so a bad token is still 401 and a pending or suspended account 403
+    — sending credentials never gets a softer answer than a guarded route would give."""
+    if not authorization and not x_dev_uid and not x_dev_email:
+        return None
+    return await current_user(
+        db, authorization=authorization, x_dev_uid=x_dev_uid, x_dev_email=x_dev_email
+    )
+
+
 def require_role(*roles: str):
     async def checker(user: AuthUser = Depends(current_user)) -> AuthUser:
         if user.role not in roles:

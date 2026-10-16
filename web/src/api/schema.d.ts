@@ -573,7 +573,8 @@ export interface paths {
         };
         /**
          * Get Products Root
-         * @description The marketplace: buyers and admins see what is for sale, a factory sees all of its own.
+         * @description The marketplace shelf, open to any visitor. A factory sees all of its own products;
+         *     everyone else (signed in or not) sees what is for sale.
          */
         get: operations["get_products_root_api_products_get"];
         put?: never;

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { LIMITS } from "@/lib/validation";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Leaf, Minus, PackageCheck, Plus, Search, ShoppingBag, Sprout, Trash2 } from "lucide-react";
@@ -125,10 +126,17 @@ export function Marketplace() {
           <div className="eyebrow">THE RESIDUE PLATFORM MARKETPLACE</div>
           <h1>Good for you. Better for the planet.</h1>
         </div>
-        <Button variant="outline" onClick={() => setCartOpen(true)} className="h-11">
-          <ShoppingBag />
-          My cart <span className="cart-count">{count}</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          {!user && (
+            <Button asChild variant="outline" className="h-11">
+              <Link to="/login">Sign in</Link>
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => setCartOpen(true)} className="h-11">
+            <ShoppingBag />
+            My cart <span className="cart-count">{count}</span>
+          </Button>
+        </div>
       </div>
       <div className="market-hero">
         <img src={field} width={1600} height={800} alt="Harvested rice straw in Punjab, the source of the products" />
@@ -171,7 +179,6 @@ export function Marketplace() {
           <>
             <div className="mb-5 flex items-center justify-between">
               <p className="text-sm text-muted-foreground">{visible.length} thoughtfully made products</p>
-              <span className="demo-label live"><span />Live data</span>
             </div>
             <div className="product-grid">
               {visible.map((p) => (
@@ -266,8 +273,12 @@ export function Marketplace() {
                 <Button className="mt-4 w-full" loading={paying} onClick={() => void checkout()}>
                   Place order <ArrowRight />
                 </Button>
-              ) : (
+              ) : user ? (
                 <p className="auth-note my-4">Only buyers can place orders. Sign in with a buyer account to check out.</p>
+              ) : (
+                <Button asChild className="mt-4 w-full">
+                  <Link to="/login">Sign in to buy <ArrowRight /></Link>
+                </Button>
               )}
             </div>
           )}

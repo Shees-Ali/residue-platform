@@ -1,0 +1,10 @@
+/* The public /market page: a plain, signed-out layout on the app's own tokens. */
+.public-page{min-height:100vh;display:flex;flex-direction:column;background:var(--background)}
+.public-header{display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px;padding:0 28px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
+.public-brand{display:flex;align-items:center;gap:9px;font:800 20px var(--font-display);color:var(--foreground);text-decoration:none}
+.public-brand>span:last-child{color:var(--primary)}
+.public-brand small{display:block;font:600 7px var(--font-sans);color:var(--muted-foreground);margin-top:3px}
+.public-header nav{display:flex;align-items:center;gap:6px}
+.public-main{flex:1;width:100%;max-width:1200px;margin:0 auto;padding:32px 28px}
+.public-footer{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:18px 28px;border-top:1px solid var(--border);font-size:9px;color:var(--muted-foreground);flex-wrap:wrap}
+@media(max-width:767px){.public-header{height:56px;padding:0 16px}.public-header nav{gap:2px}.public-header nav .btn-ghost{display:none}.public-main{padding:20px 16px}.public-footer{padding:15px 16px;font-size:8px}}

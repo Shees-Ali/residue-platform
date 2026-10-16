@@ -114,6 +114,16 @@ describe("marketplace", () => {
     expect(within(cart).queryByRole("button", { name: /Place order/ })).not.toBeInTheDocument();
   });
 
+  test("a visitor shops the same shelf and the cart offers sign-in instead of checkout", async () => {
+    mockGet({ "/api/products": [product()] });
+    renderAt("/market", { status: "signedOut" });
+    fireEvent.click(await screen.findByRole("button", { name: "Add Biomass pellets to cart" }));
+    fireEvent.click(screen.getByRole("button", { name: /My cart/ }));
+    const cart = await screen.findByRole("dialog");
+    expect(within(cart).getByRole("link", { name: /Sign in to buy/ })).toHaveAttribute("href", "/login");
+    expect(within(cart).queryByRole("button", { name: /Place order/ })).not.toBeInTheDocument();
+  });
+
   test("a buyer sees past orders with their split", async () => {
     mockGet({ "/api/products": [product()], "/api/orders": [order()] });
     renderAt("/market", signedIn("buyer"));

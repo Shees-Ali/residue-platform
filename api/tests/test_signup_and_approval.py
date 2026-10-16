@@ -224,8 +224,7 @@ async def test_farmers_cannot_use_other_roles_routes(api, world):
     await api.post("/api/me/register", headers=h, json={"role": "farmer", "display_name": "Fa"})
     for method, path in (
         ("get", "/api/offers"),
-        ("get", "/api/products"),
-        ("get", "/api/orders"),
+        ("get", "/api/orders"),  # the shelf itself is public; orders are not
         ("get", "/api/ledger"),
         ("get", "/api/users"),
         ("get", f"/api/lots/{world.lot_id}/ranking"),

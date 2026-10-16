@@ -66,7 +66,7 @@ export function ResidueShell({ children }: { children: ReactNode }) {
               <small>FROM HARVEST TO HOPE</small>
             </span>
           </Link>
-          <div className="workspace-label">YOUR WORKSPACE</div>
+          <div className="workspace-label"></div>
           <nav aria-label="Main navigation">
             {navItems.map((r) => (
               <Button
@@ -84,41 +84,14 @@ export function ResidueShell({ children }: { children: ReactNode }) {
             ))}
           </nav>
           <div className="sidebar-impact">
-            <div className="impact-logo">
-              <Recycle size={24} />
-            </div>
-            <h3>
-              Nothing wasted.
-              <br />
-              Everything valued.
-            </h3>
-            <p>
-              A circular future starts
-              <br />
-              with our farms.
-            </p>
             <span>
               Made for Pakistan <span className="pakistan-mark">☾</span>
             </span>
-          </div>
-          <div className="sidebar-bottom">
-            <span className="demo-pill">PROTOTYPE</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              title="About this demo"
-              aria-label="About this demo"
-              onClick={() => setHelp(true)}
-            >
-              <CircleHelp size={18} />
-            </Button>
           </div>
         </aside>
         <div className="main-column">
           <header className="app-header">
             <span className="header-location">
-              <span className="live-dot" />
-              Growing a greener Pakistan
             </span>
             <div className="role-switch">
               <LiveChip />
@@ -178,22 +151,9 @@ export function ResidueShell({ children }: { children: ReactNode }) {
               © 2026 Residue Platform <span className="footer-dot">·</span> Growing value. Closing
               the loop.
             </span>
-            <span className="flex items-center gap-1.5">
-              <span className="live-dot" />
-              Prototype <ArrowUpRight size={13} />
-            </span>
           </footer>
         </div>
       </div>
-      <Dialog open={help} onOpenChange={setHelp}>
-        <DialogContent>
-          <DialogTitle>A circular future for Punjab</DialogTitle>
-          <DialogDescription>
-            Residue Platform is a prototype with fictional records. Payments are simulated, and no real orders, payments or collections are made.
-          </DialogDescription>
-          <Button onClick={() => setHelp(false)}>Got it</Button>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

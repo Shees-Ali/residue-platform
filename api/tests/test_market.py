@@ -49,6 +49,20 @@ async def test_a_factory_lists_products_and_buyers_see_them(api, shop):
     assert next(p for p in market if p["id"] == shop["id"])["factory_name"] == "Test Factory"
 
 
+async def test_a_visitor_with_no_account_may_browse_the_shelf_but_not_buy(api, shop, monkeypatch):
+    """The shop window is public: no credentials at all means browse, never order."""
+    await api.patch(f"/api/products/{shop['id']}", headers=FACTORY, json={"stock": 0})
+    sold_out = (await api.post("/api/products", headers=FACTORY,
+                               json={**PRODUCT, "name": "Sawdust blocks"})).json()
+    monkeypatch.delenv("AUTH_DISABLED")  # as on Cloud Run: a missing token is a visitor
+    shelf = (await api.get("/api/products")).json()
+    assert shop["id"] not in [p["id"] for p in shelf]  # sold out: off the public shelf
+    assert sold_out["id"] in [p["id"] for p in shelf]
+    assert (await api.post("/api/orders",
+                           json={"product_id": sold_out["id"], "quantity": 1})).status_code == 401
+    assert (await api.get("/api/orders")).status_code == 401
+
+
 async def test_only_a_factory_manages_its_own_products(api, shop):
     assert (await api.post("/api/products", headers=BUYER, json=PRODUCT)).status_code == 403
     url = f"/api/products/{shop['id']}"

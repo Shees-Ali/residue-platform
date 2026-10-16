@@ -106,10 +106,6 @@ export function SectionHead({ title, children }: { title: string; children?: Rea
     <div className="section-title">
       <h2>{title}</h2>
       <div className="flex items-center gap-3">
-        <span className="demo-label live">
-          <span />
-          Live data
-        </span>
         {children}
       </div>
     </div>

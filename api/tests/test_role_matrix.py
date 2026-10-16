@@ -59,7 +59,7 @@ ROUTES: dict[tuple[str, str], tuple[set[str], dict | None]] = {
     ("GET", "/api/ledger"): (ADMIN, None),
     ("GET", "/api/ledger/check"): (ADMIN, None),
     ("GET", "/api/ledger/mine"): ({"transporter", "farmer"}, None),
-    ("GET", "/api/products"): ({"buyer", "factory", "admin"}, None),
+    ("GET", "/api/products"): (set(ROLES), None),  # the shelf is also open to visitors (PUBLIC)
     ("POST", "/api/products"): ({"factory"}, None),
     ("PATCH", "/api/products/{product_id}"): ({"factory"}, None),
     ("POST", "/api/orders"): ({"buyer"}, None),
@@ -88,6 +88,8 @@ SELF_ROUTES = {
     ("GET", "/api/me/profile"),  # own row only, any status (a pending account may fix its details)
     ("PATCH", "/api/me/profile"),
 }
+# Open to a visitor with no account at all (optional_user: no credentials means "browse").
+PUBLIC_ROUTES = {("GET", "/api/products")}
 # Needs a signed-in farmer (their own token phone), so it is covered in test_lot_forms.
 FARMER_ONLY_ROUTES = {("POST", "/api/me/link-phone")}
 # The local photo store: writing needs any signed-in person, reading is open (an img tag cannot
@@ -145,7 +147,10 @@ async def test_anonymous_callers_get_401_everywhere(api, monkeypatch):
     monkeypatch.delenv("AUTH_DISABLED")
     for (method, template), (_, body) in ROUTES.items():
         r = await _call(api, method, template, {}, body)
-        assert r.status_code == 401, (method, template, r.status_code)
+        if (method, template) in PUBLIC_ROUTES:
+            assert r.status_code == 200, (method, template, r.status_code)  # a visitor may browse
+        else:
+            assert r.status_code == 401, (method, template, r.status_code)
     for method, template in SELF_ROUTES:
         assert (await _call(api, method, template, {}, None)).status_code == 401
 

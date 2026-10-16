@@ -10,7 +10,7 @@ import { useAuth } from "@/auth/AuthProvider";
 import { PhoneVerifier } from "@/auth/PhoneVerifier";
 import { ConfirmSection, Payments } from "./FarmerConfirm";
 import { LotForm } from "./LotForm";
-import { LiveLabel, MyRequests } from "./lots";
+import { MyRequests } from "./lots";
 
 /** The farmer's page: report residue, and follow every request. Real data. */
 export function FarmerHome() {
@@ -71,7 +71,6 @@ export function FarmerHome() {
         <>
           <div className="section-title">
             <h2>Your requests</h2>
-            <LiveLabel />
           </div>
           <MyRequests />
           <Payments />

@@ -2,7 +2,6 @@ import { fireEvent, screen, within } from "@testing-library/react";
 import { me, renderAt, signedIn } from "@/test/renderApp";
 
 const MARKET = "Good for you. Better for the planet.";
-const FARMER = "Assalam-o-Alaikum, Test!";
 const ADMIN = "A growing circular economy.";
 
 describe("who ends up where", () => {
@@ -13,7 +12,7 @@ describe("who ends up where", () => {
   });
 
   test("a new account must choose a role", () => {
-    renderAt("/market", { status: "needsRegistration", email: "a@b.pk", name: "A B" });
+    renderAt("/farmer", { status: "needsRegistration", email: "a@b.pk", name: "A B" });
     expect(screen.getByRole("heading", { name: "How will you use it?" })).toBeInTheDocument();
   });
 
@@ -25,7 +24,7 @@ describe("who ends up where", () => {
 
   test("a suspended account is told so", () => {
     const user = me("buyer", { status: "suspended" });
-    renderAt("/market", { status: "suspended", user });
+    renderAt("/farmer", { status: "suspended", user });
     expect(screen.getByRole("heading", { name: "This account is suspended" })).toBeInTheDocument();
   });
 
@@ -35,10 +34,16 @@ describe("who ends up where", () => {
     expect(screen.getByRole("heading", { name: MARKET })).toBeInTheDocument();
   });
 
-  test("a farmer cannot open the marketplace", () => {
+  test("a signed-out visitor may open the marketplace", () => {
+    renderAt("/market", { status: "signedOut" });
+    expect(screen.getByRole("heading", { name: MARKET })).toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Main navigation" })).not.toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Marketplace" })).toBeInTheDocument();
+  });
+
+  test("a farmer may browse the marketplace", () => {
     renderAt("/market", signedIn("farmer"));
-    expect(screen.queryByRole("heading", { name: MARKET })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: FARMER })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: MARKET })).toBeInTheDocument();
   });
 
   test("signed-in people skip the login page", () => {
@@ -58,9 +63,9 @@ describe("navigation", () => {
     expect(links()).toEqual(["Marketplace", "My details"]);
   });
 
-  test("a transporter sees only their dashboard and their details", () => {
+  test("a transporter sees their dashboard, the public marketplace and their details", () => {
     renderAt("/transporter", signedIn("transporter"));
-    expect(links()).toEqual(["Transporter Dashboard", "My details"]);
+    expect(links()).toEqual(["Transporter Dashboard", "Marketplace", "My details"]);
   });
 
   test("a factory sees its dashboard and the marketplace", () => {
@@ -81,7 +86,7 @@ describe("navigation", () => {
   });
 
   test("the header shows who is signed in and signing out returns to login", () => {
-    renderAt("/market", signedIn("buyer"));
+    renderAt("/farmer", signedIn("farmer"));
     expect(screen.getByText("Test User")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /sign out/i }));
     expect(screen.getByRole("heading", { name: "Sign in" })).toBeInTheDocument();
