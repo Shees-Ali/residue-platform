@@ -708,6 +708,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/agent/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check Status
+         * @description F5: the caller's own most recent requests and where each one stands (read-only).
+         *
+         *     Full details only when the carrier vouches for the caller's number; /phone page calls hear
+         *     the stage, residue and date only.
+         */
+        post: operations["check_status_api_agent_status_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/agent/escalations": {
         parameters: {
             query?: never;
@@ -1388,6 +1411,16 @@ export interface components {
             call_id: string;
             /** Farmer Known */
             farmer_known: boolean;
+        };
+        /** CheckStatusIn */
+        CheckStatusIn: {
+            /** Call Id */
+            call_id: string;
+        };
+        /** CheckStatusOut */
+        CheckStatusOut: {
+            /** Requests */
+            requests: components["schemas"]["RequestStatusOut"][];
         };
         /** ConfirmIn */
         ConfirmIn: {
@@ -2279,6 +2312,42 @@ export interface components {
             /** District */
             district?: string | null;
             factory?: components["schemas"]["FactoryProfileIn"] | null;
+        };
+        /**
+         * RequestStatusOut
+         * @description One of the caller's requests (F5). Unverified callers get only the first six fields.
+         */
+        RequestStatusOut: {
+            /** Lot Id */
+            lot_id: string;
+            /** Residue Label */
+            residue_label?: string | null;
+            /** Reported On */
+            reported_on: string;
+            /** Stage */
+            stage: string;
+            /** Status Text */
+            status_text: string;
+            /** Details Withheld */
+            details_withheld?: boolean | null;
+            /** Quantity Tonnes */
+            quantity_tonnes?: number | null;
+            /** Village */
+            village?: string | null;
+            /** District */
+            district?: string | null;
+            /** Pickup Text */
+            pickup_text?: string | null;
+            /** Factory Name */
+            factory_name?: string | null;
+            /** Est Farmer Amount Rupees */
+            est_farmer_amount_rupees?: number | null;
+            /** Final Weight Kg */
+            final_weight_kg?: number | null;
+            /** Farmer Amount Rupees */
+            farmer_amount_rupees?: number | null;
+            /** Rejection Reason */
+            rejection_reason?: string | null;
         };
         /** ResidueTypeOut */
         ResidueTypeOut: {
@@ -3952,6 +4021,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QuoteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_status_api_agent_status_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckStatusIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckStatusOut"];
                 };
             };
             /** @description Validation Error */

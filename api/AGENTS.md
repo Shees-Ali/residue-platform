@@ -10,7 +10,7 @@ Read `../AGENTS.md` first, then `../memory/implementation-plan.md` and the story
 ## Rules
 - Routers are thin HTTP; logic lives in pure `app/services/*` modules.
 - Tests first for the ledger check, revenue split, offer expiry, factory scoring. Remove the `tdd` marker when a module is implemented.
-- `/api/agent/*` has exactly four routes, requires Google ID token and `Idempotency-Key` on writes, and never reads farmer identity from the body.
+- `/api/agent/*` has exactly five routes, requires Google ID token and `Idempotency-Key` on writes, and never reads farmer identity from the body.
 - Money is integer minor units; shares are basis points.
 - Update the story file and `../memory/decisions.md` in the same commit.
 

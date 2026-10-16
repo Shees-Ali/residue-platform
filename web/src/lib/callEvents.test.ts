@@ -84,6 +84,20 @@ test("a new lot drops the old quote, and a quote for another lot is ignored", ()
   expect(right.quote?.price_per_tonne_rupees).toBe(6500);
 });
 
+test("requests the agent looked up are kept; junk entries are dropped", () => {
+  const view = run([
+    {
+      type: "status",
+      requests: [
+        { lot_id: "L1", residue_label: "Wheat straw", stage: "on_the_way", status_text: "On the way." },
+        null,
+      ],
+    } as unknown as CallEvent,
+    { type: "status", requests: "nope" } as unknown as CallEvent,
+  ]);
+  expect(view.requests?.map((r) => r.lot_id)).toEqual(["L1"]);
+});
+
 test("saved lot, quote and escalation are captured; junk is ignored", () => {
   const view = run([
     { type: "lot", lot_id: "7f3a9c00-0000", residue_label: "Wheat straw", quantity_tonnes: 2 },

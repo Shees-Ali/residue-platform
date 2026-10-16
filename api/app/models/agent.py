@@ -30,6 +30,34 @@ class EscalateIn(BaseModel):
     transcript: text(0, 50000) = ""
 
 
+class CheckStatusIn(BaseModel):
+    call_id: str = Field(min_length=1, max_length=64)
+
+
+class RequestStatusOut(BaseModel):
+    """One of the caller's requests (F5). Unverified callers get only the first six fields."""
+
+    lot_id: str
+    residue_label: str | None = None
+    reported_on: str  # YYYY-MM-DD, Pakistan time
+    stage: str
+    status_text: str
+    details_withheld: bool | None = None  # true on the /phone page: no places, factory or money
+    quantity_tonnes: float | None = None
+    village: str | None = None
+    district: str | None = None
+    pickup_text: str | None = None
+    factory_name: str | None = None
+    est_farmer_amount_rupees: float | None = None
+    final_weight_kg: int | None = None
+    farmer_amount_rupees: float | None = None
+    rejection_reason: str | None = None
+
+
+class CheckStatusOut(BaseModel):
+    requests: list[RequestStatusOut]
+
+
 class RecordConfirmationIn(BaseModel):
     call_id: str = Field(max_length=64)
     job_id: str = Field(max_length=64)

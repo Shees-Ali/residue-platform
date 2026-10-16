@@ -33,7 +33,7 @@ Firestore holds ten collections: users, farmers, transporters, factories, lots, 
 4. **Delivery.** The transporter uploads a photo and weight. The API's grading endpoint returns a structured grade (type, moisture band, contamination flags, confidence), and the factory confirms weight and grade.
 5. **Settlement.** The API writes ledger entries that release the farmer, transporter and platform fee. The revenue-share calculator is a pure function with unit tests.
 
-(2026-10-15: the phone line is Telnyx, not Twilio; read Twilio below as Telnyx, see decisions.md.) Rules for the voice agent: it reaches the API only through four tools (create lot, get quote, escalate, record confirmation), using a Google ID token plus the call ID. The API takes the farmer's identity from the call record, not from anything the model says, requires an idempotency key on writes, and decides whether money moves. The webhook verifies Twilio's signature, and the media stream carries a one-time token.
+(2026-10-15: the phone line is Telnyx, not Twilio; read Twilio below as Telnyx, see decisions.md.) Rules for the voice agent: it reaches the API only through its tools (create lot, get quote, escalate, record confirmation; check status added 2026-10-16, F5), using a Google ID token plus the call ID. The API takes the farmer's identity from the call record, not from anything the model says, requires an idempotency key on writes, and decides whether money moves. The webhook verifies Twilio's signature, and the media stream carries a one-time token.
 
 ## User stories
 

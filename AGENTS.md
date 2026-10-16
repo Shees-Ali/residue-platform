@@ -25,7 +25,7 @@ No Makefile; only Python and Node are required.
 - Spec any future story in `memory/` before writing code: endpoints, data fields, done-when check, tests first.
 - Tests first for: the ledger check (A3), the revenue split (FA3), offer expiry (A2), factory scoring (A1). Not for UI or voice.
 - `voice/` never imports Firestore or any database client (CI enforces it). It reaches data only through the API.
-- Agent routes (`/api/agent/*`) expose only: create lot, get quote, escalate, record confirmation. Writes need `Idempotency-Key`. Farmer identity comes from the call record, never from request fields.
+- Agent routes (`/api/agent/*`) expose only: create lot, get quote, escalate, record confirmation, check status (F5). Writes need `Idempotency-Key`. Farmer identity comes from the call record, never from request fields.
 - Money is integer minor units; shares are basis points summing to 10000.
 - Validation first: before building any endpoint, form or field, write its constraints, error messages and feedback into the story file and `memory/validation-rules.md`, and get them confirmed by the user. Then enforce the same rule on the API (real guard) and on the web form (fast feedback), with explicit per-field errors (`{detail, errors:[{field,message,code}]}`), inline messages, a toast and a button spinner, and tests on both sides. Every typed field has a min and max length or value (`memory/validation-rules.md`, "Length limits"). Loaders show for the whole real request and never clear on a guess. See `memory/validation-rules.md`.
 - Leave `TODO(<story id>)` comments for unbuilt work.

@@ -6,7 +6,7 @@ from app.main import app
 from app.models import agent as agent_models
 
 
-def test_agent_routes_are_exactly_the_four_tools():
+def test_agent_routes_are_exactly_the_five_tools():
     ops = {
         (path, method.upper())
         for path, item in app.openapi()["paths"].items()
@@ -18,11 +18,13 @@ def test_agent_routes_are_exactly_the_four_tools():
         ("/api/agent/quote", "POST"),
         ("/api/agent/escalations", "POST"),
         ("/api/agent/confirmations", "POST"),
+        ("/api/agent/status", "POST"),
     }
 
 
 def test_agent_request_models_have_no_farmer_identity():
-    for name in ("CreateLotIn", "GetQuoteIn", "EscalateIn", "RecordConfirmationIn"):
+    names = ("CreateLotIn", "GetQuoteIn", "EscalateIn", "RecordConfirmationIn", "CheckStatusIn")
+    for name in names:
         fields = getattr(agent_models, name).model_fields
         assert "call_id" in fields
         assert not [f for f in fields if "farmer" in f or "phone" in f]

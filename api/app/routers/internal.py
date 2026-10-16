@@ -1,6 +1,6 @@
 """Service-to-service routes for the voice transport layer.
 
-NOT model tools: the agent never calls these (the four-tool rule covers /api/agent/* only).
+NOT model tools: the agent never calls these (the agent-tool rule covers /api/agent/* only).
 They create the call record that links a caller's phone number to a farmer, which is where
 every agent tool later gets its identity.
 """

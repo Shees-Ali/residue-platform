@@ -65,7 +65,7 @@ Web `LIMITS` in `lib/validation.ts` = API limit. The input stops typing at the m
 | escalation summary / transcript / call summary | 1 / 0 / 0 | 2000 / 50000 / 2000 |
 | search box | 0 | 80 |
 | SMS code | 6 | 6 |
-| photo path, call and job ids (agent routes) | 1 | 300, 64 |
+| photo path, call and job ids (agent routes, incl. check status, F5) | 1 | 300, 64 |
 
 ## Farmer phone is optional for now (2026-10-16)
 SMS verification is off while Firebase phone sign-in is not set up. `REQUIRE_VERIFIED_PHONE=false` (API) and `VITE_REQUIRE_VERIFIED_PHONE=false` (web). Off: a farmer signs up with no phone or an unverified typed one (still a valid mobile number if typed), and gets a farmer record at once. On: the SMS flow as before. Always on when `K_SERVICE` is set (Cloud Run). An unverified phone can link earlier phone-made lots, so switch it on before real use.

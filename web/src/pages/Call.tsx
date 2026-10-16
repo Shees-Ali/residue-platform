@@ -367,6 +367,27 @@ function Captured({ view, busy }: { view: CallView; busy: boolean }) {
           {lot?.lot_id ? "Confirmed with the farmer" : "Read back to the farmer before saving"}
         </div>
       </section>
+      {view.requests && (
+        <section className="variant" aria-label="Requests looked up">
+          <div className="variant-title">
+            <Clock aria-hidden="true" />
+            {view.requests.length ? "Their requests" : "No earlier requests"}
+          </div>
+          {view.requests.map((r) => (
+            <p key={r.lot_id}>
+              <strong>
+                {[r.quantity_tonnes !== undefined && `${r.quantity_tonnes} t`, r.residue_label]
+                  .filter(Boolean)
+                  .join(" ")}
+              </strong>
+              {r.reported_on && ` · ${r.reported_on}`}
+              {r.details_withheld && " · details withheld"}
+              <br />
+              {r.status_text}
+            </p>
+          ))}
+        </section>
+      )}
       {view.escalated && (
         <div className="variant" role="status">
           <div className="variant-title">
