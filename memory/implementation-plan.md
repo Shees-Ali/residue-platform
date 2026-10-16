@@ -17,7 +17,7 @@ Eight parts, each with one job.
 | Web app | React, Vite, Tailwind, Leaflet | Firebase Hosting | One app with role routes: admin, transporter, factory, marketplace, and a browser call widget as a fallback |
 | API | FastAPI, Pydantic, pytest | Cloud Run | Jobs, factory assignment, offer ladder, escrow ledger, revenue-share calculator, photo grading, and a small agent-only endpoint group |
 | Voice agent | Google ADK, FastAPI WebSocket, Gemini Live | Cloud Run | Answers calls, talks to the farmer, and uses tools that call the API |
-| Telephony | Twilio (trial) | Twilio | Receives the farmer's call and streams the audio to the voice agent |
+| Telephony | Twilio (trial) — superseded 2026-10-15 by Telnyx Call Control, see decisions.md | Twilio | Receives the farmer's call and streams the audio to the voice agent |
 | Database | Firestore | Firebase | Lots, jobs, offers, ledger and users, with live listeners that update the dashboards |
 | Auth | Firebase Authentication, Google ID tokens | Firebase, Google Cloud | Email or Google sign-in for dashboards, and signed tokens between the voice agent and the API |
 | Photo storage | Cloud Storage | Google Cloud | Lot and weighbridge photos |
@@ -33,7 +33,7 @@ Firestore holds ten collections: users, farmers, transporters, factories, lots, 
 4. **Delivery.** The transporter uploads a photo and weight. The API's grading endpoint returns a structured grade (type, moisture band, contamination flags, confidence), and the factory confirms weight and grade.
 5. **Settlement.** The API writes ledger entries that release the farmer, transporter and platform fee. The revenue-share calculator is a pure function with unit tests.
 
-Rules for the voice agent: it reaches the API only through four tools (create lot, get quote, escalate, record confirmation), using a Google ID token plus the call ID. The API takes the farmer's identity from the call record, not from anything the model says, requires an idempotency key on writes, and decides whether money moves. The webhook verifies Twilio's signature, and the media stream carries a one-time token.
+(2026-10-15: the phone line is Telnyx, not Twilio; read Twilio below as Telnyx, see decisions.md.) Rules for the voice agent: it reaches the API only through four tools (create lot, get quote, escalate, record confirmation), using a Google ID token plus the call ID. The API takes the farmer's identity from the call record, not from anything the model says, requires an idempotency key on writes, and decides whether money moves. The webhook verifies Twilio's signature, and the media stream carries a one-time token.
 
 ## User stories
 
@@ -131,7 +131,7 @@ api/ (FastAPI backend)
 
 voice/ (ADK voice agent)
 - Python 3.12, FastAPI, google-adk with bidirectional streaming (Gemini Live), httpx, pytest.
-- Routes: POST /twilio/voice (validate the Twilio signature, return TwiML that opens a media stream), WS /twilio/media (Twilio Media Streams: convert 8 kHz mu-law to 16 kHz PCM for input, and 24 kHz PCM back to 8 kHz mu-law for output), WS /browser (browser mic fallback).
+- (Superseded 2026-10-15: Telnyx routes and L16 audio, see decisions.md.) Routes: POST /twilio/voice (validate the Twilio signature, return TwiML that opens a media stream), WS /twilio/media (Twilio Media Streams: convert 8 kHz mu-law to 16 kHz PCM for input, and 24 kHz PCM back to 8 kHz mu-law for output), WS /browser (browser mic fallback).
 - One ADK agent named intake_agent with Urdu-first instructions and four tools: create_lot, get_quote, escalate_to_human, record_confirmation. Each tool is a plain function that calls the API over HTTPS with a Google ID token.
 - Do not import Firestore or any database client in this project. Add a CI check that fails if it does.
 - Dockerfile for Cloud Run.

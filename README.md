@@ -1,12 +1,12 @@
 # residue-platform
 
-Crop-residue marketplace demo. Farmers phone in (Urdu, Twilio + Gemini Live); the API assigns a factory, dispatches transporters, runs a simulated escrow ledger and splits revenue. Synthetic data only.
+Crop-residue marketplace demo. Farmers phone in (Urdu, Telnyx + Gemini Live; a browser call page is the fallback); the API assigns a factory, dispatches transporters, runs a simulated escrow ledger and splits revenue. Synthetic data only.
 
 | Project | What | Runs on |
 |---|---|---|
 | [web/](web/) | React 18, Vite, Tailwind, Firebase, Leaflet | Firebase Hosting |
 | [api/](api/) | FastAPI, Pydantic v2, PostgreSQL | Cloud Run |
-| [voice/](voice/) | ADK voice agent, Twilio media streams. No database access | Cloud Run |
+| [voice/](voice/) | ADK voice agent: Telnyx phone line and browser mic fallback. No database access | Cloud Run |
 | [deploy/](deploy/), [seed/](seed/), [scripts/](scripts/) | deploy scripts, synthetic data, CI checks | |
 | [memory/](memory/) | project memory: plan, stories, decision log (source of truth) | |
 

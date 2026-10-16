@@ -51,6 +51,14 @@ async def seed_synthetic_accounts(session) -> None:
         await session.execute(insert(model).values(data).on_conflict_do_nothing())
 
 
+@pytest.fixture(autouse=True)
+def no_real_telnyx(monkeypatch):
+    """api/.env may hold real Telnyx credentials: tests never dial unless a test sets fakes."""
+    for name in ("TELNYX_API_KEY", "TELNYX_CONNECTION_ID", "TELNYX_FROM_NUMBER",
+                 "VOICE_STREAM_URL", "STREAM_SECRET"):
+        monkeypatch.delenv(name, raising=False)
+
+
 @pytest.fixture
 def client() -> TestClient:
     return TestClient(app)

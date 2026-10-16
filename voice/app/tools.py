@@ -4,7 +4,14 @@ No farmer id parameter anywhere: the API derives identity from the call record.
 The call id comes from app.call_context (set by the transport), not from the model.
 """
 from app.api_client import post
-from app.call_context import current_call_id
+from app.call_context import current_call_id, current_transcript, emit, escalation_snapshots
+
+
+async def _shown(event_type: str, result: dict, keys: tuple[str, ...]) -> dict:
+    """Pass a successful result to the caller's screen (display only), then back to the model."""
+    if "error" not in result:
+        await emit({"type": event_type, **{k: result[k] for k in keys if k in result}})
+    return result
 
 
 async def create_lot(
@@ -22,7 +29,8 @@ async def create_lot(
         quantity_tonnes: approximate weight in tonnes, more than 0 and at most 100.
         pickup_date: the day to collect, as YYYY-MM-DD (today or later).
         pickup_part: morning, afternoon or evening.
-        village: the village name as the caller says it.
+        village: the village name spelled in English letters (e.g. Pattoki), whatever
+            language the caller speaks.
         district: Lahore, Sheikhupura, Kasur, Faisalabad or Okara.
 
     Returns the saved lot (residue_label, quantity_tonnes, village, district, pickup_text) to read
@@ -31,7 +39,7 @@ async def create_lot(
     call_id = current_call_id.get(None)
     if call_id is None:
         return {"error": "no_active_call", "message": "No call is in progress."}
-    return await post(
+    result = await post(
         "/api/agent/lots",
         call_id,
         "create_lot",
@@ -44,6 +52,11 @@ async def create_lot(
             "village": village,
             "district": district,
         },
+    )
+    return await _shown(
+        "lot",
+        result,
+        ("lot_id", "residue_label", "quantity_tonnes", "village", "district", "pickup_text"),
     )
 
 
@@ -60,12 +73,23 @@ async def get_quote(lot_id: str) -> dict:
     call_id = current_call_id.get(None)
     if call_id is None:
         return {"error": "no_active_call", "message": "No call is in progress."}
-    return await post(
+    result = await post(
         "/api/agent/quote",
         call_id,
         "get_quote",
         {"call_id": call_id, "lot_id": lot_id},
         write=False,
+    )
+    return await _shown(
+        "quote",
+        {"lot_id": lot_id, **result} if "error" not in result else result,
+        (
+            "lot_id",
+            "price_per_tonne_rupees",
+            "farmer_share_percent",
+            "est_farmer_amount_rupees",
+            "payment_timing",
+        ),
     )
 
 
@@ -80,13 +104,15 @@ async def escalate_to_human(summary: str) -> dict:
     call_id = current_call_id.get(None)
     if call_id is None:
         return {"error": "no_active_call", "message": "No call is in progress."}
-    # TODO(F3): pass the running transcript once the transport layer keeps one.
-    return await post(
+    snapshots = escalation_snapshots.get({})
+    transcript = snapshots.setdefault(summary, "\n".join(current_transcript.get([])))
+    result = await post(
         "/api/agent/escalations",
         call_id,
         "escalate_to_human",
-        {"call_id": call_id, "summary": summary, "transcript": ""},
+        {"call_id": call_id, "summary": summary, "transcript": transcript},
     )
+    return await _shown("escalated", result, ("escalation_id",))
 
 
 async def record_confirmation(job_id: str, confirmed: bool, note: str = "") -> dict:
@@ -102,12 +128,13 @@ async def record_confirmation(job_id: str, confirmed: bool, note: str = "") -> d
     call_id = current_call_id.get(None)
     if call_id is None:
         return {"error": "no_active_call", "message": "No call is in progress."}
-    return await post(
+    result = await post(
         "/api/agent/confirmations",
         call_id,
         "record_confirmation",
         {"call_id": call_id, "job_id": job_id, "confirmed": confirmed, "note": note},
     )
+    return await _shown("confirmation", result, ("job_id", "state", "farmer_amount_rupees"))
 
 
 TOOLS = [create_lot, get_quote, escalate_to_human, record_confirmation]

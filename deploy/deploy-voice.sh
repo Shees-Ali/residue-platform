@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Deploy the voice service to Cloud Run. Twilio must reach it, so it is public;
-# /twilio/voice validates Twilio's signature. The voice SA gets run.invoker on the API only.
+# Deploy the voice service to Cloud Run. Telnyx must reach it, so it is public;
+# /telnyx/webhook verifies Telnyx's Ed25519 signature; /telnyx/media verifies our stream-URL HMAC.
+# The voice SA gets run.invoker on the API only.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 . deploy/env.sh
@@ -14,5 +15,21 @@ gcloud run deploy "$VOICE_SERVICE" \
   --min-instances 0 --max-instances 2 \
   --allow-unauthenticated \
   --timeout 3600 \
-  --set-env-vars "API_BASE_URL=$API_URL" \
-  --set-secrets "TWILIO_AUTH_TOKEN=twilio-auth-token:latest,GEMINI_API_KEY=gemini-api-key:latest"
+  --update-env-vars "API_BASE_URL=$API_URL" \
+  --set-secrets "TELNYX_API_KEY=telnyx-api-key:latest,TELNYX_PUBLIC_KEY=telnyx-public-key:latest,STREAM_SECRET=stream-secret:latest,GEMINI_API_KEY=gemini-api-key:latest"
+
+# The service's own URL (Telnyx streams calls to <it>/telnyx/media) only exists after the first
+# deploy, so it is set afterwards, every time (cheap, and correct on the very first deploy).
+VOICE_URL="$(gcloud run services describe "$VOICE_SERVICE" --project "$PROJECT_ID" --region "$REGION" --format='value(status.url)')"
+if [[ -z "$VOICE_URL" ]]; then
+  echo "error: could not read the voice service URL" >&2
+  exit 1
+fi
+gcloud run services update "$VOICE_SERVICE" --project "$PROJECT_ID" --region "$REGION"   --update-env-vars "PUBLIC_BASE_URL=$VOICE_URL"
+# F4 verification calls: the API dials through Telnyx and streams to this service.
+# Set TELNYX_CONNECTION_ID and TELNYX_FROM_NUMBER (the Call Control app and its number) to enable.
+if [[ -n "${TELNYX_CONNECTION_ID:-}" && -n "${TELNYX_FROM_NUMBER:-}" ]]; then
+  gcloud run services update "$API_SERVICE" --project "$PROJECT_ID" --region "$REGION"     --update-env-vars "VOICE_STREAM_URL=${VOICE_URL/https:/wss:}/telnyx/media,TELNYX_CONNECTION_ID=$TELNYX_CONNECTION_ID,TELNYX_FROM_NUMBER=$TELNYX_FROM_NUMBER"     --update-secrets "TELNYX_API_KEY=telnyx-api-key:latest,STREAM_SECRET=stream-secret:latest"
+fi
+echo "Voice service: $VOICE_URL"
+echo "Point the Telnyx Call Control app's webhook at: $VOICE_URL/telnyx/webhook"

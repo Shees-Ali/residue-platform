@@ -3,12 +3,12 @@
 Shared rules for every coding agent and contributor.
 
 ## Project
-Crop-residue marketplace demo: farmers call (Urdu, Twilio + Gemini Live) to report residue; the API assigns a factory, dispatches transporters, runs a simulated escrow ledger and splits revenue. Synthetic data only. Plan: `memory/implementation-plan.md`.
+Crop-residue marketplace demo: farmers call (Urdu, Telnyx + Gemini Live) to report residue; the API assigns a factory, dispatches transporters, runs a simulated escrow ledger and splits revenue. Synthetic data only. Plan: `memory/implementation-plan.md`.
 
 ## Layout
 - `web/` React 18 + TS + Vite + Tailwind. Firebase Hosting.
 - `api/` FastAPI + Pydantic v2 + Firestore. Cloud Run.
-- `voice/` ADK voice agent (FastAPI, Twilio media streams). Cloud Run.
+- `voice/` ADK voice agent (FastAPI, Telnyx media streams, browser mic fallback). Cloud Run.
 - `deploy/` firebase.json and gcloud deploy scripts. `seed/` synthetic data. `scripts/` CI checks.
 - `memory/` project memory (source of truth).
 

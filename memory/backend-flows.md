@@ -33,18 +33,18 @@ Firebase ID token verified with `google.oauth2.id_token.verify_firebase_token`; 
 5. **A2/T1 dispatch:** `POST /api/dispatch/tick`, `GET /api/offers` (own), `POST /api/offers/{id}/accept`. Done when an expired offer moves to the next transporter and two concurrent accepts give one winner.
 6. **T2 delivery:** `POST /api/jobs/{id}/photos/upload-url` (signed URL, fake in dev), `POST /{id}/pickup`, `POST /{id}/deliver` (transporter; photo path + weight), `GET /api/ledger/mine` (payout pending until settled, then released).
 7. **FA2 weigh and confirm:** `POST /api/jobs/{id}/grade` (Gemini behind an interface, labeled estimate, stored in `grades`), `POST /{id}/confirm` (factory: final weight + accept, or reject with reason + cost rule).
-8. **F4 verification and settlement:** `/api/agent/confirmations` (yes -> settle, no -> disputed), `POST /api/jobs/{id}/verification-call` (admin demo button: creates a `verification` call row; Twilio dial is voice-plan work), `services/settlement.py`.
+8. **F4 verification and settlement:** `/api/agent/confirmations` (yes -> settle, no -> disputed), `POST /api/jobs/{id}/verification-call` (admin demo button: creates a `verification` call row and, with Telnyx configured, dials the farmer: see `services/telephony.py`, 2026-10-15), `services/settlement.py`.
 9. **F2 quote:** `/api/agent/quote` returns price per tonne, shares, payment timing, computed with the same functions settlement uses so quote and ledger agree.
 10. **F3 escalations:** `/api/agent/escalations`, `GET /api/escalations`, `POST /{id}/resolve` (admin).
 11. **A3 ledger and impact:** `GET /api/ledger` (admin), `/check` (per-job and global), `GET /api/impact` (tonnes of settled jobs).
 12. **FA3/B1 market:** `GET/POST /api/products`, `PATCH`, `POST /api/orders` (atomic stock decrement, `sale_splits` via `split`, ledger `order` entries), `GET /api/orders/{id}/split`.
 
 ## Not in this spec
-Twilio outbound dialing, Cloud Storage client, real payments, dispute resolution, web UI, deploy.
+Cloud Storage client, real payments, dispute resolution, web UI, deploy.
 
 ## Status (2026-10-14)
 Slices 1 to 12 are built on the API with tests (167 API tests, 14 voice tool tests). Deviations from the spec above: the transporter is paid at factory confirmation, not at settlement (see decisions); `GET /api/ledger/mine` serves transporters only; added `POST /api/jobs/{id}/redispatch`, transporter approve/revoke, and tick dispatch of waiting jobs; `verified` state unused.
-Not verified against real services: Firebase ID tokens, Cloud Scheduler OIDC, Cloud Storage signed URLs, Gemini grading, the Firestore events writer (`FIRESTORE_EVENTS=1`). Not built: web UIs, Twilio webhook and outbound verification dial, deploy changes (new env vars are in `api/.env.example`), admin resolution of disputes.
+Not verified against real services: Firebase ID tokens, Cloud Scheduler OIDC, Cloud Storage signed URLs, Gemini grading, the Firestore events writer (`FIRESTORE_EVENTS=1`). Telnyx line and the outbound verification dial are code complete but not tried on a live call (see decisions 2026-10-15). Not built: deploy changes (new env vars are in `api/.env.example`), admin resolution of disputes.
 
 ## Events, notifications and live updates (EV1 to EV7)
 Every business change calls `notify.emit(db, type, ...)` inside its transaction: one `events` row (the fact) and one `notifications` row per person the catalog (`app/services/notify_catalog.py`) says should hear about it. The actor is not told of their own act, except for money and matching results. After the commit, `inbox.commit_and_deliver` mirrors each new notification to Firestore `users/{uid}/inbox`; a failed mirror leaves `delivered_at` empty and the request still succeeds. `POST /api/dispatch/tick` (Cloud Scheduler, or `DISPATCH_LOOP_SECONDS` locally) retries the failed ones and checks the ledger (`ledger.unbalanced`). Switch the mirror on with `FIRESTORE_EVENTS=1`; `GET /api/me` tells the web (`live_updates`). Routes: `GET /api/notifications`, `/unread-count`, `POST /{id}/read`, `/read-all`, `GET /api/jobs/{id}/events`.

@@ -28,3 +28,5 @@ Postgres is the system of record (`../memory/data-model.md`). Set `DATABASE_URL`
 ## Local auth bypass
 
 `/api/agent/*` and `/api/internal/*` require a Google ID token from the voice service account. For local testing without Google credentials set `AUTH_DISABLED=true` in `api/.env` (and `API_AUTH_DISABLED=true` in `voice/.env`). The API ignores the flag whenever `K_SERVICE` is set, i.e. on Cloud Run.
+
+F4 verification calls: with `TELNYX_API_KEY`, `TELNYX_CONNECTION_ID`, `TELNYX_FROM_NUMBER`, `VOICE_STREAM_URL` and `STREAM_SECRET` (same value as the voice service) set, `POST /api/jobs/{id}/verification-call` dials the farmer through Telnyx; without them it only opens the call record.

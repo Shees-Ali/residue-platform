@@ -1,5 +1,6 @@
 """F4: the farmer's yes or no on weight and payment, after the factory has confirmed."""
 import uuid
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
 from fastapi import HTTPException
@@ -7,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db_models.tables import Call, Escalation, Farmer, Job, Lot, Verification
+from app.services import telephony
 from app.services.settlement import dispute, settle_verified
 from app.validation import FieldErrors
 
@@ -18,6 +20,10 @@ async def verification_call_for(db: AsyncSession, job: Job) -> Call:
     lot = await db.get(Lot, job.lot_id)
     call = Call(farmer_id=lot.farmer_id, kind="verification", status="in_progress")
     db.add(call)
+    await db.flush()
+    # The voice service reports this reference back via /api/internal/calls, so the farmer's
+    # answer is recorded on this call (not a new one): see services/telephony.py.
+    call.twilio_call_sid = telephony.call_ref(call)
     await db.flush()
     return call
 
@@ -70,6 +76,21 @@ async def record_web_answer(
     )
     await db.flush()
     return {"job_id": str(job.id), "state": "disputed", "farmer_amount": None}
+
+
+async def recent_verification_call(db: AsyncSession, farmer_id: uuid.UUID, seconds: int) -> bool:
+    """A verification call to this farmer opened in the last `seconds` and not finished: it may
+    still be ringing, so do not dial again yet."""
+    since = datetime.now(UTC) - timedelta(seconds=seconds)
+    found = await db.execute(
+        select(Call.id).where(
+            Call.farmer_id == farmer_id,
+            Call.kind == "verification",
+            Call.status.in_(("in_progress", "connected")),
+            Call.started_at > since,
+        ).limit(1)
+    )
+    return found.first() is not None
 
 
 async def record_answer(

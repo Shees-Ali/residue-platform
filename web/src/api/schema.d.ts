@@ -430,7 +430,11 @@ export interface paths {
         put?: never;
         /**
          * Post Jobs Job Id Verification Call
-         * @description Open a verification call for the job's farmer. TODO(F4): the voice service dials it.
+         * @description Open a verification call for the job's farmer and dial them (when Telnyx is configured).
+         *
+         *     The call record is committed before dialling, so a call Telnyx placed always has its record
+         *     (the voice service finds it by reference). A refusal marks it failed (502). No answer from
+         *     Telnyx keeps it (504): the phone may be ringing, so a re-dial is refused for a few minutes.
          */
         post: operations["post_jobs_job_id_verification_call_api_jobs__job_id__verification_call_post"];
         delete?: never;
@@ -757,7 +761,10 @@ export interface paths {
          * Start Call
          * @description Link the caller's number to a farmer (creating one if new) and open a call record.
          *
-         *     Idempotent on twilio_call_sid, so a webhook retry returns the same call.
+         *     A verification call opened by the API (sid `verify-<id>`) is reused rather than duplicated.
+         *     Each call record connects once (in_progress -> connected): a second start for the same sid
+         *     is refused (409), as is a sid that belongs to another farmer or kind, so a replayed or
+         *     forged stream cannot attach to anyone's call record.
          */
         post: operations["start_call_api_internal_calls_post"];
         delete?: never;

@@ -49,11 +49,14 @@ async def post_lot(api, call_id, key="k1", **over):
 # --- internal call routes ----------------------------------------------------
 
 
-async def test_start_call_creates_farmer_and_is_idempotent_per_sid(api):
+async def test_start_call_creates_farmer_once_and_each_call_connects_once(api):
     first = await start_call(api)
-    again = await start_call(api)
+    replay = await api.post(
+        "/api/internal/calls", json={"twilio_call_sid": "CA-test-1", "caller_phone": PHONE}
+    )
+    assert replay.status_code == 409  # a replayed stream cannot attach to a live call
     other_sid = await start_call(api, sid="CA-test-2")
-    assert first == again != other_sid
+    assert first != other_sid
     farmers = (
         await api.session.execute(
             text("SELECT count(*) FROM farmers WHERE phone = :p"), {"p": PHONE}
@@ -183,3 +186,12 @@ async def test_unknown_village_falls_back_to_the_district_centroid(api):
         await api.session.execute(select(Lot).where(Lot.id == uuid.UUID(r.json()["lot_id"])))
     ).scalar_one()
     assert (lot.lat, lot.lon) == (31.52, 74.36) and lot.village_id is None
+
+
+async def test_an_ended_call_cannot_be_restarted(api):
+    call_id = await start_call(api, sid="CA-ended")
+    await api.post(f"/api/internal/calls/{call_id}/end", json={"status": "completed"})
+    r = await api.post(
+        "/api/internal/calls", json={"twilio_call_sid": "CA-ended", "caller_phone": PHONE}
+    )
+    assert r.status_code == 409

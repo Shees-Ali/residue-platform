@@ -24,7 +24,10 @@ router = APIRouter(
 async def start_call(db: DbSession, body: CallStartIn):
     """Link the caller's number to a farmer (creating one if new) and open a call record.
 
-    Idempotent on twilio_call_sid, so a webhook retry returns the same call.
+    A verification call opened by the API (sid `verify-<id>`) is reused rather than duplicated.
+    Each call record connects once (in_progress -> connected): a second start for the same sid
+    is refused (409), as is a sid that belongs to another farmer or kind, so a replayed or
+    forged stream cannot attach to anyone's call record.
     """
     await db.execute(
         insert(Farmer).values(phone=body.caller_phone).on_conflict_do_nothing(
@@ -39,9 +42,20 @@ async def start_call(db: DbSession, body: CallStartIn):
         .values(twilio_call_sid=body.twilio_call_sid, farmer_id=farmer.id, kind=body.kind)
         .on_conflict_do_nothing(index_elements=["twilio_call_sid"])
     )
+    # Locked until the commit, so two concurrent starts cannot both connect the same call.
     call = (
-        await db.execute(select(Call).where(Call.twilio_call_sid == body.twilio_call_sid))
+        await db.execute(
+            select(Call).where(Call.twilio_call_sid == body.twilio_call_sid).with_for_update()
+        )
     ).scalar_one()
+    if call.kind != body.kind or call.farmer_id != farmer.id:
+        # The reference belongs to someone else's call (or another kind): never hand it over.
+        raise HTTPException(status_code=409, detail="Call reference does not match this caller")
+    if call.status != "in_progress":
+        # Every call record connects once: a replayed stream (e.g. a URL copied from logs, on
+        # another instance) cannot attach to a live or ended call, or answer a verification.
+        raise HTTPException(status_code=409, detail="Call already connected")
+    call.status = "connected"
     await db.commit()
     return CallStartOut(call_id=str(call.id), farmer_known=bool(farmer.name))
 

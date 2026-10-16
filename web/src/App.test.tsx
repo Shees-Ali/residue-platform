@@ -8,7 +8,7 @@ const pages: [string, string][] = [
   ["/factory", "From residue to resources."],
   ["/market", "Good for you. Better for the planet."],
   ["/admin", "A growing circular economy."],
-  ["/call", "Call widget (browser fallback)"],
+  ["/call", "Live call"],
 ];
 
 // An admin may open every page.

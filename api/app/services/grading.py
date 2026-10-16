@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 GRADE_DISCLAIMER = "Visual estimate only; weighbridge confirmation required."
 MOISTURE_BANDS = ("dry", "medium", "wet")
-GEMINI_MODEL = os.getenv("GRADING_MODEL", "gemini-2.5-flash")
+GEMINI_MODEL = os.getenv("GRADING_MODEL", "gemini-3.8-flash")
 
 PROMPT = (
     "You grade photos of crop residue delivered to a biomass factory. From the photos only, give: "

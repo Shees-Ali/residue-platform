@@ -32,6 +32,7 @@ from app.models.job import JobOfferOut, JobOut
 from app.models.notifications import JobEventOut
 from app.models.reports import LedgerEntryOut
 from app.models.tracking import TrackOut
+from app.services import telephony
 from app.services.delivery import (
     check_photo_path,
     check_photo_uploaded,
@@ -47,7 +48,11 @@ from app.services.job_views import Viewer, job_ladder, job_out, list_jobs
 from app.services.settlement import confirm_delivery, reject_delivery
 from app.services.storage import Storage, get_storage, new_photo_path
 from app.services.tracking import MOVING, record_ping, track_for
-from app.services.verification import record_web_answer, verification_call_for
+from app.services.verification import (
+    recent_verification_call,
+    record_web_answer,
+    verification_call_for,
+)
 from app.validation import FieldErrors
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
@@ -390,21 +395,40 @@ async def get_jobs_job_id_ledger(db: DbSession, job_id: str, user: AuthUser = as
     ]
 
 
-# --- F4 (admin demo button; the Twilio dial-out itself belongs to the voice plan) ---------
+# --- F4 (admin demo button: opens the call record and dials the farmer through Telnyx) -----
 
 
 @router.post("/{job_id}/verification-call", response_model=VerificationCallOut)
 async def post_jobs_job_id_verification_call(
     db: DbSession, inbox: Delivery, job_id: str, user: AuthUser = as_admin
 ):
-    """Open a verification call for the job's farmer. TODO(F4): the voice service dials it."""
+    """Open a verification call for the job's farmer and dial them (when Telnyx is configured).
+
+    The call record is committed before dialling, so a call Telnyx placed always has its record
+    (the voice service finds it by reference). A refusal marks it failed (502). No answer from
+    Telnyx keeps it (504): the phone may be ringing, so a re-dial is refused for a few minutes.
+    """
+    dialling = telephony.configured()
     job = await load_job(db, job_id, lock=True)
-    call = await verification_call_for(db, job)
     lot = await db.get(Lot, job.lot_id)
+    # Lock the farmer until the commit: two jobs of one farmer cannot both pass the guard.
+    await db.execute(select(Farmer.id).where(Farmer.id == lot.farmer_id).with_for_update())
+    if dialling and await recent_verification_call(db, lot.farmer_id, telephony.REDIAL_GUARD_S):
+        raise HTTPException(409, "A verification call was just placed; wait before calling again")
+    call = await verification_call_for(db, job)
     farmer = await db.get(Farmer, lot.farmer_id)
     out = VerificationCallOut(
         call_id=str(call.id), job_id=str(job.id), farmer_id=str(farmer.id),
         farmer_phone=farmer.phone,
     )
     await commit_and_deliver(db, inbox)
+    if dialling:
+        try:
+            await telephony.dial_verification(call, job, farmer.phone)
+        except telephony.DialRejected as exc:
+            call.status = "failed"
+            await db.commit()
+            raise HTTPException(502, str(exc)) from exc
+        except telephony.DialUnknown as exc:
+            raise HTTPException(504, str(exc)) from exc
     return out

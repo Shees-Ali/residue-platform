@@ -122,6 +122,23 @@ async def test_escalate_sends_a_summary_with_a_stable_key(api):
     assert json.loads(first.content)["call_id"] == "call-123"
 
 
+async def test_escalate_sends_the_transcript_frozen_so_retries_keep_their_key(api):
+    from app.call_context import current_transcript, escalation_snapshots
+    from app.tools import escalate_to_human
+
+    lines = ["caller: مدد چاہیے"]
+    current_transcript.set(lines)
+    escalation_snapshots.set({})
+    api["reply"] = (201, {"escalation_id": "e1", "status": "open"})
+    await escalate_to_human("Caller wants a person")
+    lines.append("agent: ٹھیک ہے")
+    await escalate_to_human("Caller wants a person")
+    first, second = api["seen"]
+    assert json.loads(first.content)["transcript"] == "caller: مدد چاہیے"
+    assert first.content == second.content
+    assert first.headers["Idempotency-Key"] == second.headers["Idempotency-Key"]
+
+
 async def test_record_confirmation_has_no_farmer_identity_and_returns_errors_to_the_model(api):
     from app.tools import record_confirmation
 

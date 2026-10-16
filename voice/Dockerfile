@@ -5,4 +5,5 @@ COPY pyproject.toml ./
 COPY app ./app
 RUN pip install .
 ENV PORT=8080
-CMD exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT}
+# No access log (app/main.py also redacts media-stream URLs, whose query is a bearer token).
+CMD exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --no-access-log

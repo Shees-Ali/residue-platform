@@ -15,7 +15,8 @@ gcloud run deploy "$API_SERVICE" \
   --service-account "$API_SA" \
   --min-instances 0 --max-instances 2 \
   $AUTH_FLAG \
-  --set-env-vars "FIREBASE_PROJECT_ID=$PROJECT_ID,VOICE_SERVICE_ACCOUNT=$VOICE_SA"
+  --update-env-vars "FIREBASE_PROJECT_ID=$PROJECT_ID,VOICE_SERVICE_ACCOUNT=$VOICE_SA"
+# --update (not --set) keeps the Telnyx settings deploy-voice.sh adds for F4 dial-out.
 
 # Only the voice service account may invoke the API through IAM.
 gcloud run services add-iam-policy-binding "$API_SERVICE" \

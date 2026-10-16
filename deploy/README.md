@@ -1,6 +1,6 @@
 # deploy
 
-Prereqs: `gcloud` and `firebase` CLIs logged in; secrets `twilio-auth-token`, `gemini-api-key` in Secret Manager; service accounts `residue-api` and `residue-voice` created.
+Prereqs: `gcloud` and `firebase` CLIs logged in; secrets `telnyx-api-key`, `telnyx-public-key`, `stream-secret` (random, e.g. `openssl rand -hex 32`; signs media-stream URLs, shared by voice and API), `gemini-api-key` in Secret Manager; service accounts `residue-api` and `residue-voice` created.
 
 ```
 export PROJECT_ID=your-project
@@ -9,6 +9,7 @@ bash deploy/deploy-api.sh && bash deploy/deploy-voice.sh && bash deploy/deploy-w
 
 - Cloud Run: `--min-instances 0 --max-instances 2` for both services (free-tier safety). Set a budget alert.
 - The voice service account gets `roles/run.invoker` on the API service only.
+- Phone line (Telnyx): `deploy-voice.sh` sets the voice service's own `PUBLIC_BASE_URL` after deploying (so the first deploy works too) and prints the webhook URL for the Telnyx Call Control app. For F4 dial-out, export `TELNYX_CONNECTION_ID` and `TELNYX_FROM_NUMBER` before running it; it then gives the API `VOICE_STREAM_URL` and the Telnyx key.
 - API ingress is public by default (browser dashboards); see the open decision in `memory/decisions.md`.
 
 ## Firestore: the notification inbox (EV3, EV5)
