@@ -10,4 +10,4 @@ npm test
 npm run gen:api    # typed client from openapi.json
 ```
 
-Routes: `/farmer`, `/transporter`, `/factory`, `/market`, `/admin`, `/call`, `/health` (`/` redirects to `/market`). Hosting config is in `../deploy/firebase.json`.
+Routes: `/farmer`, `/transporter`, `/factory`, `/market`, `/admin`, `/call`, `/health` (`/` redirects to `/market`). Hosting config is the root `../firebase.json` (Firestore rules and emulators: `../deploy/firebase.json`).

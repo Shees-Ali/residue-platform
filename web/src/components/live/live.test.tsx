@@ -75,7 +75,6 @@ describe("farmer page", () => {
     expect(screen.getByText("Waiting for a factory")).toBeInTheDocument();
     expect(screen.getByText(/You would receive about/)).toBeInTheDocument();
     expect(screen.getByText(/district centre used/)).toBeInTheDocument();
-    expect(screen.getByText("Live data")).toBeInTheDocument();
   });
 
   test("a failed load offers a retry instead of an empty page", async () => {

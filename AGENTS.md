@@ -9,7 +9,7 @@ Crop-residue marketplace demo: farmers call (Urdu, Telnyx + Gemini Live) to repo
 - `web/` React 18 + TS + Vite + Tailwind. Firebase Hosting.
 - `api/` FastAPI + Pydantic v2 + Firestore. Cloud Run.
 - `voice/` ADK voice agent (FastAPI, Telnyx media streams, browser mic fallback). Cloud Run.
-- `deploy/` firebase.json and gcloud deploy scripts. `seed/` synthetic data. `scripts/` CI checks.
+- root `firebase.json` (Hosting); `deploy/` Firestore/emulator config and gcloud deploy scripts. `seed/` synthetic data. `scripts/` CI checks.
 - `memory/` project memory (source of truth).
 
 ## Commands
