@@ -117,11 +117,12 @@ class GcsStorage:
         service account's own token (needs roles/iam.serviceAccountTokenCreator on itself)."""
         import google.auth
         from google.auth.transport.requests import Request
+        from google.oauth2 import service_account
 
         creds, _ = google.auth.default()
-        if not getattr(creds, "service_account_email", None) or hasattr(creds, "sign_bytes"):
-            return {}  # a key file or user credentials sign locally
-        creds.refresh(Request())
+        if isinstance(creds, service_account.Credentials):
+            return {}  # a key file signs locally
+        creds.refresh(Request())  # also turns the metadata server's "default" into the real email
         return {"service_account_email": creds.service_account_email, "access_token": creds.token}
 
     async def signed_upload_url(self, path: str, content_type: str) -> str:
