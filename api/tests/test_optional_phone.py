@@ -64,11 +64,14 @@ async def test_an_existing_farmer_without_a_record_can_report_without_re_signing
     assert (await submit(api, h)).status_code == 201
 
 
-async def test_cloud_run_always_requires_the_sms(api, world, monkeypatch):
-    monkeypatch.setenv("K_SERVICE", "residue-api")
-    # headers-only dev auth is refused there, so check the rule itself
+def test_cloud_run_follows_the_variable(monkeypatch):
+    """Cloud Run no longer forces the SMS (decision 2026-10-18): the variable decides."""
     from app.config import phone_verification_required
 
+    monkeypatch.setenv("K_SERVICE", "residue-api")
+    monkeypatch.delenv("REQUIRE_VERIFIED_PHONE", raising=False)
+    assert phone_verification_required() is False
+    monkeypatch.setenv("REQUIRE_VERIFIED_PHONE", "true")
     assert phone_verification_required() is True
 
 
