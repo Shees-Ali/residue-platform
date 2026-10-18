@@ -73,10 +73,10 @@ describe("navigation", () => {
     expect(links()).toEqual(["Factory Dashboard", "Marketplace", "My details"]);
   });
 
-  test("an admin sees everything", async () => {
+  test("an admin's menu keeps to admin work (role pages stay reachable by URL)", async () => {
     renderAt("/admin", signedIn("admin"));
     await screen.findByRole("heading", { name: ADMIN });
-    expect(links()).toHaveLength(7); // every page plus My details
+    expect(links()).toEqual(["Marketplace", "Admin Dashboard", "Call widget", "My details"]);
   });
 
   test("there is no demo role switcher any more", async () => {

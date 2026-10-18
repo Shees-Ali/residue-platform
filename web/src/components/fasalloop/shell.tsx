@@ -39,6 +39,7 @@ export const roles: Role[] = [
 const callNav: Role = { name: "Call", label: "Call widget", path: "/call", icon: PhoneCall };
 const settingsNav: Role = { name: "Settings", label: "My details", path: "/settings", icon: SettingsIcon };
 const allNav: Role[] = [...roles, callNav, settingsNav];
+const ADMIN_HIDDEN = ["/farmer", "/transporter", "/factory"];
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -51,7 +52,11 @@ export function ResidueShell({ children }: { children: ReactNode }) {
   const [help, setHelp] = useState(false);
   const [leaving, setLeaving] = useState(false);
   // Show only the pages this person's role may open.
-  const navItems = allNav.filter((r) => canAccess(r.path, user?.role as AccountRole | undefined));
+  const role = user?.role as AccountRole | undefined;
+  // Admins can still open the role pages by URL; the menu keeps to their own work.
+  const navItems = allNav.filter(
+    (r) => canAccess(r.path, role) && !(role === "admin" && ADMIN_HIDDEN.includes(r.path)),
+  );
   const home = user ? homeFor(user.role as AccountRole) : "/";
   return (
     <>
