@@ -112,15 +112,28 @@ class GcsStorage:
 
         self._bucket = storage.Client().bucket(bucket)
 
+    def _signer(self) -> dict:
+        """On Cloud Run the credentials have no private key: sign through the IAM API with the
+        service account's own token (needs roles/iam.serviceAccountTokenCreator on itself)."""
+        import google.auth
+        from google.auth.transport.requests import Request
+
+        creds, _ = google.auth.default()
+        if not getattr(creds, "service_account_email", None) or hasattr(creds, "sign_bytes"):
+            return {}  # a key file or user credentials sign locally
+        creds.refresh(Request())
+        return {"service_account_email": creds.service_account_email, "access_token": creds.token}
+
     async def signed_upload_url(self, path: str, content_type: str) -> str:
         blob = self._bucket.blob(path)
         return blob.generate_signed_url(
-            version="v4", method="PUT", expiration=timedelta(minutes=15), content_type=content_type
+            version="v4", method="PUT", expiration=timedelta(minutes=15),
+            content_type=content_type, **self._signer(),
         )
 
     async def read_url(self, path: str) -> str:
         return self._bucket.blob(path).generate_signed_url(
-            version="v4", method="GET", expiration=timedelta(minutes=30)
+            version="v4", method="GET", expiration=timedelta(minutes=30), **self._signer()
         )
 
     async def read(self, path: str) -> bytes:
