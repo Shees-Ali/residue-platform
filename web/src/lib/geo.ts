@@ -27,8 +27,7 @@ export function locationMessage(code?: number): string {
   }
 }
 
-/** One fresh reading from the phone. Rejects with a LocationError. */
-export function getPosition(timeoutMs = 10_000): Promise<Position> {
+function readOnce(options: PositionOptions): Promise<Position> {
   return new Promise((resolve, reject) => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       reject(new LocationError(locationMessage()));
@@ -36,8 +35,19 @@ export function getPosition(timeoutMs = 10_000): Promise<Position> {
     }
     navigator.geolocation.getCurrentPosition(
       (p) => resolve({ lat: p.coords.latitude, lon: p.coords.longitude, accuracy_m: p.coords.accuracy }),
-      (e) => reject(new LocationError(locationMessage(e.code))),
-      { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 0 },
+      (e) => reject(Object.assign(new LocationError(locationMessage(e.code)), { code: e.code })),
+      options,
     );
   });
+}
+
+/** One reading from the phone. Tries GPS first; if that times out or finds nothing (indoors, a
+ * laptop), falls back to the network position, a recent one allowed. Rejects with a LocationError. */
+export async function getPosition(timeoutMs = 10_000): Promise<Position> {
+  try {
+    return await readOnce({ enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 0 });
+  } catch (e) {
+    if ((e as { code?: number }).code === 1) throw e; // permission denied: asking again won't help
+    return readOnce({ enableHighAccuracy: false, timeout: 20_000, maximumAge: 60_000 });
+  }
 }
